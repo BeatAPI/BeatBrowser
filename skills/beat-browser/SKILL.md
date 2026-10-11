@@ -26,10 +26,10 @@ Drive the user's **real Chrome** through BeatBrowser. Stack: `beat-browser` CLI 
 - On captcha, login wall, payment, or account mismatch: stop and ask the user (do not bypass).
 - Do not extract cookies, tokens, or passwords from the browser profile.
 
-## X (Twitter) replies
+## Site-specific skills
 
-For publishing or filling an X reply, switch to `skills/x-reply/SKILL.md` and `docs/learnings/x.com.md`.
+Some sites ship extra playbooks under `skills/` and `docs/learnings/` (for example `skills/x-reply/SKILL.md` with `docs/learnings/x.com.md`). Call `learnings({ domain })` first and read the matching skill if one exists.
 
 ## Human install reminder
 
-BeatBrowser is **not** on the Chrome Web Store. Load unpacked from the repo `extension/` directory. Ports `18899–18903` avoid colliding with older browser-control bridges on `8899`.
+BeatBrowser is **not** on the Chrome Web Store. Load unpacked from the repo `extension/` directory. The bridge listens on `127.0.0.1` ports `18899–18903`; disable any other browser-control extension that could compete for the same tabs.

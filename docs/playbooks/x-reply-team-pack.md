@@ -18,8 +18,8 @@ This is a sanitized experience pack for agents using `beat-browser`. It contains
 
 ## Submit once and prove the result
 
-- Final Reply activation is a separate action and requires explicit publication authorization for the exact target, account, copy, and link.
-- Activate the final Reply control at most once after prechecks. A tool receipt saying "clicked" is not publication evidence.
+- After verifying the exact target, account, copy and link, stop with the draft ready. The user performs the final Reply click; do not submit through an agent tool or bulk publisher.
+- Observe the result after the user submits. A tool receipt saying "clicked" is not publication evidence.
 - After any possible activation, a timeout, disconnect, or ambiguous result is `post_unknown`. Do not resubmit blindly or switch controllers and try again.
 - Verify the matching reply under the exact target and on the approved account's replies surface.
 - Capture only the durable `https://x.com/<approved-handle>/status/<numeric-id>` URL, then write it back before moving to the next item.
