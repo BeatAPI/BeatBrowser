@@ -17,14 +17,18 @@ Run from a clean checkout with Node.js 20+ after `npm ci`:
 
 ### Extension download release preparation on 2026-10-12
 
-- CLI, package lockfile and extension versions match at 1.2.1.
+- Final CLI, package lockfile and extension versions match at 1.2.2.
 - `npm ci`, all 216 tests, syntax/source checks, isolated package installation
   and extension ZIP generation passed locally.
 - The ZIP regression checks root-level manifest/runtime files, removal of
   `manifest.key`, inclusion of the license/privacy notice, identical stable and
   versioned ZIPs, SHA-256 checksums and rejection of mismatched CLI versions.
 - Workflow YAML and each embedded Bash script passed syntax checks.
-- Public GitHub upload and npm publication are verified separately after push.
+- The first v1.2.1 Actions attempt passed tests but failed the package check
+  because npm 12 changed `npm pack --json` from an array to a keyed object.
+  The check now accepts both formats; the failed tag is preserved and the
+  corrected source ships as v1.2.2. GitHub upload and npm publication are
+  verified separately after push.
 - This preparation did not install the new extension into a real Chrome profile
   or repeat the live cross-client demo.
 

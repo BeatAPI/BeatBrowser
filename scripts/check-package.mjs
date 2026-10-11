@@ -28,7 +28,12 @@ const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const run = (command, args, cwd = temporary) => execFileSync(command, args, { cwd, env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], timeout: 120000 });
 
 try {
-  const pack = JSON.parse(run(npm, ['pack', '--json', '--pack-destination', temporary], root))[0];
+  const output = JSON.parse(run(npm, ['pack', '--json', '--pack-destination', temporary], root));
+  // npm 10/11 returns an array; npm 12 returns entries keyed by package name.
+  const packages = Array.isArray(output) ? output : Object.values(output);
+  assert.equal(packages.length, 1, 'Expected exactly one packed package');
+  const [pack] = packages;
+  assert.ok(Array.isArray(pack?.files) && typeof pack.filename === 'string', 'Invalid npm pack metadata');
   const names = new Set(pack.files.map(file => file.path));
   for (const required of ['LICENSE', 'README.md', 'AGENT_INSTALL.md', 'PRIVACY.md', 'TEST_RESULTS.md',
     'src/cli.js', 'src/agents.json', 'extension/manifest.json', 'extension/background.js',

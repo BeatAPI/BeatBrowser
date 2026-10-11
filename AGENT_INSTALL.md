@@ -11,7 +11,7 @@ The GitHub [latest release](https://github.com/BeatAPI/beat-browser/releases/lat
 Install it globally from the official npm registry:
 
 ```bash
-npm install --global @beatapi/beat-browser@1.2.1
+npm install --global @beatapi/beat-browser@1.2.2
 beat-browser install --dry-run
 beat-browser extension
 ```

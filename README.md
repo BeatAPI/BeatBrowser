@@ -73,7 +73,7 @@ Install the CLI from the official npm registry. Use the source path below when d
 Install globally so Chrome's extension folder stays at a stable path:
 
 ```bash
-npm install --global @beatapi/beat-browser@1.2.1
+npm install --global @beatapi/beat-browser@1.2.2
 beat-browser install --dry-run   # preview client config changes
 beat-browser install             # apply; backs up each changed config
 beat-browser extension           # print the extension folder
@@ -88,7 +88,7 @@ If this exact version is not yet available on npm, install from the matching sou
 ### From source
 
 ```bash
-git clone --branch v1.2.1 https://github.com/BeatAPI/beat-browser.git
+git clone --branch v1.2.2 https://github.com/BeatAPI/beat-browser.git
 cd beat-browser
 npm ci
 node src/cli.js install --dry-run
