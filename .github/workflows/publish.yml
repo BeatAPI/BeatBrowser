@@ -1,8 +1,3 @@
-#
-#   git push --follow-tags
-#
-#
-
 name: publish
 
 on:
@@ -10,12 +5,16 @@ on:
     tags: ['v*']
   workflow_dispatch:
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write # OIDC ，
-      contents: read
+      id-token: write
+      contents: write
 
     steps:
       - uses: actions/checkout@v5
@@ -24,10 +23,16 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
-          package-manager-cache: false # 
+          package-manager-cache: false
+
+      - name: Verify release tag and versions
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          test "$GITHUB_REF_TYPE" = tag
+          test "$GITHUB_REF_NAME" = "v$VERSION"
+          node --input-type=module -e "import fs from 'node:fs'; import assert from 'node:assert/strict'; const read=p=>JSON.parse(fs.readFileSync(p)); const v=read('package.json').version; assert.equal(read('extension/manifest.json').version,v); assert.equal(read('package-lock.json').version,v); assert.equal(read('package-lock.json').packages[''].version,v);"
 
       - run: npm install -g npm@latest
-
       - run: npm ci
       - run: npm test
       - run: npm run check:syntax
@@ -35,10 +40,29 @@ jobs:
       - run: npm run check:package
       - run: npm run build:extension
 
+      - name: Publish GitHub extension downloads
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v$VERSION"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release view "$TAG" --json assets --jq '.assets[].name' > /tmp/beatbrowser-release-assets
+            for FILE in "dist/beat-browser-$VERSION.zip" dist/beat-browser-extension.zip dist/SHA256SUMS.txt; do
+              NAME="${FILE##*/}"
+              if ! grep -Fxq "$NAME" /tmp/beatbrowser-release-assets; then
+                gh release upload "$TAG" "$FILE"
+              fi
+            done
+          else
+            gh release create "$TAG" "dist/beat-browser-$VERSION.zip" dist/beat-browser-extension.zip dist/SHA256SUMS.txt --verify-tag --title "BeatBrowser $VERSION" --notes-file docs/RELEASE_NOTES.md
+          fi
+
       - id: published
+        name: Check npm version
         run: |
           PKG=$(node -p "require('./package.json').name")@$(node -p "require('./package.json').version")
-          if npm view "$PKG" version >/dev/null 2>&1; then
+          if npm view "$PKG" version --registry=https://registry.npmjs.org >/dev/null 2>&1; then
             echo "$PKG already on npm — skip publish"
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else

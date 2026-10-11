@@ -2,12 +2,16 @@
 
 You are an AI agent setting up BeatBrowser for the user. Done = `node src/cli.js doctor --json` reports `"ok": true` and `extensionOnline: true`. Never use `sudo`. You cannot click Chrome's "Load unpacked" for the user — that step is theirs.
 
+## Extension ZIP download
+
+The GitHub [latest release](https://github.com/BeatAPI/beat-browser/releases/latest) provides `beat-browser-extension.zip` and SHA-256 checksums. Extract it into a permanent folder and load that folder through Chrome's **Load unpacked** control. The ZIP alone does not install the local MCP server; complete the CLI setup below. Match the CLI and extension versions, and load only one copy of the extension.
+
 ## npm installation
 
 Install it globally from the official npm registry:
 
 ```bash
-npm install --global @beatapi/beat-browser
+npm install --global @beatapi/beat-browser@1.2.1
 beat-browser install --dry-run
 beat-browser extension
 ```

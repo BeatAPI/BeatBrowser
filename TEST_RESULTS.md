@@ -10,10 +10,23 @@ Run from a clean checkout with Node.js 20+ after `npm ci`:
 
 | Command | Result |
 | --- | --- |
-| `npm test` | 215 passed, 0 failed, 0 skipped |
-| `npm run check:syntax` | 44 JavaScript files pass `node --check` |
+| `npm test` | 216 passed, 0 failed, 0 skipped (2026-10-12) |
+| `npm run check:syntax` | 45 JavaScript files pass `node --check` (2026-10-12) |
 | `npm run check:security` | No findings (narrow source-pattern and extension cloud-boundary scan; not exhaustive secret detection) |
 | `node src/cli.js run --dry-run --url https://example.com --goal 'Check page readiness'` | Exit 0; `status: "dry_run"`, zero model calls, no browser connection |
+
+### Extension download release preparation on 2026-10-12
+
+- CLI, package lockfile and extension versions match at 1.2.1.
+- `npm ci`, all 216 tests, syntax/source checks, isolated package installation
+  and extension ZIP generation passed locally.
+- The ZIP regression checks root-level manifest/runtime files, removal of
+  `manifest.key`, inclusion of the license/privacy notice, identical stable and
+  versioned ZIPs, SHA-256 checksums and rejection of mismatched CLI versions.
+- Workflow YAML and each embedded Bash script passed syntax checks.
+- Public GitHub upload and npm publication are verified separately after push.
+- This preparation did not install the new extension into a real Chrome profile
+  or repeat the live cross-client demo.
 
 ### Release preparation on 2026-10-08
 

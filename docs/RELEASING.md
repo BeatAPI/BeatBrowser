@@ -11,7 +11,8 @@ Publication is distinct from a successful pack check or a GitHub push.
    in sync when incrementing a release.
 4. Run `npm ci`, `npm test`, `npm run check:syntax`, `npm run check:security`,
    `npm run check:package` and `npm run build:extension`.
-5. Inspect the staged diff for credentials and browser/customer data. Never
+5. Update `docs/RELEASE_NOTES.md` and the pinned install/tag examples for the release.
+6. Inspect the staged diff for credentials and browser/customer data. Never
    commit runtime logs, traces, profile data or private site notes.
 
 The package check builds a tarball, installs it in a temporary directory, checks
@@ -40,12 +41,36 @@ Report an authentication failure as a blocked publication, not a release.
 Configure an npm trusted publisher for organization `BeatAPI`, repository
 `beat-browser`, workflow file `publish.yml`. Setting `id-token: write` in
 GitHub alone does not establish that trust relationship. The package workflow
-runs on a `v*` tag or manual dispatch, checks the package and publishes publicly.
+runs on a `v*` tag (or manual dispatch targeting that tag), verifies that the tag,
+CLI, lockfile and extension versions match, and runs the release checks. It then
+creates the GitHub Release with `beat-browser-<version>.zip`, the stable
+`beat-browser-extension.zip` alias, and `SHA256SUMS.txt`, before publishing npm.
+
+Push the reviewed source to main first, then create and push its matching tag.
+Never move or force-push a published tag. The workflow uses `contents: write` for
+GitHub release assets and `id-token: write` for npm trusted publishing. On rerun,
+existing release assets are retained and only missing assets are uploaded.
+
+The stable README download URL is
+`https://github.com/BeatAPI/beat-browser/releases/latest/download/beat-browser-extension.zip`.
+The archive has `manifest.json` at its root, includes LICENSE and PRIVACY.md,
+and omits `manifest.key`. Users extract it into a permanent folder before using
+Chrome's Load unpacked control; the local CLI/MCP server is still required.
+
+A successful GitHub upload does not prove npm publication succeeded. If the
+registry publish fails, the GitHub ZIP and matching source-tag installation can
+remain available; report the npm failure separately and rerun the failed workflow
+after fixing authentication. Do not advertise an unavailable npm version.
 
 References: [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/),
 [scoped public packages](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/).
 
 ## Verify delivery
+
+- Track the Actions run for the exact tag/source SHA, including the npm step.
+- Open the public Release and latest-download link. Download the ZIP, verify its
+  SHA-256 against the published checksums, inspect its root manifest/runtime files
+  and confirm its version and license/privacy notices.
 
 - Confirm `npm view @beatapi/beat-browser version dist.tarball` on the official
   registry and install the exact released version in a clean prefix.
