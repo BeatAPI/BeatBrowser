@@ -6,9 +6,21 @@ You are an AI agent setting up BeatBrowser for the user. Done = `node src/cli.js
 
 The GitHub [latest release](https://github.com/BeatAPI/beat-browser/releases/latest) provides `beat-browser-extension.zip` and SHA-256 checksums. Extract it into a permanent folder and load that folder through Chrome's **Load unpacked** control. The ZIP alone does not install the local MCP server; complete the CLI setup below. Match the CLI and extension versions, and load only one copy of the extension.
 
-## npm installation
+## CLI installation from GitHub
 
-Install it globally from the official npm registry:
+Install the matching CLI from the release asset, preview client config changes and print the extension folder:
+
+```bash
+npm install --global https://github.com/BeatAPI/beat-browser/releases/download/v1.2.2/beat-browser-cli.tgz
+beat-browser install --dry-run
+beat-browser extension
+```
+
+The GitHub tarball installs public npm dependencies. Load either the extracted extension ZIP or the installed package's extension folder, not both.
+
+## npm registry alternative
+
+When this version is available on the official npm registry:
 
 ```bash
 npm install --global @beatapi/beat-browser@1.2.2

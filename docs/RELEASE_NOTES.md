@@ -2,7 +2,7 @@
 
 Your Chrome. Your choice of agent.
 
-- Direct Chrome extension ZIP downloads from GitHub, including a stable latest-download URL and SHA-256 checksums.
+- Direct Chrome extension ZIP and matching local CLI downloads from GitHub, including a stable latest-download URL and SHA-256 checksums.
 - Clear instructions for ZIP extraction, Chrome's Load unpacked control, local MCP setup and updates.
 - Extension archives include the MIT license and privacy notice; the public manifest key is removed from the archive.
 - Matching CLI/extension versions, archive regression checks and npm 10/11/12 package-check compatibility.
@@ -15,12 +15,12 @@ Download `beat-browser-extension.zip` below and extract it into a permanent fold
 The extension alone is not enough. Install the matching local CLI/MCP server:
 
 ```bash
-npm install --global @beatapi/beat-browser@1.2.2
+npm install --global https://github.com/BeatAPI/beat-browser/releases/download/v1.2.2/beat-browser-cli.tgz
 beat-browser install --dry-run
 beat-browser install
 ```
 
-If npm 1.2.2 is not yet available, use the matching source tag:
+The CLI download has a separate `CLI-SHA256SUMS.txt` checksum. npm registry publication is a separate step; the GitHub CLI download works even while that publication is pending. You can also install from the matching source tag:
 
 ```bash
 git clone --branch v1.2.2 https://github.com/BeatAPI/beat-browser.git

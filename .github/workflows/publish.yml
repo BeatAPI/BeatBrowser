@@ -40,6 +40,14 @@ jobs:
       - run: npm run check:package
       - run: npm run build:extension
 
+      - name: Build matching CLI download
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          npm pack --pack-destination dist
+          cp "dist/beatapi-beat-browser-$VERSION.tgz" dist/beat-browser-cli.tgz
+          cd dist
+          sha256sum beat-browser-cli.tgz > CLI-SHA256SUMS.txt
+
       - name: Publish GitHub extension downloads
         env:
           GH_TOKEN: ${{ github.token }}
@@ -48,14 +56,14 @@ jobs:
           TAG="v$VERSION"
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release view "$TAG" --json assets --jq '.assets[].name' > /tmp/beatbrowser-release-assets
-            for FILE in "dist/beat-browser-$VERSION.zip" dist/beat-browser-extension.zip dist/SHA256SUMS.txt; do
+            for FILE in "dist/beat-browser-$VERSION.zip" dist/beat-browser-extension.zip dist/SHA256SUMS.txt dist/beat-browser-cli.tgz dist/CLI-SHA256SUMS.txt; do
               NAME="${FILE##*/}"
               if ! grep -Fxq "$NAME" /tmp/beatbrowser-release-assets; then
                 gh release upload "$TAG" "$FILE"
               fi
             done
           else
-            gh release create "$TAG" "dist/beat-browser-$VERSION.zip" dist/beat-browser-extension.zip dist/SHA256SUMS.txt --verify-tag --title "BeatBrowser $VERSION" --notes-file docs/RELEASE_NOTES.md
+            gh release create "$TAG" "dist/beat-browser-$VERSION.zip" dist/beat-browser-extension.zip dist/SHA256SUMS.txt dist/beat-browser-cli.tgz dist/CLI-SHA256SUMS.txt --verify-tag --title "BeatBrowser $VERSION" --notes-file docs/RELEASE_NOTES.md
           fi
 
       - id: published

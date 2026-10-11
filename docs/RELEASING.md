@@ -44,7 +44,8 @@ GitHub alone does not establish that trust relationship. The package workflow
 runs on a `v*` tag (or manual dispatch targeting that tag), verifies that the tag,
 CLI, lockfile and extension versions match, and runs the release checks. It then
 creates the GitHub Release with `beat-browser-<version>.zip`, the stable
-`beat-browser-extension.zip` alias, and `SHA256SUMS.txt`, before publishing npm.
+`beat-browser-extension.zip` alias, and `SHA256SUMS.txt`, plus the matching `beat-browser-cli.tgz` and
+`CLI-SHA256SUMS.txt`, before publishing npm.
 
 Push the reviewed source to main first, then create and push its matching tag.
 Never move or force-push a published tag. The workflow uses `contents: write` for
@@ -59,7 +60,7 @@ Chrome's Load unpacked control; the local CLI/MCP server is still required.
 
 A successful GitHub upload does not prove npm publication succeeded. If the
 registry publish fails, the GitHub ZIP and matching source-tag installation can
-remain available; report the npm failure separately and rerun the failed workflow
+and CLI tarball remain available; report the npm failure separately and rerun the failed workflow
 after fixing authentication. Do not advertise an unavailable npm version.
 
 References: [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/),

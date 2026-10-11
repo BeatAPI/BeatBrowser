@@ -67,6 +67,18 @@ The ZIP contains the Chrome extension only. It needs the local BeatBrowser MCP s
 
 ### Install the local CLI/MCP server
 
+Install the exact matching CLI directly from this GitHub release:
+
+```bash
+npm install --global https://github.com/BeatAPI/beat-browser/releases/download/v1.2.2/beat-browser-cli.tgz
+beat-browser install --dry-run
+beat-browser install
+```
+
+This installs the local Node CLI and its public npm dependencies. It does not load the Chrome extension for you. The CLI archive and its checksum are also listed on the [release page](https://github.com/BeatAPI/beat-browser/releases/latest).
+
+### npm registry alternative
+
 
 Install the CLI from the official npm registry. Use the source path below when developing BeatBrowser.
 
