@@ -32,7 +32,7 @@ try {
   const names = new Set(pack.files.map(file => file.path));
   for (const required of ['LICENSE', 'README.md', 'AGENT_INSTALL.md', 'PRIVACY.md', 'TEST_RESULTS.md',
     'src/cli.js', 'src/agents.json', 'extension/manifest.json', 'extension/background.js',
-    'media/architecture.png', 'media/architecture.svg', 'docs/COMPARISON.md', 'docs/DEMO.md',
+    'media/hero.webp', 'media/compare-agents.webp', 'media/architecture.png', 'media/architecture.svg', 'docs/COMPARISON.md', 'docs/DEMO.md',
     'docs/RELEASING.md', 'test/fixtures/demo.html', 'skills/beat-browser/SKILL.md']) {
     assert.ok(names.has(required), `Missing package file: ${required}`);
   }

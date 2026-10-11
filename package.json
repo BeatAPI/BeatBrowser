@@ -9,6 +9,8 @@
   "files": [
     "src",
     "extension",
+    "media/hero.webp",
+    "media/compare-agents.webp",
     "media/architecture.png",
     "media/architecture.svg",
     "skills",

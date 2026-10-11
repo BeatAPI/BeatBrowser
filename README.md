@@ -7,7 +7,9 @@
 Let an MCP-capable agent work in the Chrome profile you already use.
 Keep your signed-in sessions when you switch between Claude Code, Codex CLI, Cursor and other MCP clients.
 
-![BeatBrowser architecture: MCP agents share one local browser bridge](media/architecture.png)
+![BeatBrowser: your Chrome, your choice of MCP agent](media/hero.webp)
+
+*Concept illustration; the dashboard shown is not a shipped BeatBrowser interface.*
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 ![Node 20+](https://img.shields.io/badge/node-20%2B-343b49)
@@ -26,6 +28,8 @@ Ask your agent to read a dashboard, collect a few records, fill a draft or test 
 BeatBrowser provides browser tools; your agent supplies the reasoning and model. Normal mode needs no BeatBrowser account or API key. Optional Fast JEV adds a bounded decision loop for compatible tasks.
 
 ## How it works
+
+![BeatBrowser architecture: MCP agents share one local browser bridge](media/architecture.png)
 
 ```text
 Claude Code / Codex CLI / Cursor / other MCP clients
@@ -113,6 +117,10 @@ args = ["/absolute/path/to/beat-browser/src/cli.js", "mcp"]
 ## How it compares
 
 **Claude and Codex can already operate a signed-in browser.** BeatBrowser offers a browser toolkit across MCP clients, with inspectable source, shared local site notes and an optional typed executor.
+
+![One browser toolkit across compatible MCP clients](media/compare-agents.webp)
+
+*The vendor-tools panel refers to native browser integrations; those hosts can also support third-party MCP tools.*
 
 Checked against official docs on **2026-10-08**. Product browser features are separate from general MCP support; this is not a speed or safety ranking.
 
