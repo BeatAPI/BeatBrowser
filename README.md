@@ -50,9 +50,9 @@ Claude Code / Codex CLI / Cursor / other MCP clients
 
 Multiple clients can connect. Label your tabs and pass `tabId` explicitly; concurrent writes to the same tab are not isolated. When multiple Chrome profiles are connected, Normal commands use the bridge's selected primary extension; use explicit profile selection in development TaskSpaces for tasks that must stay on one profile.
 
-## Background TaskSpaces (development)
+## Background TaskSpaces (1.3.0 preview)
 
-This branch adds BeatBrowser-owned task windows, named multiple pages, profile-pinned ownership, progress notifications and human takeover controls. MCP, CLI and the new [JavaScript SDK](docs/JAVASCRIPT.md) share the same local bridge. It does not require Ego Lite. These changes are not in the installed 1.2.2 release. See [status and limits](docs/TASKSPACES.md) and the [Ego capability comparison](docs/EGO_PARITY_REVIEW.md).
+This preview adds a BeatBrowser workspace sidebar, owned task windows, named pages, profile-pinned ownership, progress notifications and human takeover controls. It also diagnoses stalled pages and reports write-request evidence without automatically repeating uncertain input. MCP, CLI and the new [JavaScript SDK](docs/JAVASCRIPT.md) share the same local bridge. It does not require Ego Lite. The local 1.3.0 preview is not published to npm and does not replace the installed 1.2.2 release automatically. Start with [preview testing](docs/PREVIEW_TESTING.md). See [status and limits](docs/TASKSPACES.md) and the [Ego capability comparison](docs/EGO_PARITY_REVIEW.md).
 
 ## Install
 

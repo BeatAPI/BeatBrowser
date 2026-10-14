@@ -1,6 +1,6 @@
 # Background TaskSpaces — development status
 
-Unreleased development capability, reviewed 2026-10-14. The installed 1.2.2 extension does not acquire it merely because local source changed. No Ego installation or native browser engine is required.
+Unreleased 1.3.0 local preview, reviewed 2026-10-14. The installed 1.2.2 extension does not acquire it merely because local source changed. No Ego installation or native browser engine is required.
 
 ## Execution model
 
@@ -20,13 +20,13 @@ The bridge pins each space to its original extension connection and owner sessio
 - `events`: read a bounded lifecycle log including popup origin. This is not a full CDP or download-event stream. Popups are observed, not silently adopted; a popup outside the task window pauses execution.
 - `notifications`: opt in to local system progress/review/completion notifications. Changed progress reports are delivered on a configurable interval (default five minutes, minimum one); unchanged progress stays quiet. OS notification settings still apply.
 
-The existing extension popup shows progress, page counts and View / take over, Confirm / resume, and Stop controls. Focusing a running task window pauses subsequent automation. This does not undo in-flight input. Returning control is not blanket approval for future consequential actions.
+The extension popup and persistent BeatBrowser workspace sidebar share the same task state. The sidebar adds named pages, per-page View and activity history. Open it explicitly from the toolbar popup; background work never opens it automatically. Both surfaces expose View / take over, Confirm / resume and Stop. Focusing a running task window pauses subsequent automation. This does not undo in-flight input. Returning control is not blanket approval for future consequential actions.
 
 The default lease is 15 minutes; requested leases range from 30 seconds to one hour. Explicit resume renews for 15 minutes. There are at most four nonterminal tasks per owner, 16 pages per task and 80 retained lifecycle events per task. Session state uses existing `chrome.storage.session`; it is not a durable job queue. An extension/browser restart loses task state, and bridge reconnection does not automatically recover ownership. Finish or stop when done.
 
 ## Agent access
 
-Use the existing MCP or CLI `spaces` command with explicit `spaceId` and `tabId`. Node agents can use [the JavaScript SDK](JAVASCRIPT.md), including named pages and waits for human control, URLs and popups. Existing page tools are reused. The optional Fast JEV loop has not been validated with TaskSpaces. Grok Bot and Muse have not individually undergone client acceptance in this change.
+Use the existing MCP or CLI `spaces` command with explicit `spaceId` and `tabId`. Node agents can use [the JavaScript SDK](JAVASCRIPT.md), including named pages and waits for human control, URLs and popups. Existing page tools are reused. Ordinary input with no visible effect is not automatically repeated through another input layer. Write-request receipts include method/status only and do not prove business success. Frozen tabs can be thawed before dispatch; timed-out writes are never resent. Discarded, busy and confirmed-dialog states are distinguished. The optional Fast JEV loop has not been validated with TaskSpaces. Grok Bot and Muse have not individually undergone client acceptance in this change.
 
 Open Profound will own schedules and product run records. BeatBrowser executes assigned work and returns evidence. BeatAPI remains an optional capability layer for analysis, research and generation, not a prerequisite to ordinary local browser control.
 

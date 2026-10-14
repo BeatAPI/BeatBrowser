@@ -1,0 +1,56 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BeatBrowser Workspace</title>
+<link rel="stylesheet" href="workspace.css" />
+
+
+<body class="panel">
+<div class="top">
+  <img class="logo" src="icons/logo-light.png" width="28" height="28" alt="" />
+  <div class="name">BeatBrowser <span id="ver"></span></div>
+</div>
+
+<div class="status">
+  <div class="status-left">
+    <span class="dot" id="dot"></span>
+    <span class="label" id="state">Checking…</span>
+  </div>
+</div>
+<div class="meta" id="conntip" hidden></div>
+<button class="action" id="btn" type="button" hidden>Reconnect</button>
+<div class="workspace-intro"><div class="eyebrow">YOUR BROWSER. YOUR CONTROL.</div><h1>Agents at work.</h1><p>Keep browsing. Review progress here and take over whenever you need.</p></div>
+<section class="spaces" aria-label="Task spaces">
+  <h2>Task spaces</h2>
+  <div id="spaces-list">Loading…</div>
+  <p class="meta" id="spaces-message" role="status"></p>
+</section>
+
+<details class="adv">
+  <summary>Agents &amp; preferences</summary>
+
+  <div class="toggle-row">
+    <div class="toggle-copy">
+      <div class="t" id="l2state">High-fidelity input</div>
+      <div class="d">Trusted events for picky sites</div>
+    </div>
+    <button class="sw" id="l2btn" type="button" aria-pressed="false" title="Toggle high-fidelity"><i></i></button>
+  </div>
+  <span id="l2dot" class="dot" hidden></span>
+
+  <div class="toggle-row">
+    <div class="toggle-copy">
+      <div class="t" id="markstate">Show control marks</div>
+      <div class="d">Border + badge on agent tabs</div>
+    </div>
+    <button class="sw" id="markbtn" type="button" aria-pressed="false" title="Toggle control marks"><i></i></button>
+  </div>
+  <span id="markdot" class="dot" hidden></span>
+  <div class="sess" id="sess"></div>
+</details>
+
+<div class="foot" id="tip">Stuck? <code>beat-browser doctor</code></div>
+
+<script src="popup.js"></script>
+
+</body>

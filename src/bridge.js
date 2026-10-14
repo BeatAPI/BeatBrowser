@@ -219,6 +219,14 @@ export function startBridge({ port = DEFAULT_PORT, token = newToken(), writeInfo
         if (old.instanceId === ws.instanceId && old !== ws) {
           extensions.delete(old);
           for (const [id, owner] of spaceOwners) if (owner.extension === old) spaceOwners.delete(id);
+          for (const [key, request] of pending) {
+            if (request.ext !== old) continue;
+            clearTimeout(request.timer);
+            clearTimeout(request.orphanTimer);
+            pending.delete(key);
+            send(request.agent, {type:'res',id:request.id,ok:false,error:{code:'NO_EXTENSION',
+              message:'The browser connection was replaced during this operation. Its outcome may be unknown; it was not replayed. Inspect before continuing.'}});
+          }
           if (old.readyState === 1) old.close(4009, 'replaced');
         }
       }

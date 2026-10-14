@@ -15,7 +15,7 @@ const binary=process.env.BEAT_TEST_CHROME;
 if(!binary) throw new Error('Set BEAT_TEST_CHROME to an installed Chrome for Testing executable.');
 const root=path.resolve(import.meta.dirname,'..');
 const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'beat-spaces-'));
-const bridge=startBridge({port:0,writeInfo:false,token:randomBytes(16).toString('hex'),auditFn:()=>{}});
+const bridge=startBridge({port:0,writeInfo:false,token:randomBytes(16).toString('hex'),auditFn:event=>{if(process.env.BEAT_TEST_TRACE)console.log(JSON.stringify({event:event.ev,id:event.id,cmd:event.cmd,error:event.error}));}});
 await bridge.ready;
 const port=bridge.wss.address().port;
 const ext=path.join(tmp,'extension');fs.cpSync(path.join(root,'extension'),ext,{recursive:true});
@@ -24,7 +24,8 @@ for(const file of ['background.js','offscreen.js']){
  if(file==='background.js')s=s.replace("new Set(['tabs', 'spaces',","new Set(['__spaces_test_state', '__spaces_test_popup_url', 'tabs', 'spaces',").replace('const HANDLERS = {',"const HANDLERS = { async __spaces_test_state() { return chrome.windows.getAll({populate:true}); }, async __spaces_test_popup_url() { return {url:chrome.runtime.getURL('popup.html')}; },");
  fs.writeFileSync(p,s);
 }
-const fixture=http.createServer((req,res)=>{if(req.url==='/fixture.bin'){res.setHeader('Content-Type','application/octet-stream');res.end(Buffer.from('BeatBrowser binary fixture'));return;}res.setHeader('Content-Type','text/html');res.end(`<!doctype html><title>${req.url==='/human'?'Human workspace':'Agent fixture'}</title><h1>BeatBrowser fixture</h1><input id="input"><input id="file" type="file"><button id="button" onclick="document.querySelector('#output').textContent=document.querySelector('#input').value">Apply</button><output id="output"></output><script>window.framesRendered=0;function frame(){framesRendered++;requestAnimationFrame(frame)}requestAnimationFrame(frame)</script>`);});
+let writeRequests=0;
+const fixture=http.createServer((req,res)=>{if(req.url==='/test-write'){writeRequests++;res.statusCode=202;res.end('accepted');return;}if(req.url==='/fixture.bin'){res.setHeader('Content-Type','application/octet-stream');res.end(Buffer.from('BeatBrowser binary fixture'));return;}res.setHeader('Content-Type','text/html');res.end(`<!doctype html><title>${req.url==='/human'?'Human workspace':'Agent fixture'}</title><h1>BeatBrowser fixture</h1><input id="input"><input id="file" type="file"><button id="button" onclick="document.querySelector('#output').textContent=document.querySelector('#input').value">Apply</button><button id="silent" onclick="fetch('/test-write',{method:'POST'})">Signal</button><output id="output"></output><script>window.framesRendered=0;function frame(){framesRendered++;requestAnimationFrame(frame)}requestAnimationFrame(frame)</script>`);});
 fixture.listen(0,'127.0.0.1');await once(fixture,'listening');const base=`http://127.0.0.1:${fixture.address().port}`;
 const headless=process.env.BEAT_TEST_HEADED!=='1';
 const browser=spawn(binary,browserTestArgs({temporaryDirectory:tmp,extensionDirectory:ext,url:`${base}/human`,headless}),{stdio:['ignore','ignore','pipe']});
@@ -56,6 +57,8 @@ try {
  assert.equal(Buffer.from(fetched.base64,'base64').toString(),'BeatBrowser binary fixture');
  const fetchedPath=path.join(tmp,'download-fixture.bin');fs.writeFileSync(fetchedPath,Buffer.from(fetched.base64,'base64'));
  assert.equal(fs.readFileSync(fetchedPath,'utf8'),'BeatBrowser binary fixture');
+ const receipt=await call('click',{...scope,selector:'#silent'});
+ assert.equal(writeRequests,1);assert.match(receipt.text,/Requests observed/);
  const first=await frames();await new Promise(r=>setTimeout(r,6500));const second=await frames();assert(second.frames>first.frames,'Background animation must continue beyond the old 5s detach interval');
  const after=await call('__spaces_test_state');const same=after.find(w=>w.id===human.id);const agent=after.find(w=>w.id===s.windowId);
  assert.equal(same.tabs.find(t=>t.active).id,human.tabs.find(t=>t.active).id);
@@ -75,7 +78,10 @@ try {
  await assert.rejects(call('type',{...scope,selector:'#input',text:'must-not-run-before-review'}),/user/);
  const popup=await checkSpacesPopup({profileDirectory:path.join(tmp,'profile'),url:(await call('__spaces_test_popup_url')).url,output:path.join(root,'screenshots-local/taskspaces-popup.png')});
  assert.equal((await call('spaces',{action:'status',spaceId:s.spaceId})).state,'running');
+ await call('spaces',{action:'report',spaceId:s.spaceId,message:'Both test pages completed.',needsConfirmation:true});
+ const panel=await checkSpacesPopup({profileDirectory:path.join(tmp,'profile'),url:(await call('__spaces_test_popup_url')).url.replace('popup.html','panel.html'),output:path.join(root,'screenshots-local/taskspaces-panel.png')});
+ assert.equal((await call('spaces',{action:'status',spaceId:s.spaceId})).state,'running');
  await call('spaces',{action:'stop',spaceId:s.spaceId});await assert.rejects(call('type',{...scope,selector:'#input',text:'must-not-type'}),/stopped/);
- console.log(JSON.stringify({passed:true,popup,headless,mockKeychain:process.platform==='darwin',backgroundInput:true,namedPages:true,fileInputUpload:true,binaryFetchToDisk:true,reviewBlocksInput:true,framesBefore:first.frames,framesAfter:second.frames,visibility:second.visibility,humanWindowFocusUnchanged:headless?null:true,humanTabUnchanged:true,agentWindowMinimized:headless?null:true,backgroundScreenshot,screenshotReturnsOrReportsLimitation:true,stopBlocksInput:true},null,2));
+ console.log(JSON.stringify({passed:true,popup,panel,headless,writeRequestEvidence:true,mockKeychain:process.platform==='darwin',backgroundInput:true,namedPages:true,fileInputUpload:true,binaryFetchToDisk:true,reviewBlocksInput:true,framesBefore:first.frames,framesAfter:second.frames,visibility:second.visibility,humanWindowFocusUnchanged:headless?null:true,humanTabUnchanged:true,agentWindowMinimized:headless?null:true,backgroundScreenshot,screenshotReturnsOrReportsLimitation:true,stopBlocksInput:true},null,2));
 } catch(e){ console.error(e.message);console.error(stderr.slice(-1500));process.exitCode=1; }
 finally{socket?.close();browser.kill('SIGTERM');fixture.close();bridge.close();await new Promise(r=>setTimeout(r,500));fs.rmSync(tmp,{recursive:true,force:true});}

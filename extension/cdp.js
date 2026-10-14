@@ -326,6 +326,17 @@ chrome.permissions?.onAdded?.addListener(wireDebuggerEvents);
 
 export const pendingDialog = (tabId) => dialogs.get(tabId) || null;
 
+// Upstream-inspired diagnosis; no automatic dialog acceptance or foregrounding.
+export async function probeDialog(tabId) {
+  if (dialogs.has(tabId)) return dialogs.get(tabId);
+  await withL2(tabId, async () => {});
+  await new Promise(resolve => setTimeout(resolve, 150));
+  return dialogs.get(tabId) || null;
+}
+export async function unfreeze(tabId) {
+  return withL2(tabId, cmd => cmd('Page.setWebLifecycleState', {state:'active'}));
+}
+
 export async function handleDialog(tabId, { accept = false, promptText } = {}) {
   const d = dialogs.get(tabId);
   if (!d) return null;

@@ -156,9 +156,14 @@ test('TaskSpace profile selection and page membership cannot fall back to anothe
   await reply('released', {spaceId:'multi',pages:[{label:'main',tabId:42}]});
   send('released-page', {spaceId:'multi'}, 'snapshot', 43);
   assert.equal((await response('released-page')).error.code, 'SPACE_STOPPED');
+  send('in-flight', {spaceId:'multi'}, 'snapshot', 42);
+  await until(() => second.messages.some(m => m.id === 'in-flight'));
   const replacement = await peer(port, true);
   hello(replacement, true, 'second-profile');
   await until(() => replacement.messages.some(m => m.type === 'welcome'));
+  const interrupted = await response('in-flight');
+  assert.equal(interrupted.error.code, 'NO_EXTENSION');
+  assert.match(interrupted.error.message, /not replayed/);
   send('replaced', {spaceId:'multi'}, 'snapshot', 42);
   assert.equal((await response('replaced')).error.code, 'SPACE_STOPPED');
   assert.equal(replacement.messages.some(m => m.id === 'replaced'), false);

@@ -1597,7 +1597,20 @@
   
   //
   
+  let readinessObserver = null;
+  let readinessAdded = 0;
   async function doReady(p) {
+    if (p.probe) {
+      if (!readinessObserver && document.documentElement) {
+        readinessObserver = new MutationObserver(records => {
+          for (const record of records) readinessAdded += record.addedNodes.length;
+        });
+        readinessObserver.observe(document.documentElement, {childList:true,subtree:true});
+      }
+      const added = readinessAdded;
+      readinessAdded = 0;
+      return {data:{added,loading:document.readyState === 'loading'}};
+    }
     if (document.readyState === 'loading') {
       await new Promise((r) => document.addEventListener('DOMContentLoaded', r, { once: true }));
     }

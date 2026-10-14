@@ -34,13 +34,13 @@ Ego's reviewed SDK at `dca7003349c5f7132189ba00547cbbd7ff8e597e` expects a nativ
 
 Our task window contains ordinary website pages and Chrome's toolbar. BeatBrowser owns the extension icon/popup, page control marks and task controls. There is no Ego product UI to strip out. Chrome's address/tab bars cannot become BeatBrowser chrome through CSS in an extension; replacing those requires a separate browser product, which is not the current architecture.
 
-Recommended next UI consolidation: a BeatBrowser-branded side panel reusing the existing TaskSpace state and controls. It should show tasks/pages, recent progress, review requests and View/Resume/Stop without automatically opening or focusing. The upstream panel is a useful interaction reference; its Chinese branding, connection IDs and task model should not be copied wholesale. This review did not migrate the popup to a side panel.
+Recommended next UI consolidation: a BeatBrowser-branded side panel reusing the existing TaskSpace state and controls. It should show tasks/pages, recent progress, review requests and View/Resume/Stop without automatically opening or focusing. The upstream panel is a useful interaction reference; its Chinese branding, connection IDs and task model should not be copied wholesale. Follow-up implementation added a BeatBrowser-branded side panel sharing the popup controller and TaskSpace state; the popup remains a compact entry point.
 
 ## Porting decisions
 
 - Applied: tab-close cleanup fix and corrected native-download guidance.
 - Verified existing functionality: focus emulation is already present; background TaskSpace file-input upload and binary fetch/save work in the isolated headless fixture.
-- Next candidates: own side panel, readiness timing, bounded stall diagnostics, write-request evidence. Integrate separately with TaskSpace ownership and uncertain-write tests.
+- Follow-up implemented: own side panel, worker-side readiness timing, bounded stall diagnostics, pre-dispatch thaw, write-request evidence and no automatic no-change input replay. Added ownership/uncertain-write checks. Automatic playbook drafts and the full upstream welcome/version system remain deferred.
 - Not established as solved upstream: minimized headed screenshot rendering, browser-native ownership/focus interception, complete Download/FileChooser event APIs.
 - No upstream whole-tree merge, browser restart, extension reload, npm publication or daily-profile changes were performed.
 

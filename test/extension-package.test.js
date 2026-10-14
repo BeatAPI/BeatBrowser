@@ -28,7 +28,7 @@ test('extension release ZIP loads from its root and includes matching notices an
     assert.equal(manifest.version, version);
     assert.ok(!('key' in manifest));
     const members = new Set(execFileSync('unzip', ['-Z1', zip], { encoding: 'utf8' }).trim().split('\n'));
-    for (const name of ['background.js', 'offscreen.html', 'offscreen.js', 'popup.html', 'popup.js', 'icons/icon128.png']) {
+    for (const name of ['background.js', 'offscreen.html', 'offscreen.js', 'popup.html', 'popup.js', 'panel.html', 'workspace.css', 'content-transport.js', 'write-evidence.js', 'icons/icon128.png']) {
       assert.ok(members.has(name), `Missing runtime file: ${name}`);
     }
     for (const name of ['LICENSE', 'PRIVACY.md']) assert.equal(read(name), fs.readFileSync(path.join(root, name), 'utf8'));

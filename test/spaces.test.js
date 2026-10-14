@@ -6,7 +6,7 @@ function setup() {
   const chrome={
     storage:{session:{get:async()=>structuredClone(data),set:async x=>{data=structuredClone({...data,...x})}}},
     windows:{create:async p=>{calls.push(['create',p]);tabs.set(8,{id:8,windowId:4});return{id:4,tabs:[{id:8}]};},update:async(id,p)=>calls.push(['window',id,p]),onFocusChanged:{addListener:fn=>listeners.focus=fn}},
-    tabs:{get:async id=>tabs.get(id),create:async p=>{calls.push(['tab-create',p]);const tab={id:nextTab++,windowId:p.windowId};tabs.set(tab.id,tab);return tab;},remove:async id=>{calls.push(['tab-remove',id]);tabs.delete(id);},query:async p=>[...tabs.values()].filter(t=>t.windowId===p.windowId),onCreated:{addListener:fn=>listeners.created=fn},onRemoved:{addListener:fn=>listeners.remove=fn}},
+    tabs:{get:async id=>tabs.get(id),update:async(id,p)=>{calls.push(['tab-update',id,p]);Object.assign(tabs.get(id),p);},create:async p=>{calls.push(['tab-create',p]);const tab={id:nextTab++,windowId:p.windowId};tabs.set(tab.id,tab);return tab;},remove:async id=>{calls.push(['tab-remove',id]);tabs.delete(id);},query:async p=>[...tabs.values()].filter(t=>t.windowId===p.windowId),onCreated:{addListener:fn=>listeners.created=fn},onRemoved:{addListener:fn=>listeners.remove=fn}},
     notifications:{create:async(id,p)=>{calls.push(['notification',id,p]);}},
     alarms:{create(){},onAlarm:{addListener:fn=>listeners.alarm=fn}}
   };
@@ -99,4 +99,15 @@ test('popup events are bounded and a foreign popup pauses without moving it',asy
  const result=await h.spaces.command({action:'events',spaceId:'space-one',after:0},'a');
  assert.equal(result.state,'user');assert(result.events.some(e=>e.type==='popup'&&e.tabId===90));
  assert.equal(result.pages.length,1);assert.equal(h.held.size,0);
+});
+
+test('human sidebar can inspect history and hand off a named page without resuming',async()=>{
+ const h=setup();await open(h);
+ await h.spaces.command({action:'new-page',spaceId:'space-one',pageLabel:'reference',url:'https://example.test'},'a');
+ const history=await h.spaces.humanCommand({action:'events',spaceId:'space-one',after:0});
+ assert(history.events.some(e=>e.type==='page-added'));
+ await h.spaces.humanCommand({action:'handoff',spaceId:'space-one',pageLabel:'reference'});
+ assert.deepEqual(h.calls.find(c=>c[0]==='tab-update'),['tab-update',9,{active:true}]);
+ await assert.rejects(h.spaces.guard(9,'a'),/user/);
+ assert.equal(h.held.size,0);
 });

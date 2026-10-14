@@ -5,6 +5,9 @@
 
 import * as cdp from './cdp.js';
 import { createSpaces } from './spaces.js';
+import { createContentTransport } from './content-transport.js';
+import { createWriteEvidence, writesText } from './write-evidence.js';
+const writeEvidence = createWriteEvidence(chrome);
 const taskSpaces = createSpaces(chrome, cdp);
 import { matchChallenge, hostOf, hostMatches, L2_ORIGINS_SEED } from './risk.js';
 import { CRED_URL, redactCreds } from './redact.js';
@@ -149,7 +152,14 @@ function directSend(msg) {
 
 //
 
+let directConnecting = false;
 async function directConnect() {
+  if (directConnecting) return;
+  directConnecting = true;
+  try { await connectDirectOnce(); }
+  finally { directConnecting = false; }
+}
+async function connectDirectOnce() {
   if (directWs && directWs.readyState <= 1) return;
   
   
@@ -178,7 +188,7 @@ async function directConnect() {
             if (x.type === 'ping') { if (sock.readyState === 1) sock.send(JSON.stringify({ type: 'pong' })); return; }
             onMessage(x);
           };
-          sock.onclose = () => { directWs = null; stopDirectPing(); setBadge(false); };
+          sock.onclose = () => { if (directWs !== sock) return; directWs = null; stopDirectPing(); setBadge(false); };
           sock.onerror = () => {};
           resolve(sock);
         };
@@ -687,6 +697,7 @@ async function ensureContent(tabId, frameId = 0) {
   if (frameId !== 0) throw err('NOT_INTERACTABLE', `Frame f${frameId} cannot be injected (it may have navigated away or be sandboxed)`);
   
   
+  if (await taskSpaces.contains(tabId)) throw err('PAGE_BUSY', 'Task page is not responding. Inspect it before explicitly reloading; BeatBrowser will not discard task state automatically.');
   await chrome.tabs.reload(tabId);
   await waitForLoad(tabId);
   await sleep(300);
@@ -747,30 +758,7 @@ const contentBudget = (p) => {
   return 15000;
 };
 
-async function toContent(tabId, payload, frameId = 0) {
-  await ensureContent(tabId, frameId);
-  let r;
-  try {
-    let timer;
-    const budget = contentBudget(payload);
-    r = await Promise.race([
-      chrome.tabs.sendMessage(tabId, payload, { frameId }),
-      new Promise((_, rej) => {
-        timer = setTimeout(() => rej(err('DIALOG_BLOCKING',
-          `The page script did not respond for ${Math.round(budget / 1000)} seconds. The most common cause is an `
-          + `alert / confirm / "Leave this page?" dialog: once it opens, the page's JS stops entirely and the extension cannot reach it.\n`
-          + `Ask the user to close the dialog by hand in the browser. Do not retry as-is; wait takes the same path and will hang the same way.\n`
-          + `(It could also be a very heavy script; in that case retrying later helps.)`)), budget);
-      }),
-    ]).finally(() => clearTimeout(timer));
-  } catch (e) {
-    if (e?.code) throw e;
-    throw err('TIMEOUT', `Page not responding (${e.message})`);
-  }
-  if (!r) throw err('INTERNAL', 'The page script returned nothing');
-  if (r.error) throw err(r.error.code, r.error.message);
-  return r.data;
-}
+const toContent = createContentTransport({chrome, cdp, ensureContent, contentBudget});
 
 function waitForLoad(tabId, timeout = 15000) {
   return new Promise((resolve) => {
@@ -814,13 +802,14 @@ async function waitForReady(tabId, { hardCap = 12000, quiet = 300, expectNav = f
     return;   
   }
   const deadline = Date.now() + hardCap;
+  let quietSince = Date.now();
   while (Date.now() < deadline) {
     try {
-      const r = await toContent(tabId, { __hc: 'ready', quiet, budget: deadline - Date.now() });
-      if (r?.ready) return;
-    } catch {
-      
-      
+      const r = await toContent(tabId, { __hc: 'ready', probe: true });
+      if (r?.loading || r?.added >= 5) quietSince = Date.now();
+      else if (Date.now() - quietSince >= quiet) return;
+    } catch (error) {
+      if (['TAB_DISCARDED', 'DIALOG_BLOCKING', 'PAGE_FROZEN'].includes(error.code)) throw error;
     }
     await sleep(80);
   }
@@ -1220,6 +1209,7 @@ async function performCore(id, cmd, p, { blockSensitive = false } = {}, ctx) {
   if (cmd === 'click' && !hasTarget && Number.isFinite(params.x) && Number.isFinite(params.y)) {
     const base = await toContent(id, { __hc: 'locate', baselineOnly: true }, frameId).catch(() => null);
     const x = Number(params.x), y = Number(params.y);
+    const writeMark = await writeEvidence.arm(id, frameId);
     let note;
     if (params.dragTo && Number.isFinite(params.dragTo.x) && Number.isFinite(params.dragTo.y)) {
       await cdp.drag(id, x, y, Number(params.dragTo.x), Number(params.dragTo.y));
@@ -1229,6 +1219,7 @@ async function performCore(id, cmd, p, { blockSensitive = false } = {}, ctx) {
       note = `Clicked coordinates (${x}, ${y}) (real event)`;
     }
     const ev = await settle(id, frameId, { ...params, ref: undefined }, base?.baseline, before);
+    ev.writes = await writeEvidence.read(id, writeMark, frameId);
     const after = (await chrome.tabs.get(id)).url;
     return { note, l2note: '', ev, navigated: before !== after, upgraded: false };
   }
@@ -1274,6 +1265,7 @@ async function performCore(id, cmd, p, { blockSensitive = false } = {}, ctx) {
     return n;
   };
 
+  const writeMark = await writeEvidence.arm(id, frameId);
   let note = '', usedL2 = layer === 'L2', l2note = '';
   try {
     note = usedL2 ? await execL2(id, cmd, params, loc) : await runL1();
@@ -1287,29 +1279,17 @@ async function performCore(id, cmd, p, { blockSensitive = false } = {}, ctx) {
   }
 
   let ev = await settle(id, frameId, params, loc?.baseline, before);
+  ev.writes = await writeEvidence.read(id, writeMark, frameId);
 
   
   
-  let upgraded = false;
+  const upgraded = false;
   if (!ev.changed && !usedL2 && l2ok && !params.real) {
-    if (loc?.sensitive) {
-      l2note = ' (not retried automatically with real events: this is a submit/pay/delete kind of action, '
-             + 'and a retry could run it twice. Pass real:true explicitly if you are sure it is needed)';
-    } else {
-      try {
-        note = await execL2(id, cmd, params, loc);
-        usedL2 = true;
-        upgraded = true;
-        ev = await settle(id, frameId, params, loc?.baseline, before);
-      } catch (e) {
-        l2note = ` (ordinary events had no effect, and real events could not be used either: ${e.message})`;
-      }
-    }
+    l2note = ev.writes.length
+      ? ' (write requests were observed; input was not repeated)'
+      : ' (input was not repeated: no visible change does not prove failure. Inspect the page before explicitly trying real:true)';
   }
 
-  
-  
-  
   const challenge = matchChallenge(ev.challengeEv);
   if (challenge) {
     const learned = await rememberL2Origin(before, challenge);
@@ -1332,7 +1312,7 @@ async function performCore(id, cmd, p, { blockSensitive = false } = {}, ctx) {
   
   
   const child = await childOpenedSince(id, startedAt);
-  if (child) {
+  if (child && !await taskSpaces.contains(id)) {
     await waitForReady(child.id);
     await setActiveTabId(child.id);
     await claimTab(ctx?.sid, child.id, ctx);
@@ -1403,6 +1383,7 @@ function effectLines({ note, l2note, ev, upgraded, followed }) {
     note + (upgraded ? '  ←  ordinary events had no effect, switched to real events automatically' : ''),
     l2note,
     ev.expectUnmet ? `⚠️ Expectation not met (waited ${SETTLE_MS / 1000}s): ${ev.expectUnmet}. Do not proceed as if it succeeded.` : '',
+    ev.writes?.length ? `Requests observed during this action: ${writesText(ev.writes)}. These may include unrelated traffic; verify the result before continuing.` : '',
     ev.changed
       ? `Effect: ${ev.parts.join('; ')}` + (ev.volatile ? '  (note: this page is also changing on its own)' : '')
       : ev.unattributable
@@ -1675,7 +1656,7 @@ const HANDLERS = {
     
     
     
-    await toContent(id, { __hc: 'ready', quiet: 150, budget: 800 }).catch(() => {});
+    await waitForReady(id, {quiet:150,hardCap:800}).catch(() => {});
     const snap = await guardCreds(id, await snapshotAll(id, p));
     return drift ? { ...snap, text: drift + '\n' + snap.text } : snap;
   },
@@ -1794,7 +1775,7 @@ const HANDLERS = {
         if (!r.ev.changed) {
           stopped = {
             label,
-            why: `This step produced no change attributable to it, and the later steps probably rest on a wrong premise, `
+            why: (r.ev.writes?.length ? `Requests were observed (${writesText(r.ev.writes)}), but business success is not verified. ` : '') + `This step produced no change attributable to it, and the later steps probably rest on a wrong premise, `
               + `so the run stops here. ${r.l2note || ''}`,
           };
           return;
@@ -2461,8 +2442,8 @@ chrome.tabs.onUpdated.addListener((tabId, info) => {
 
 chrome.runtime.onMessage.addListener((m, _s, sendResponse) => {
   if (m?.__hcPopup === 'spaces') {
-    if (_s.id !== chrome.runtime.id || _s.url !== chrome.runtime.getURL('popup.html')) {
-      sendResponse({error:'TaskSpace controls are available only in the extension popup.'});
+    if (_s.id !== chrome.runtime.id || !['popup.html', 'panel.html'].some(path => _s.url === chrome.runtime.getURL(path))) {
+      sendResponse({error:'TaskSpace controls are available only in the extension workspace.'});
       return false;
     }
     taskSpaces.humanCommand(m.params || {}).then(sendResponse).catch(error => sendResponse({error:error.message}));

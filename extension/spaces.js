@@ -188,7 +188,16 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
         s.notifications = p.notifications === true;
       } else if (p.action === 'stop' || p.action === 'handoff') {
         if (!TERMINAL.has(s.state)) await pause(s, p.action === 'stop' ? 'stopped' : 'user', spaces);
-        if (p.action === 'handoff') await chrome.windows.update(s.windowId, { state: 'normal', focused: true });
+        if (p.action === 'handoff') {
+          if (p.pageLabel) {
+            const page = pages(s).find(page => page.label === p.pageLabel);
+            if (!page) fail('This page is no longer managed.');
+            const tab = await chrome.tabs.get(page.tabId);
+            if (tab.windowId !== s.windowId) fail('The page moved; inspect its current window manually.');
+            await chrome.tabs.update(page.tabId, {active:true});
+          }
+          await chrome.windows.update(s.windowId, { state: 'normal', focused: true });
+        }
       } else if (p.action === 'resume') {
         if (p.userConfirmed !== true) fail('Resume requires userConfirmed:true after the user asks to return control.');
         if (TERMINAL.has(s.state)) fail('A stopped or finished TaskSpace cannot resume. Start a new explicitly authorized task.');
@@ -252,7 +261,7 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
   const contains = async tabId => Object.values(await read()).some(s => pages(s).some(p => p.tabId === tabId));
   async function humanCommand(p) {
     if (p.action === 'list') return { spaces: Object.values(await read()).map(publicSpace) };
-    if (!['handoff', 'resume', 'stop', 'notifications'].includes(p.action)) fail('Unknown human control.');
+    if (!['handoff', 'resume', 'stop', 'notifications', 'events'].includes(p.action)) fail('Unknown human control.');
     const s = (await read())[p.spaceId];
     if (!s) fail('TaskSpace no longer exists.');
     return command({ ...p, userConfirmed: p.action === 'resume' }, s.owner);

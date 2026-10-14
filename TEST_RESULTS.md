@@ -6,6 +6,17 @@ live runs are small samples and are labelled as such.
 
 ## Automated checks
 
+### 1.3.0 local preview on 2026-10-14
+
+- **242 tests passed**, zero failures/skips. Syntax: 59 JavaScript files. Narrow security/source scan: 95 files, no findings; not an exhaustive security audit.
+- Isolated package installation: 83 files, matching 1.3.0 metadata, stable launcher, SDK import and 24 Normal MCP tools passed. No npm publication or daily-client upgrade was performed.
+- Rechecked upstream heads: huashu-chrome `84d5ee4053`, Ego public SDK `dca7003349`; both match the reviewed revisions.
+- Real Chrome 153 headless with a disposable profile/private bridge and mock keychain: two named pages, background input, file-input upload, byte-verified binary save, one POST with method/status evidence, confirmation pause, stop and screenshot passed. Rendering advanced from 122 to 513 frames.
+- Actual extension popup and sidebar document rendered task progress; both human-resume controls passed through extension messaging. Sidebar page inventory and activity history passed; screenshot visually inspected. This does not certify the native side-panel container on the user's desktop.
+- Connection replacement now fails pending requests explicitly with unknown-outcome guidance. Timeout diagnosis and action receipts never automatically replay an uncertain write. Tests cover these behaviors and named-page human handoff.
+- Still unverified in this preview: headed macOS focus/minimization, minimized headed capture, native download/file-picker dialogs, system notification delivery, and individual Grok Bot/Muse clients. No real profile, credentials or keychain permission were used.
+- See [preview installation and acceptance](docs/PREVIEW_TESTING.md) and [upstream maintenance](docs/UPSTREAM_MAINTENANCE.md). Older entries below are historical snapshots, not the current preview totals.
+
 Run from a clean checkout with Node.js 20+ after `npm ci`:
 
 | Command | Result |

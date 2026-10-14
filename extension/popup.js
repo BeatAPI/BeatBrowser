@@ -104,15 +104,34 @@ l2btn.onclick = () => {
   });
 };
 
+const isPanel = document.body.classList.contains('panel');
+const messageArea = document.getElementById('spaces-message');
+const workspaceButton = document.getElementById('open-workspace');
+if (workspaceButton) {
+  workspaceButton.disabled = true;
+  chrome.windows.getCurrent().then(win => {
+    workspaceButton.disabled = false;
+    workspaceButton.onclick = () => {
+      chrome.sidePanel.open({windowId:win.id}).then(() => window.close()).catch(error => {
+        messageArea.textContent = `Could not open the sidebar: ${error.message}`;
+      });
+    };
+  }).catch(() => { messageArea.textContent = 'Open BeatBrowser from the Chrome toolbar to use its sidebar.'; });
+}
+let renderSequence = 0;
 async function refreshSpaces() {
+  const sequence = ++renderSequence;
   const root=document.getElementById('spaces-list');
   const result=await chrome.runtime.sendMessage({__hcPopup:'spaces',params:{action:'list'}});
+  if (sequence !== renderSequence) return;
   if (result?.error) { document.getElementById('spaces-message').textContent=result.error;return; }
   root.replaceChildren();
   const spaces=result?.spaces || [];
-  if (!spaces.length) { root.textContent='No task spaces yet.';return; }
-  for (const space of spaces.slice(-20).reverse()) {
-    const card=document.createElement('div');card.className='space';
+  if (!spaces.length) { root.className='empty-space';root.textContent='No tasks yet. Ask your agent to start a BeatBrowser background task.';return; }
+  root.className='';
+  const priority = state => state === 'user' ? 0 : ['stopped','finished'].includes(state) ? 2 : 1;
+  for (const space of [...spaces].reverse().sort((a,b)=>priority(a.state)-priority(b.state)).slice(0,20)) {
+    const card=document.createElement('div');card.className='space';card.dataset.state=space.state;
     const title=document.createElement('strong');title.textContent=space.label;
     const state=document.createElement('small');state.textContent=space.state==='user'?'Paused · your confirmation needed':space.state;
     const progress=document.createElement('p');progress.textContent=space.progress || 'No progress report yet.';
@@ -129,7 +148,7 @@ async function refreshSpaces() {
     if (['user','interrupted','expired'].includes(space.state)) choices.push(['resume','Confirm / resume']);
     if (!['stopped','finished'].includes(space.state)) choices.push(['stop','Stop']);
     for (const [action,label] of choices) {
-      const button=document.createElement('button');button.type='button';button.textContent=label;
+      const button=document.createElement('button');button.type='button';button.textContent=label;button.dataset.action=action;
       button.onclick=async()=>{
         button.disabled=true;
         const reply=await chrome.runtime.sendMessage({__hcPopup:'spaces',params:{action,spaceId:space.spaceId}});
@@ -138,7 +157,40 @@ async function refreshSpaces() {
       };
       actions.append(button);
     }
-    card.append(title,state,progress,pageCount,notifyLabel,actions);root.append(card);
+    card.append(title,state,progress,pageCount,notifyLabel,actions);
+    if (isPanel) {
+      const list=document.createElement('ul');list.className='page-list';
+      for (const page of space.pages || []) {
+        const row=document.createElement('li');
+        const name=document.createElement('span');name.textContent=`${page.label} · ${page.openedBy === 'user' ? 'your page' : 'agent page'}`;
+        const view=document.createElement('button');view.textContent='View';view.type='button';
+        view.onclick=async()=>{
+          view.disabled=true;
+          try {
+            const result=await chrome.runtime.sendMessage({__hcPopup:'spaces',params:{action:'handoff',spaceId:space.spaceId,pageLabel:page.label}});
+            messageArea.textContent=result?.error || 'Task paused. You have control.';
+          } catch(error) { messageArea.textContent=error.message; }
+          finally { view.disabled=false; }
+        };
+        row.append(name,view);list.append(row);
+      }
+      const history=document.createElement('details');history.className='timeline';
+      const summary=document.createElement('summary');summary.textContent='Activity';
+      const entries=document.createElement('ol');history.append(summary,entries);
+      history.ontoggle=async()=>{
+        if (!history.open) return;
+        const log=await chrome.runtime.sendMessage({__hcPopup:'spaces',params:{action:'events',spaceId:space.spaceId,after:0}});
+        entries.replaceChildren();
+        for (const event of (log?.events || []).slice(-12).reverse()) {
+          const item=document.createElement('li');
+          item.textContent=`${new Date(event.at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} · ${event.type.replaceAll('-',' ')}${event.pageLabel ? ' · '+event.pageLabel : ''}`;
+          entries.append(item);
+        }
+        if (log?.error) { const item=document.createElement('li');item.textContent=log.error;entries.append(item); }
+      };
+      card.append(list,history);
+    }
+    root.append(card);
   }
 }
 refreshSpaces().catch(()=>{document.getElementById('spaces-message').textContent='Task spaces are unavailable.';});
