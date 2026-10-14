@@ -302,8 +302,9 @@ const TOOLS = [
   {
     name: 'download',
     description:
-      'Download a URL via the browser itself. For anything large (video, archives) where fetch+binary would ' +
-      'blow up at its 12MB cap. Straight to disk, never opens the OS save dialog.',
+      'Download a URL using Chrome as a fallback when fetch with binary:true and savePath cannot handle it. ' +
+      'Try via:"page" for sites requiring page credentials or Referer. Chrome settings or policy may show a save dialog; ' +
+      'explain that possibility and obtain permission before using this fallback during background work.',
     inputSchema: {
       type: 'object',
       properties: {

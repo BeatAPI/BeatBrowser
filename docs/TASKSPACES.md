@@ -38,6 +38,8 @@ An earlier headed fixture observed unchanged human-window focus and selected tab
 
 The synthetic launcher defaults to headless, enforces a disposable OS-temp profile and uses `--use-mock-keychain` on macOS. Those settings never apply to everyday Chrome. No real keychain permission was granted and no user password/cookie extraction was added. Headless success does not prove a headed permission dialog has disappeared.
 
+Existing upload and binary fetch/save paths were also exercised successfully inside the headless task fixture. Missing full Download/FileChooser contracts do not mean ordinary uploads/downloads are missing; native Chrome downloads can still show save UI depending on settings. See [upstream review](HUASHU_UPSTREAM_REVIEW.md).
+
 Remaining work: reliable minimized headed screenshot rendering; native-level focus/ownership interception; durable element references; uniform cross-origin-frame event handling; complete Download/FileChooser/dialog contracts; action-bound approval evidence; real signed-in model-site acceptance. Progress notes are not verified outcomes. A finish receipt reports page disposition, not proof a business action succeeded.
 
 ```sh

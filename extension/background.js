@@ -2447,7 +2447,7 @@ chrome.tabs.onRemoved.addListener(async (tabId) => {
   if (Object.keys(shrunk).length) await chrome.storage.local.set(shrunk);
   const sess = await chrome.storage.session.get(null);
   const gone = Object.keys(sess).filter((k) =>
-    (k.startsWith('seen:') && k.endsWith(':' + tabId)) || k === frameSnapKey(tabId) || k === childKey(tabId));
+    (k.startsWith('seen:') && k.endsWith(':' + tabId)) || k === frameSnapKey(tabId));
   if (gone.length) await chrome.storage.session.remove(gone);
   await noteMarked(tabId, false);
   emit('tab_closed', { tabId });

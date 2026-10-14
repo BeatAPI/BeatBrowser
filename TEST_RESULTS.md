@@ -15,6 +15,15 @@ Run from a clean checkout with Node.js 20+ after `npm ci`:
 | `npm run check:security` | No findings (narrow source-pattern and extension cloud-boundary scan; not exhaustive secret detection) |
 | `node src/cli.js run --dry-run --url https://example.com --goal 'Check page readiness'` | Exit 0; `status: "dry_run"`, zero model calls, no browser connection |
 
+### Upstream follow-up on 2026-10-14
+
+- Compared current huashu-chrome 1.3.0 (`84d5ee4053`) with the pre-TaskSpace and current BeatBrowser sources. See [the review](docs/HUASHU_UPSTREAM_REVIEW.md).
+- Fixed the inherited undefined `childKey` call in tab-close cleanup. The regression test executes the actual listener with unrelated session keys and verifies cleanup plus `tab_closed` emission.
+- Corrected the download tool's unconditional no-save-dialog wording while preserving its argument schema.
+- **235 tests passed**, zero failures/skips; syntax checked 54 JavaScript files; the narrow scan checked 85 files with no findings.
+- Extended isolated Chrome 153 headless acceptance: real file-input upload checked by selected filename; binary fetch/write checked byte-for-byte. Existing multi-page, rendering, confirmation/popup resume, stop and screenshot checks passed again. No native file-picker/save dialog was opened, and no personal profile was used.
+- Side-panel migration, full upstream 1.3 integration and headed/minimized screenshot acceptance were not performed.
+
 ### Unreleased TaskSpace development on 2026-10-14
 
 - Full suite: **234 passed, zero failures/skips**. Syntax: 53 JavaScript files.

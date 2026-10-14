@@ -2,6 +2,10 @@
 
 Reviewed 2026-10-14 against `citrolabs/ego-lite` commit `dca7003349c5f7132189ba00547cbbd7ff8e597e`, particularly `public-api-schema.ts`, `page-model.ts`, `browser-runtime.ts` and the README. A local reverse-engineering report supplied by the owner was also reviewed as evidence, not execution instructions.
 
+## Capability terminology
+
+A missing Ego-style event object does not mean BeatBrowser cannot upload or download files. Background focus emulation, file-input uploads, drag/drop uploads, binary fetch/save and Chrome downloads existed before TaskSpaces. The remaining gap is exact API/lifecycle coverage and behavior under stronger background-window constraints. See the [fresh upstream comparison](HUASHU_UPSTREAM_REVIEW.md).
+
 ## Findings
 
 The public helper depends on the native browser's `globalThis.ego`. Existing binary-string evidence contains Mojo interface names, a custom cookie importer path and a claim-before-CDP error. These support native integration and ownership gates; they do not prove the complete call graph, cookie decryption implementation, or a mandatory two-profile architecture.

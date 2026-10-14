@@ -27,7 +27,11 @@ function tempDir(t) {
 test('TaskSpaces adds scope while preserving every existing tool contract', () => {
   const tools = getToolList();
   const baseline = tools.filter(tool => tool.name !== 'spaces').map(tool => {
-    const copy = structuredClone(tool); delete copy.inputSchema.properties.spaceId; return copy;
+    const copy = structuredClone(tool); delete copy.inputSchema.properties.spaceId;
+    // Preserve the old contract fingerprint except the corrected download promise.
+    if (copy.name === 'download') copy.description = 'Download a URL via the browser itself. For anything large (video, archives) where fetch+binary would ' +
+      'blow up at its 12MB cap. Straight to disk, never opens the OS save dialog.';
+    return copy;
   });
   assert.deepEqual(baseline.map((tool) => tool.name), [
     'snapshot', 'navigate', 'click', 'type', 'select', 'fill', 'key', 'read_text',

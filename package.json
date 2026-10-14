@@ -34,7 +34,8 @@
     "docs/TASKSPACES.md",
     "docs/EGO_PARITY_REVIEW.md",
     "docs/EGO_API_PARITY.csv",
-    "docs/JAVASCRIPT.md"
+    "docs/JAVASCRIPT.md",
+    "docs/HUASHU_UPSTREAM_REVIEW.md"
   ],
   "engines": {
     "node": ">=20"
