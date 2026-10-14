@@ -1,3 +1,4 @@
+import './ui-language.js';
 // [INPUT] Identified local sessions and explicit task-window requests.
 // [OUTPUT] Owned background workspaces, page handles and lifecycle receipts.
 // [POS] BeatBrowser execution isolation. [PROTOCOL] No product accounts or job queue.
@@ -23,6 +24,7 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
     tabId: pages(s)[0]?.tabId ?? null, pages: pages(s).map(p => ({ ...p })),
     state: s.state, expiresAt: s.expiresAt, progress: s.progress || '',
     updatedAt: s.updatedAt || null, notifications: !!s.notifications,
+    pauseReason: s.pauseReason || null,
     sequence: s.sequence || 0,
   });
   function record(s, type, details = {}) {
@@ -33,15 +35,17 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
   async function notify(s, title) {
     if (!s.notifications || !chrome.notifications) return;
     await chrome.notifications.create(`beat-space-${s.id}`, {
-      type: 'basic', iconUrl: 'icons/icon128.png', title,
+      type: 'basic', iconUrl: 'icons/icon128.png',
+      title: globalThis.BeatBrowserUI.text(title, await globalThis.BeatBrowserUI.read()),
       message: (s.progress || s.label).slice(0, 250),
     }).catch(() => {});
     s.lastNotifiedAt = now();
     s.lastNotifiedSequence = s.sequence;
   }
-  async function pause(s, state, spaces) {
+  async function pause(s, state, spaces, reason = state) {
     s.state = state;
-    record(s, state);
+    s.pauseReason = reason;
+    record(s, state, {reason});
     // Persist the gate before releasing CDP, so the next command cannot proceed.
     await write(spaces);
     await Promise.all(pages(s).map(p => cdp.releaseBackground(p.tabId)));
@@ -63,7 +67,7 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
       if (mayFocus) fail('This operation would foreground a task window. Use an explicit TaskSpace handoff instead.');
       const tab = await chrome.tabs.get(tabId);
       if (tab.windowId !== s.windowId) {
-        await pause(s, 'user', spaces);
+        await pause(s, 'user', spaces, 'page-moved');
         fail('Task page moved out of its window; user owns it now.');
       }
       if (!cdp.backgroundHeld(tabId)) {
@@ -83,17 +87,23 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
   async function retain(s) {
     try {
       for (const p of pages(s)) await cdp.retainBackground(p.tabId);
-      await chrome.windows.update(s.windowId, { state: 'minimized', focused: false });
+      // Setting focused:false here brings another window forward (Chrome API).
+      // Minimize alone: never manipulate the user's window stacking order.
+      await chrome.windows.update(s.windowId, { state: 'minimized' });
       s.state = 'running';
+      s.pauseReason = null;
     } catch {
       s.state = 'interrupted';
+      s.pauseReason = 'control-unavailable';
       await Promise.all(pages(s).map(p => cdp.releaseBackground(p.tabId)));
     }
   }
   async function open(p, sid, spaces) {
     webUrl(p.url);
     if (Object.values(spaces).filter(s => s.owner === sid && !TERMINAL.has(s.state)).length >= 4) fail('Finish an existing space before opening another.');
-    const win = await chrome.windows.create({ url: p.url, focused: false, state: 'minimized', type: 'normal' });
+    // Request minimized creation; native focus behavior still needs headed acceptance.
+    // No focused/bounds overrides; do not restore focus after the fact.
+    const win = await chrome.windows.create({ url: p.url, state: 'minimized', type: 'normal' });
     const tab = win.tabs?.[0] || (await chrome.tabs.query({ windowId: win.id }))[0];
     if (!tab) fail('Task window did not supply a page.');
     const s = {
@@ -161,7 +171,7 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
     }
     s.pages = pages(s).filter(page => retained.includes(page.label));
     record(s, 'receipt', { retained, closed });
-    await notify(s, 'BeatBrowser task finished');
+    await notify(s, 'BeatBrowser · Completed');
     await write(spaces);
     return { ...publicSpace(s), receipt: { retained, closed, finishedAt: now() } };
   }
@@ -181,13 +191,13 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
         s.progress = String(p.message || '').slice(0, 1000);
         record(s, 'progress');
         if (p.needsConfirmation === true) {
-          await pause(s, 'user', spaces);
-          await notify(s, 'BeatBrowser needs your review');
+          await pause(s, 'user', spaces, 'review-requested');
+          await notify(s, 'BeatBrowser · Review');
         }
       } else if (p.action === 'notifications') {
         s.notifications = p.notifications === true;
       } else if (p.action === 'stop' || p.action === 'handoff') {
-        if (!TERMINAL.has(s.state)) await pause(s, p.action === 'stop' ? 'stopped' : 'user', spaces);
+        if (!TERMINAL.has(s.state)) await pause(s, p.action === 'stop' ? 'stopped' : 'user', spaces, p.action === 'stop' ? 'stopped' : 'handoff');
         if (p.action === 'handoff') {
           if (p.pageLabel) {
             const page = pages(s).find(page => page.label === p.pageLabel);
@@ -221,7 +231,7 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
       const spaces = await read();
       for (const s of Object.values(spaces)) {
         if (s.state === 'running' && s.expiresAt <= now()) await pause(s, 'expired', spaces);
-        else if (s.state === 'running' && s.progress && s.sequence !== s.lastNotifiedSequence && now() - (s.lastNotifiedAt || 0) >= s.reportIntervalMs) await notify(s, 'BeatBrowser progress');
+        else if (s.state === 'running' && s.progress && s.sequence !== s.lastNotifiedSequence && now() - (s.lastNotifiedAt || 0) >= s.reportIntervalMs) await notify(s, 'BeatBrowser · Progress');
       }
       await write(spaces);
     });
@@ -231,7 +241,16 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
     if (headless) return;
     void serial(async () => {
       const spaces = await read();
-      for (const s of Object.values(spaces)) if (s.windowId === windowId && s.state === 'running') await pause(s, 'user', spaces);
+      const owned = Object.values(spaces).some(s => s.windowId === windowId && s.state === 'running');
+      if (!owned) return;
+      // macOS can deliver a queued activation after creation/minimization.
+      // Check the current window instead of attributing the event to a person.
+      // If inspection fails, keep the conservative pause below.
+      try {
+        const win = await chrome.windows.get(windowId);
+        if (win.focused === false || win.state === 'minimized') return;
+      } catch { /* Unknown current focus: pause rather than continuing input. */ }
+      for (const s of Object.values(spaces)) if (s.windowId === windowId && s.state === 'running') await pause(s, 'user', spaces, 'window-focused');
     });
   });
   chrome.tabs.onRemoved.addListener(tabId => {
@@ -254,7 +273,7 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
       if (!s) return;
       record(s, 'popup', { tabId: tab.id, windowId: tab.windowId, openerTabId: tab.openerTabId });
       // Observe popups, but never move a window or claim a new page implicitly.
-      if (tab.windowId !== s.windowId) await pause(s, 'user', spaces);
+      if (tab.windowId !== s.windowId) await pause(s, 'user', spaces, 'popup-outside');
       await write(spaces);
     });
   });

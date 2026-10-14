@@ -13,7 +13,7 @@ Keep your signed-in sessions when you switch between Claude Code, Codex CLI, Cur
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 ![Node 20+](https://img.shields.io/badge/node-20%2B-343b49)
-![23 MCP tools](https://img.shields.io/badge/MCP-23_tools-2463eb)
+![24 MCP tools](https://img.shields.io/badge/MCP-24_tools-2463eb)
 
 [**Download Chrome extension ZIP**](https://github.com/BeatAPI/beat-browser/releases/latest/download/beat-browser-extension.zip) · [Releases](https://github.com/BeatAPI/beat-browser/releases) · [Install](#install) · [Compare](#how-it-compares) · [Tools](#tools) · [Demo guide](docs/DEMO.md) · [Security](#security-and-privacy)
 
@@ -50,9 +50,13 @@ Claude Code / Codex CLI / Cursor / other MCP clients
 
 Multiple clients can connect. Label your tabs and pass `tabId` explicitly; concurrent writes to the same tab are not isolated. When multiple Chrome profiles are connected, Normal commands use the bridge's selected primary extension; use explicit profile selection in development TaskSpaces for tasks that must stay on one profile.
 
-## Background TaskSpaces (1.3.0 preview)
+## Background TaskSpaces (1.3.1 source preview)
 
-This preview adds a BeatBrowser workspace sidebar, owned task windows, named pages, profile-pinned ownership, progress notifications and human takeover controls. It also diagnoses stalled pages and reports write-request evidence without automatically repeating uncertain input. MCP, CLI and the new [JavaScript SDK](docs/JAVASCRIPT.md) share the same local bridge. It does not require Ego Lite. The local 1.3.0 preview is not published to npm and does not replace the installed 1.2.2 release automatically. Start with [preview testing](docs/PREVIEW_TESTING.md). See [status and limits](docs/TASKSPACES.md) and the [Ego capability comparison](docs/EGO_PARITY_REVIEW.md).
+**Your agent works in the background. You keep your browser.**
+
+Give agents their own task windows inside your signed-in Chrome. Follow progress in a compact Chinese/English sidebar, review their work, and take over whenever you want. The extension reconnects automatically when its local bridge becomes available. MCP, CLI and the [JavaScript SDK](docs/JAVASCRIPT.md) all share one connection. No extra browser or account required.
+
+The 1.3.1 source preview is not published to npm. Start with [preview setup](docs/PREVIEW_TESTING.md). Native focus behavior, recovery boundaries and other technical details are documented in [TaskSpaces](docs/TASKSPACES.md) and the [Ego capability comparison](docs/EGO_PARITY_REVIEW.md).
 
 ## Install
 

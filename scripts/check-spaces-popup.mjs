@@ -20,41 +20,97 @@ export async function checkSpacesPopup({profileDirectory,url,output}) {
     const {sessionId}=await command('Target.attachToTarget',{targetId,flatten:true});
     const evaluate=async expression=>{
       const r=await command('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true},sessionId);
-      if(r.exceptionDetails)throw Error(r.exceptionDetails.text);return r.result.value;
+      if(r.exceptionDetails)throw Error(r.exceptionDetails.exception?.description || r.exceptionDetails.text);return r.result.value;
     };
     const end=Date.now()+10000;
     while(!await evaluate("document.querySelector('#spaces-list')?.textContent.includes('Both test pages completed.')")){
       if(Date.now()>end)throw Error('TaskSpace popup did not display progress');
       await new Promise(r=>setTimeout(r,100));
     }
+    await evaluate("chrome.storage.local.set({uiLanguage:'en'})");
+    const initialLanguageEnd=Date.now()+5000;
+    while(!await evaluate("document.documentElement.lang==='en' && document.querySelector('[data-action=resume]')?.textContent==='Continue'")) {
+      if(Date.now()>initialLanguageEnd)throw Error('Initial English render did not settle');
+      await new Promise(r=>setTimeout(r,100));
+    }
     const panel = url.endsWith('/panel.html');
     const text=await evaluate('document.body.innerText');
+    // Exercise the injected expanded activity card, including time labels and current action.
+    assert.equal(await evaluate(`(async()=>{
+      await chrome.storage.local.set({dockOpen:true});
+      const tab=(await chrome.tabs.query({})).find(t=>t.url?.includes('/agent'));
+      if(!tab)throw Error('Missing synthetic activity page');
+      await chrome.scripting.executeScript({target:{tabId:tab.id},files:['ui-language.js','mark.js']});
+      await new Promise(r=>setTimeout(r,100));
+      const reply=await chrome.tabs.sendMessage(tab.id,{__hcMark:'set',sid:'ui-test',act:'Inspecting fixture',
+        owners:[{sid:'ui-test',label:'Test agent',code:'T',color:'#3a5bc7'}],
+        intents:{'ui-test':{text:'Inspect fixture',t:Date.now()}},
+        logs:{'ui-test':[{text:'Fixture ready',t:Date.now()-10000}]}});
+      await chrome.tabs.sendMessage(tab.id,{__hcMark:'clear'});
+      return reply.ok;
+    })()`),true);
     if (panel) {
-      assert.match(text,/Agents at work/);
+      assert.match(text,/Tasks/);
       assert.equal(await evaluate("document.querySelectorAll('.page-list li').length"),2);
       assert.equal(await evaluate("chrome.runtime.getManifest().side_panel.default_path"),'panel.html');
       await evaluate("document.querySelector('.timeline').open=true");
       const historyEnd=Date.now()+5000;
-      while(!await evaluate("document.querySelector('.timeline ol').textContent.includes('opened')")) {
+      while(!await evaluate("document.querySelector('.timeline ol').textContent.includes('Task started')")) {
         if(Date.now()>historyEnd)throw Error('Panel did not load the shared task history');
         await new Promise(r=>setTimeout(r,100));
       }
     }
-    assert.match(text,/2 managed pages/);assert.match(text,/Confirm \/ resume/);
+    assert.match(text,/2 pages/);assert.match(text,/Continue/);
     assert.equal(await evaluate("document.querySelector('.space-notify input').checked"),false);
-    await command('Emulation.setDeviceMetricsOverride',{width:panel?400:320,height:900,deviceScaleFactor:1,mobile:false},sessionId);
+    await command('Emulation.setDeviceMetricsOverride',{width:panel?400:340,height:900,deviceScaleFactor:1,mobile:false},sessionId);
     // Activate only this synthetic UI target in the disposable test browser.
     await command('Emulation.setFocusEmulationEnabled',{enabled:true},sessionId);
     await command('Page.bringToFront',{},sessionId);
-    const shot=await command('Page.captureScreenshot',{format:'png'},sessionId);
-    fs.mkdirSync(path.dirname(output),{recursive:true});fs.writeFileSync(output,Buffer.from(shot.data,'base64'));
-    await evaluate("[...document.querySelectorAll('.space-actions button')].find(b=>b.textContent==='Confirm / resume').click()");
+    await evaluate('document.fonts.ready');
+    assert.equal(await evaluate('document.documentElement.scrollWidth > innerWidth'),false);
+    assert.equal(await evaluate('getComputedStyle(document.body).colorScheme'),'light');
+    assert.equal(await evaluate("document.querySelectorAll('#language select').length"),0);
+    assert.equal(await evaluate("document.querySelectorAll('#language button').length"),2);
+    const capture = async filename => {
+      const shot=await command('Page.captureScreenshot',{format:'png'},sessionId);
+      fs.mkdirSync(path.dirname(filename),{recursive:true});fs.writeFileSync(filename,Buffer.from(shot.data,'base64'));
+    };
+    await capture(output.replace('.png','-en.png'));
+    await evaluate("document.querySelector('[data-language=zh]').click()");
+    const languageEnd=Date.now()+5000;
+    while(!await evaluate("document.documentElement.lang==='zh-CN' && document.querySelector('[data-action=resume]').textContent==='\\u7ee7\\u7eed'")) {
+      if(Date.now()>languageEnd)throw Error('Language switch did not update task controls');
+      await new Promise(r=>setTimeout(r,100));
+    }
+    assert.equal(await evaluate("chrome.storage.local.get('uiLanguage').then(x=>x.uiLanguage)"),'zh');
+    assert.equal(await evaluate('document.documentElement.scrollWidth > innerWidth'),false);
+    assert.equal(await evaluate("document.querySelector('[data-language=zh]').getAttribute('aria-pressed')"),'true');
+    await capture(output);
+    // The saved preference must apply to a freshly opened extension document.
+    const {targetId:peer}=await command('Target.createTarget',{url});
+    try {
+      const {sessionId:peerSession}=await command('Target.attachToTarget',{targetId:peer,flatten:true});
+      const peerEnd=Date.now()+5000;
+      while(true) {
+        const r=await command('Runtime.evaluate',{expression:"document.documentElement.lang",returnByValue:true},peerSession);
+        if(r.result.value==='zh-CN')break;
+        if(Date.now()>peerEnd)throw Error('Saved language did not persist');
+        await new Promise(r=>setTimeout(r,100));
+      }
+    } finally {await command('Target.closeTarget',{targetId:peer});}
+    await evaluate("document.querySelector('[data-language=en]').click()");
+    const englishEnd=Date.now()+5000;
+    while(!await evaluate("document.documentElement.lang==='en' && document.querySelector('[data-action=resume]').textContent==='Continue'")) {
+      if(Date.now()>englishEnd)throw Error('English switch failed');
+      await new Promise(r=>setTimeout(r,100));
+    }
+    await evaluate("[...document.querySelectorAll('.space-actions button')].find(b=>b.dataset.action==='resume').click()");
     const resumed=Date.now()+10000;
     while(!await evaluate("document.querySelector('#spaces-message').textContent.includes('Control returned')")){
       if(Date.now()>resumed)throw Error('Popup resume did not return control');
       await new Promise(r=>setTimeout(r,100));
     }
-    return {popupRendersProgress:true,popupHumanResume:true,panel,screenshot:output};
+    return {popupRendersProgress:true,popupHumanResume:true,languageSwitchAndPersistence:true,panel,screenshot:output};
   } finally {
     if(targetId)await command('Target.closeTarget',{targetId}).catch(()=>{});
     for(const p of pending.values()){clearTimeout(p.timer);p.reject(Error('UI test closed'));}

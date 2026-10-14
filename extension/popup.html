@@ -1,53 +1,46 @@
 <!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>BeatBrowser</title>
 <link rel="stylesheet" href="workspace.css" />
-
-
-<div class="top">
+</head>
+<body>
+<header class="top">
   <img class="logo" src="icons/logo-light.png" width="28" height="28" alt="" />
-  <div class="name">BeatBrowser <span id="ver"></span></div>
-</div>
-
-<div class="status">
-  <div class="status-left">
-    <span class="dot" id="dot"></span>
-    <span class="label" id="state">Checking…</span>
-  </div>
+  <div class="brand"><div class="name">BeatBrowser</div></div>
+  <div id="language" class="language-switch" role="group" aria-label="Language"><button type="button" data-language="zh" lang="zh-CN" aria-pressed="false">中文</button><button type="button" data-language="en" lang="en" aria-label="English" aria-pressed="false">EN</button></div>
+</header>
+<div class="connection-row">
+  <div class="status"><span class="dot" id="dot"></span><span class="label" id="state" data-i18n="Checking…">Checking…</span></div>
+  <button class="workspace-open" id="open-workspace" type="button"><span data-i18n="Workspace">Workspace</span><span aria-hidden="true">↗</span></button>
 </div>
 <div class="meta" id="conntip" hidden></div>
-<button class="action" id="btn" type="button" hidden>Reconnect</button>
-<button class="workspace-open" id="open-workspace" type="button">Open workspace sidebar</button>
-<section class="spaces" aria-label="Task spaces">
-  <h2>Task spaces</h2>
-  <div id="spaces-list">Loading…</div>
+<button class="action" id="btn" type="button" hidden data-i18n="Reconnect">Reconnect</button>
+
+<section class="spaces" aria-label="Tasks" data-i18n-aria="Tasks">
+  <div class="section-heading"><h2 data-i18n="Tasks">Tasks</h2><span id="task-count" class="count">0</span></div>
+  <p id="task-summary" class="task-summary"></p>
+  <div id="spaces-list"></div>
   <p class="meta" id="spaces-message" role="status"></p>
 </section>
-
 <details class="adv">
-  <summary>Advanced</summary>
-
+  <summary data-i18n="Settings">Settings</summary>
   <div class="toggle-row">
-    <div class="toggle-copy">
-      <div class="t" id="l2state">High-fidelity input</div>
-      <div class="d">Trusted events for picky sites</div>
-    </div>
-    <button class="sw" id="l2btn" type="button" aria-pressed="false" title="Toggle high-fidelity"><i></i></button>
+    <div class="toggle-copy"><div class="t" id="l2state" data-i18n="Precise input">Precise input</div></div>
+    <button class="sw" id="l2btn" type="button" aria-pressed="false" aria-labelledby="l2state"><i></i></button>
   </div>
   <span id="l2dot" class="dot" hidden></span>
-
   <div class="toggle-row">
-    <div class="toggle-copy">
-      <div class="t" id="markstate">Show control marks</div>
-      <div class="d">Border + badge on agent tabs</div>
-    </div>
-    <button class="sw" id="markbtn" type="button" aria-pressed="false" title="Toggle control marks"><i></i></button>
+    <div class="toggle-copy"><div class="t" id="markstate" data-i18n="Control marks">Control marks</div></div>
+    <button class="sw" id="markbtn" type="button" aria-pressed="false" aria-labelledby="markstate"><i></i></button>
   </div>
   <span id="markdot" class="dot" hidden></span>
   <div class="sess" id="sess"></div>
+  <div class="build-meta">BeatBrowser <span id="ver"></span></div>
+  <details class="connection-help"><summary data-i18n="Help">Help</summary><p data-i18n="Reload the extension and restart your agent.">Reload the extension and restart your agent.</p><code>beat-browser doctor</code></details>
 </details>
-
-<div class="foot" id="tip">Stuck? <code>beat-browser doctor</code></div>
-
-<script src="popup.js"></script>
+<script type="module" src="popup.js"></script>
+</body>
+</html>

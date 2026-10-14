@@ -28,7 +28,9 @@ test('TaskSpaces adds scope while preserving every existing tool contract', () =
   const tools = getToolList();
   const baseline = tools.filter(tool => tool.name !== 'spaces').map(tool => {
     const copy = structuredClone(tool); delete copy.inputSchema.properties.spaceId;
-    // Preserve the old contract fingerprint except the corrected download promise.
+    // Wording corrections do not change the existing argument contracts.
+    if (copy.inputSchema.properties.real) copy.inputSchema.properties.real.description =
+      'Force a real browser-level event. Automatic on no-effect, except for submit/pay/delete.';
     if (copy.name === 'download') copy.description = 'Download a URL via the browser itself. For anything large (video, archives) where fetch+binary would ' +
       'blow up at its 12MB cap. Straight to disk, never opens the OS save dialog.';
     return copy;

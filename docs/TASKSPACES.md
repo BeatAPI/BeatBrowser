@@ -1,6 +1,6 @@
 # Background TaskSpaces — development status
 
-Unreleased 1.3.0 local preview, reviewed 2026-10-14. The installed 1.2.2 extension does not acquire it merely because local source changed. No Ego installation or native browser engine is required.
+Unreleased 1.3.1 source preview, reviewed 2026-10-14. The installed 1.2.2 extension does not acquire it merely because local source changed. No Ego installation or native browser engine is required.
 
 ## Execution model
 

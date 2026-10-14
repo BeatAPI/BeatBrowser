@@ -34,7 +34,7 @@ const FIND = {
 
 const REAL = {
   type: 'boolean',
-  description: 'Force a real browser-level event. Automatic on no-effect, except for submit/pay/delete.',
+  description: 'Request a browser-level event explicitly. An uncertain or no-effect action is never automatically replayed.',
 };
 
 const EXPECT = {
@@ -495,7 +495,7 @@ const TOOLS = [
   },
 ];
 
-const STRATEGY = `Controls the user's real Chrome, with their real logins. Tabs open in the BACKGROUND — never steal focus.
+const STRATEGY = `Controls the user's real Chrome, with their real logins. Tabs open in the background by default. Native windows or website popups may still gain focus; use explicit handoff for foreground work.
 
 Use this toolkit when the task needs the Chrome profile where BeatBrowser is loaded.
 Other connected browser integrations may also use existing logins; keep this task on

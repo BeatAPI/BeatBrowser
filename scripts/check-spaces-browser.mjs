@@ -38,12 +38,18 @@ try {
  socket.send(JSON.stringify({type:'hello',role:'agent',client:'spaces-test',sessionId:'spaces-real-check',token:bridge.token}));
  const until=async fn=>{const end=Date.now()+45000;while(!await fn()){if(Date.now()>end)throw new Error('Timed out waiting for isolated browser');await new Promise(r=>setTimeout(r,150));}};
  await until(()=>ready);
- const call=(cmd,params={})=>new Promise((resolve,reject)=>{const id=`test-${++n}`;const timer=setTimeout(()=>reject(new Error(`${cmd} timed out`)),25000);waiting.set(id,{resolve:x=>{clearTimeout(timer);resolve(x)},reject:e=>{clearTimeout(timer);reject(e)}});socket.send(JSON.stringify({type:'cmd',id,cmd,params,tabId:params.tabId}));});
+ const call=(cmd,params={})=>new Promise((resolve,reject)=>{const id=`test-${++n}`;const timer=setTimeout(()=>{waiting.delete(id);reject(new Error(`${cmd} timed out`));},25000);waiting.set(id,{resolve:x=>{clearTimeout(timer);resolve(x)},reject:e=>{clearTimeout(timer);reject(e)}});socket.send(JSON.stringify({type:'cmd',id,cmd,params,tabId:params.tabId}));});
  const before=await call('__spaces_test_state');
  const human=before.find(w=>w.tabs.some(t=>t.url===`${base}/human`));assert(human);
  const s=await call('spaces',{action:'open',url:`${base}/agent`,label:'Isolated background proof'});assert.equal(s.state,'running');console.log('opened-state',JSON.stringify((await call('__spaces_test_state')).map(w=>({id:w.id,state:w.state,focused:w.focused}))));
  const scope={spaceId:s.spaceId,tabId:s.tabId};
- await until(async()=>{try{const r=await call('query',{...scope,selector:'#input',extract:{id:'.@id'}});return String(r.text||r).includes('input');}catch{return false;}});
+ let readinessFailure;
+ try {
+   await until(async()=>{try{const r=await call('query',{...scope,selector:'#input',extract:{id:'.@id'}});return String(r.text||r).includes('input');}catch(error){readinessFailure={code:error.code,message:error.message};if(error.code==='SPACE_STOPPED')throw error;return false;}});
+ } catch(error) {
+   console.error(JSON.stringify({stage:'first-page-ready',lastError:readinessFailure,space:await call('spaces',{action:'status',spaceId:s.spaceId}),windows:(await call('__spaces_test_state')).map(w=>({id:w.id,state:w.state,focused:w.focused}))}));
+   throw error;
+ }
  await call('type',{...scope,selector:'#input',text:'background-success'});
  await call('click',{...scope,selector:'#button'});
  const observed=await call('query',{...scope,selector:'#output',extract:{text:'.@text'}});assert.match(observed.text,/background-success/);

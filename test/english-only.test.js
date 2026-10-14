@@ -19,8 +19,9 @@ function walk(dir, out = []) {
   return out;
 }
 
-test('shipped files contain no CJK text', () => {
-  const bad = walk(ROOT).filter((f) => CJK.test(fs.readFileSync(f, 'utf8')));
+test('agent-facing files remain English; bilingual UI text stays in its catalog and selector', () => {
+  const localized = new Set(['extension/ui-language.js', 'extension/popup.html', 'extension/panel.html']);
+  const bad = walk(ROOT).filter(f => !localized.has(path.relative(ROOT, f)) && CJK.test(fs.readFileSync(f, 'utf8')));
   assert.deepEqual(bad.map((f) => path.relative(ROOT, f)), []);
 });
 

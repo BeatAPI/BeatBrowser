@@ -6,6 +6,29 @@ live runs are small samples and are labelled as such.
 
 ## Automated checks
 
+### 1.3.1 bilingual compact UI follow-up on 2026-10-14
+
+- Follow-up design refinement replaces the OS-native dropdown with inline language buttons, compacts connection/workspace controls, moves the build label into Settings and uses the homepage palette for empty/task cards. The actual daily Chrome popup displayed both language buttons and the new layout without another extension reload. Isolated bilingual switch/persistence and task interaction checks passed again (121 to 512 frames).
+
+- **249 tests passed**, zero failures/skips. Syntax: 63 JavaScript files; narrow source/security scan: 99 files, no findings.
+- Isolated install: 89 files, matching versions, stable launcher and 24 Normal MCP tools passed.
+- Chrome 153 headless: real extension popup/sidebar changed English to Chinese and back; saved language applied to newly opened documents. Both language screenshots were visually inspected. Task controls continued to pass through actual extension messaging. Background input, upload, binary save and confirmation/stop checks also passed (122 to 513 rendered frames).
+- Reloaded the existing daily Chrome 155 extension via BeatBrowser. Its native popup visibly showed Chinese language selection, Connected, Workspace, Tasks and Settings in Chinese. No MCP restart was needed for this UI-only update. A subsequent selector interaction was stopped because the user changed Chrome's active UI; the live desktop switch was not completed. The full switch/persistence check above used the isolated browser.
+- The previous Xiaohongshu demo task finished with its page retained before extension reload. No site login or personal profile was migrated.
+- Chinese and English UI copy is shared across popup/sidebar/control marks and confirmation surfaces. Agent-authored text stays unchanged. Injected control and payment-panel localization is implemented but not comprehensively visual-tested on the user's sites.
+
+
+### 1.3.1 light UI local preview on 2026-10-14
+
+- **246 tests passed**, zero failures/skips. Syntax: 61 JavaScript files; narrow source/security scan: 97 files, no findings.
+- Popup and sidebar use the BeatAPI homepage palette and bundled licensed fonts. Real extension documents rendered in isolated Chrome 153 headless; screenshots visually inspected, light color scheme and horizontal overflow checks passed. In-page control marks and confirmation surfaces were restyled; their complete visual states were not separately acceptance-tested.
+- Disposable profile/private bridge, mock keychain: two named pages, input, upload, byte-verified binary save, request evidence, explicit review/resume and stop passed. Rendering advanced from 122 to 512 frames. These results do not establish native focus/minimization behavior.
+- Actual daily Chrome 155 with the previous 1.3.0 extension: native sidebar opened; two Example Domain pages read and finished with both retained after explicit user resumes. The user reported the task window appeared on its own. **No-interruption acceptance failed.**
+- A separate headed Chrome 153 diagnostic observed a queued focus event while the task window was minimized. It paused before page-read readiness. Its disposable visible fixture disturbed the user and was closed; no personal profile was imported.
+- Final focus handling now checks current window state before interpreting an activation event. Regression coverage verifies stale/minimized/unfocused events, real focus pausing and conservative pause on inspection failure. Native macOS acceptance of this final change remains pending; headless checks are not proof that focus stealing is resolved.
+- The final 1.3.1 preview has not been reloaded into daily Chrome or published. Existing site logins are reused only when running in that same ordinary Chrome profile; a separate test profile deliberately has none.
+
+
 ### 1.3.0 local preview on 2026-10-14
 
 - **242 tests passed**, zero failures/skips. Syntax: 59 JavaScript files. Narrow security/source scan: 95 files, no findings; not an exhaustive security audit.

@@ -1,3 +1,22 @@
+import {taskPresentation, activityLabel} from './workspace-state.js';
+const ui = globalThis.BeatBrowserUI;
+let language = await ui.read();
+const t = (key, params) => ui.text(key, language, params);
+const languageSelect = document.getElementById('language');
+function applyLanguage() {
+  document.documentElement.lang = language === 'zh' ? 'zh-CN' : 'en';
+  languageSelect.querySelectorAll('button').forEach(button => { button.setAttribute('aria-pressed', String(button.dataset.language === language)); });
+  languageSelect.setAttribute('aria-label', t('Language'));
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+}
+applyLanguage();
+languageSelect.querySelectorAll('button').forEach(button => {
+  button.onclick = async () => {
+    try { await chrome.storage.local.set({uiLanguage:button.dataset.language}); }
+    catch { showMessage(t('Connection unavailable. Try reconnecting.'),true); }
+  };
+});
 const dot = document.getElementById('dot');
 const state = document.getElementById('state');
 const btn = document.getElementById('btn');
@@ -7,31 +26,29 @@ document.getElementById('ver').textContent = 'v' + chrome.runtime.getManifest().
 
 function render(connected, r = {}) {
   dot.classList.toggle('on', connected);
-  state.textContent = connected ? 'Connected' : 'Not connected';
+  const mismatch = connected && r.bridge && r.bridge !== chrome.runtime.getManifest().version;
+  state.textContent = t(mismatch ? 'Update required' : connected ? 'Connected' : 'Disconnected');
   btn.hidden = connected;
   btn.disabled = false;
-  btn.textContent = 'Reconnect';
+  btn.textContent = t('Reconnect');
 
-  const age = r.lastRx ? Math.round((Date.now() - r.lastRx) / 1000) : null;
-  const bits = [];
-  if (r.bridge) {
-    const mismatch =
-      r.bridge !== chrome.runtime.getManifest().version
-        ? ' (reload extension)'
-        : '';
-    bits.push('bridge ' + r.bridge + mismatch);
-  }
-  if (connected && age !== null) bits.push(age + 's');
-  if (!connected && r.offscreenError) bits.push(String(r.offscreenError));
-  conntip.textContent = bits.join(' · ');
-  conntip.hidden = !bits.length;
+  conntip.textContent = mismatch ? t('Reload the extension and restart your agent.') : connected ? '' : t('Open your agent to connect.');
+  conntip.hidden = connected && !mismatch;
 }
 
-chrome.runtime.sendMessage({ __hcPopup: 'status' }, (r) => render(!!r?.connected, r || {}));
+function refreshConnection() {
+  chrome.runtime.sendMessage({ __hcPopup: 'status' }, (r) => {
+    if (chrome.runtime.lastError) return render(false);
+    render(!!r?.connected, r || {});
+  });
+}
+refreshConnection();
+const connectionTimer=setInterval(refreshConnection,5000);
+window.addEventListener('pagehide',()=>clearInterval(connectionTimer));
 
 btn.onclick = () => {
   btn.disabled = true;
-  btn.textContent = 'Connecting…';
+  btn.textContent = t('Connecting…');
   chrome.runtime.sendMessage({ __hcPopup: 'connect' }, (r) => render(!!r?.connected, r || {}));
 };
 
@@ -41,7 +58,7 @@ const l2state = document.getElementById('l2state');
 function renderL2(on) {
   l2btn.classList.toggle('on', on);
   l2btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-  l2state.textContent = on ? 'High-fidelity input' : 'High-fidelity input';
+  l2state.textContent = t('Precise input');
 }
 
 chrome.storage.local.get('l2Disabled', ({ l2Disabled }) => renderL2(!l2Disabled));
@@ -53,7 +70,7 @@ const sess = document.getElementById('sess');
 function renderMark(on) {
   markbtn.classList.toggle('on', on);
   markbtn.setAttribute('aria-pressed', on ? 'true' : 'false');
-  markstate.textContent = 'Show control marks';
+  markstate.textContent = t('Control marks');
 }
 
 function renderSessions(rows) {
@@ -69,7 +86,7 @@ function renderSessions(rows) {
     who.textContent = r.label;
     const page = document.createElement('span');
     page.className = 'page';
-    page.textContent = r.title ? '· ' + r.title : '· idle';
+    page.textContent = r.title ? '· ' + r.title : '· '+t('Idle');
     line.append(sw, who, page);
     sess.appendChild(line);
   }
@@ -106,6 +123,14 @@ l2btn.onclick = () => {
 
 const isPanel = document.body.classList.contains('panel');
 const messageArea = document.getElementById('spaces-message');
+function showMessage(message,isError=false) { messageArea.textContent=message;messageArea.dataset.error=String(isError); }
+async function control(params) {
+  try {
+    const reply=await chrome.runtime.sendMessage({__hcPopup:'spaces',params});
+    if (!reply || reply.error) throw Error(reply?.error || 'No response from the extension. Reload BeatBrowser and reconnect.');
+    return reply;
+  } catch(error) { showMessage(t('Connection unavailable. Try reconnecting.'),true);throw error; }
+}
 const workspaceButton = document.getElementById('open-workspace');
 if (workspaceButton) {
   workspaceButton.disabled = true;
@@ -113,87 +138,112 @@ if (workspaceButton) {
     workspaceButton.disabled = false;
     workspaceButton.onclick = () => {
       chrome.sidePanel.open({windowId:win.id}).then(() => window.close()).catch(error => {
-        messageArea.textContent = `Could not open the sidebar: ${error.message}`;
+        messageArea.textContent = t('Could not open the sidebar.');
       });
     };
-  }).catch(() => { messageArea.textContent = 'Open BeatBrowser from the Chrome toolbar to use its sidebar.'; });
+  }).catch(() => { messageArea.textContent = t('Open from the Chrome toolbar.'); });
 }
 let renderSequence = 0;
 async function refreshSpaces() {
   const sequence = ++renderSequence;
   const root=document.getElementById('spaces-list');
   const result=await chrome.runtime.sendMessage({__hcPopup:'spaces',params:{action:'list'}});
+  const openHistory=new Set([...root.querySelectorAll('.space')].filter(c=>c.querySelector('.timeline')?.open).map(c=>c.dataset.spaceId));
   if (sequence !== renderSequence) return;
-  if (result?.error) { document.getElementById('spaces-message').textContent=result.error;return; }
+  if (result?.error) { showMessage(t('Task spaces unavailable'),true);return; }
   root.replaceChildren();
   const spaces=result?.spaces || [];
-  if (!spaces.length) { root.className='empty-space';root.textContent='No tasks yet. Ask your agent to start a BeatBrowser background task.';return; }
+  document.getElementById('task-count').textContent=String(spaces.length);
+  const active=spaces.filter(s=>!taskPresentation(s, language).terminal).length;
+  const review=spaces.filter(s=>taskPresentation(s, language).canResume).length;
+  document.getElementById('task-summary').textContent=spaces.length ? t('{active} active · {review} paused',{active,review}) : '';
+  if (!spaces.length) {
+    root.className='empty-space';
+    const title=document.createElement('strong');title.textContent=t('No tasks');
+    const description=document.createElement('p');description.textContent=t('Ask your agent to start a background task.');
+    const icon=document.createElement('span');icon.className='empty-icon';icon.setAttribute('aria-hidden','true');icon.textContent='{ }';
+    root.append(icon,title,description);return;
+  }
   root.className='';
   const priority = state => state === 'user' ? 0 : ['stopped','finished'].includes(state) ? 2 : 1;
   for (const space of [...spaces].reverse().sort((a,b)=>priority(a.state)-priority(b.state)).slice(0,20)) {
-    const card=document.createElement('div');card.className='space';card.dataset.state=space.state;
+    const card=document.createElement('div');card.className='space';card.dataset.state=space.state;card.dataset.spaceId=space.spaceId;
+    const presentation=taskPresentation(space, language);
     const title=document.createElement('strong');title.textContent=space.label;
-    const state=document.createElement('small');state.textContent=space.state==='user'?'Paused · your confirmation needed':space.state;
-    const progress=document.createElement('p');progress.textContent=space.progress || 'No progress report yet.';
-    const pageCount=document.createElement('small');pageCount.textContent=`${space.pages?.length || 0} managed pages`;
+    const state=document.createElement('small');state.className='state-badge';state.textContent=presentation.label;
+    const detail=document.createElement('p');detail.className='pause-detail';detail.textContent=presentation.detail;detail.hidden=!presentation.detail;
+    const progress=document.createElement('p');progress.textContent=space.progress || t(presentation.terminal ? 'Task ended' : 'No updates yet');
+    const pageCount=document.createElement('small');pageCount.className='page-count';pageCount.textContent=t('{count} pages',{count:space.pages?.length || 0});
     const notifyLabel=document.createElement('label');notifyLabel.className='space-notify';
     const notify=document.createElement('input');notify.type='checkbox';notify.checked=space.notifications;
     notify.onchange=async()=>{
-      const reply=await chrome.runtime.sendMessage({__hcPopup:'spaces',params:{action:'notifications',spaceId:space.spaceId,notifications:notify.checked}});
-      if(reply?.error) document.getElementById('spaces-message').textContent=reply.error;
+      notify.disabled=true;
+      try { await control({action:'notifications',spaceId:space.spaceId,notifications:notify.checked}); }
+      catch { notify.checked=!notify.checked; }
+      finally { notify.disabled=false; }
     };
-    notifyLabel.append(notify,document.createTextNode(' Notify me of progress'));
+    notifyLabel.append(notify,document.createTextNode(' '+t('Progress notifications')));
     const actions=document.createElement('div');actions.className='space-actions';
-    const choices=[['handoff','View / take over']];
-    if (['user','interrupted','expired'].includes(space.state)) choices.push(['resume','Confirm / resume']);
-    if (!['stopped','finished'].includes(space.state)) choices.push(['stop','Stop']);
+    const choices=[['handoff',presentation.terminal?'View':'Take over']];
+    if (presentation.canResume) choices.push(['resume','Continue']);
+    if (!presentation.terminal) choices.push(['stop','Stop']);
     for (const [action,label] of choices) {
-      const button=document.createElement('button');button.type='button';button.textContent=label;button.dataset.action=action;
+      const button=document.createElement('button');button.type='button';button.textContent=t(label);button.dataset.action=action;
       button.onclick=async()=>{
         button.disabled=true;
-        const reply=await chrome.runtime.sendMessage({__hcPopup:'spaces',params:{action,spaceId:space.spaceId}});
-        document.getElementById('spaces-message').textContent=reply?.error || (action==='resume'?'Control returned to the agent.':'Updated.');
-        await refreshSpaces();
+        try {
+          const reply=await control({action,spaceId:space.spaceId});
+          showMessage(t(action==='resume' ? (reply.state==='running'?'Control returned':'Control unavailable') : action==='handoff' ? 'You have control' : 'Stopped'), action==='resume' && reply.state!=='running');
+          await refreshSpaces();
+        } catch {} finally { button.disabled=false; }
       };
       actions.append(button);
     }
-    card.append(title,state,progress,pageCount,notifyLabel,actions);
+    card.append(title,state,detail,progress,pageCount);
+    if (!presentation.terminal) card.append(notifyLabel);
+    card.append(actions);
     if (isPanel) {
       const list=document.createElement('ul');list.className='page-list';
       for (const page of space.pages || []) {
         const row=document.createElement('li');
-        const name=document.createElement('span');name.textContent=`${page.label} · ${page.openedBy === 'user' ? 'your page' : 'agent page'}`;
-        const view=document.createElement('button');view.textContent='View';view.type='button';
+        const name=document.createElement('span');name.textContent=`${page.label} · ${t(page.openedBy === 'user' ? 'Your page' : 'Agent page')}`;
+        const view=document.createElement('button');view.textContent=t('View');view.type='button';
         view.onclick=async()=>{
           view.disabled=true;
           try {
-            const result=await chrome.runtime.sendMessage({__hcPopup:'spaces',params:{action:'handoff',spaceId:space.spaceId,pageLabel:page.label}});
-            messageArea.textContent=result?.error || 'Task paused. You have control.';
-          } catch(error) { messageArea.textContent=error.message; }
+            await control({action:'handoff',spaceId:space.spaceId,pageLabel:page.label});
+            showMessage(t('You have control'));
+          } catch {}
           finally { view.disabled=false; }
         };
         row.append(name,view);list.append(row);
       }
       const history=document.createElement('details');history.className='timeline';
-      const summary=document.createElement('summary');summary.textContent='Activity';
+      const summary=document.createElement('summary');summary.textContent=t('Activity');
       const entries=document.createElement('ol');history.append(summary,entries);
       history.ontoggle=async()=>{
         if (!history.open) return;
-        const log=await chrome.runtime.sendMessage({__hcPopup:'spaces',params:{action:'events',spaceId:space.spaceId,after:0}});
+        let log;
+        try { log=await control({action:'events',spaceId:space.spaceId,after:0}); }
+        catch { return; }
         entries.replaceChildren();
         for (const event of (log?.events || []).slice(-12).reverse()) {
           const item=document.createElement('li');
-          item.textContent=`${new Date(event.at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} · ${event.type.replaceAll('-',' ')}${event.pageLabel ? ' · '+event.pageLabel : ''}`;
+          item.textContent=`${new Date(event.at).toLocaleTimeString(language==='zh'?'zh-CN':'en', {hour:'2-digit',minute:'2-digit'})} · ${activityLabel(event, language)}${event.pageLabel ? ' · '+event.pageLabel : ''}`;
           entries.append(item);
         }
-        if (log?.error) { const item=document.createElement('li');item.textContent=log.error;entries.append(item); }
+        if (log?.error) { const item=document.createElement('li');item.textContent=t('Task spaces unavailable');entries.append(item); }
       };
       card.append(list,history);
+      if (openHistory.has(space.spaceId)) history.open=true;
     }
     root.append(card);
   }
 }
-refreshSpaces().catch(()=>{document.getElementById('spaces-message').textContent='Task spaces are unavailable.';});
+refreshSpaces().catch(()=>{document.getElementById('spaces-message').textContent=t('Task spaces unavailable');});
 chrome.storage.onChanged.addListener((changes,area)=>{
+  if(area==='local' && changes.uiLanguage) {
+    language=ui.resolve(changes.uiLanguage.newValue);applyLanguage();showMessage('');refreshConnection();refreshMark();refreshSpaces().catch(()=>{});
+  }
   if(area==='session' && changes.beatTaskSpaces) refreshSpaces().catch(()=>{});
 });

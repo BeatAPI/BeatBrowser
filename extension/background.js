@@ -1,3 +1,5 @@
+import './ui-language.js';
+const uiText = async key => globalThis.BeatBrowserUI.text(key, await globalThis.BeatBrowserUI.read());
 
 //
 
@@ -106,9 +108,7 @@ function noteBridgeVersion(v) {
   if (!v) return;
   const mine = chrome.runtime.getManifest().version;
   bridgeMismatch = v === mine ? '' : v;
-  chrome.action.setTitle({ title: bridgeMismatch
-    ? `beat-browser: extension v${mine} and bridge v${v} do not match; reload it once at chrome://extensions`
-    : 'beat-browser' });
+  void uiText('Update required').then(label => chrome.action.setTitle({title:bridgeMismatch ? `BeatBrowser · ${label}` : 'BeatBrowser'}));
   setBadge(true);
 }
 
@@ -535,7 +535,7 @@ async function syncMark(tabId, { act, sid, plan } = {}) {
     
     
     if (!owners.length) return;
-    await chrome.scripting.executeScript({ target: { tabId }, files: ['mark.js'] });
+    await chrome.scripting.executeScript({ target: { tabId }, files: ['ui-language.js', 'mark.js'] });
     await postMark(tabId, msg);
   } catch {  }
 }
@@ -1167,12 +1167,12 @@ async function confirmPay(id, pay) {
   const tab = await chrome.tabs.get(id);
   await chrome.windows.update(tab.windowId, { focused: true }).catch(() => {});
   await chrome.tabs.update(id, { active: true });
-  await chrome.scripting.executeScript({ target: { tabId: id }, files: ['mark.js'] });
+  await chrome.scripting.executeScript({ target: { tabId: id }, files: ['ui-language.js', 'mark.js'] });
 
   chrome.notifications?.create(`hc-pay-${Date.now()}`, {
     type: 'basic',
     iconUrl: 'icons/icon128.png',
-    title: 'Confirm this payment?',
+    title: await uiText('Confirm payment'),
     message: `${pay.label}${pay.amount ? ` · ${pay.amount}` : ''}\n${tab.title || ''}`.slice(0, 180),
     priority: 2,
   }, () => void chrome.runtime.lastError);
@@ -2311,7 +2311,7 @@ const HANDLERS = {
     }
 
     
-    await chrome.scripting.executeScript({ target: { tabId: id }, files: ['mark.js'] });
+    await chrome.scripting.executeScript({ target: { tabId: id }, files: ['ui-language.js', 'mark.js'] });
     if (selectors.length) {
       await chrome.tabs.sendMessage(id, { __hcAsk: 'flash', selectors }).catch(() => {});
     }
@@ -2320,7 +2320,7 @@ const HANDLERS = {
     chrome.notifications?.create(`hc-ask-${Date.now()}`, {
       type: 'basic',
       iconUrl: 'icons/icon128.png',
-      title: p.title || 'BeatBrowser needs your help',
+      title: p.title || await uiText('Your turn'),
       message: String(p.prompt || '').slice(0, 180),
       priority: 2,
     }, () => void chrome.runtime.lastError);

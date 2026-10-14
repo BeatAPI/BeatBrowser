@@ -14,6 +14,15 @@
 (() => {
   if (window.__hcMark) return;
   window.__hcMark = true;
+  const ui = globalThis.BeatBrowserUI;
+  let language = ui.resolve();
+  const t = (key, params) => ui.text(key, language, params);
+  ui.read().then(value => { language=value;render();updateAskLanguage(); }).catch(()=>{});
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.uiLanguage) {
+      language=ui.resolve(changes.uiLanguage.newValue);render();updateAskLanguage();
+    }
+  });
 
   
   
@@ -63,7 +72,7 @@
 
   const CSS = `
     :host { all: initial; }
-    .wrap { font: 500 12px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+    .wrap { color-scheme:light; --beat-bg:#f4f5fc; --beat-ink:#1a1a1c; --beat-line:#e4e7f0; --beat-accent:#3a5bc7; font: 500 12px/1.6 "DM Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
     .edge {
       position: fixed; pointer-events: none; z-index: 2147483645;
       opacity: .38; transition: opacity .18s ease, filter .18s ease;
@@ -122,11 +131,11 @@
     .chip {
       display: flex; align-items: center; gap: 6px;
       padding: 5px 11px 5px 9px; border-radius: 999px;
-      background: rgba(24,24,27,.85); color: #fff; cursor: pointer;
+      background: rgba(244,245,252,.97); color: var(--beat-ink); border:1px solid var(--beat-line); cursor: pointer;
       -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
       font-size: 11px; letter-spacing: .1px; white-space: nowrap;
       max-width: 46vw; overflow: hidden;
-      box-shadow: 0 2px 10px rgba(0,0,0,.25);
+      box-shadow: 0 3px 12px rgba(26,26,28,.10);
       opacity: .78; transition: opacity .18s ease, transform .18s ease;
       animation: hcIn .24s cubic-bezier(.2,.8,.3,1);
     }
@@ -141,14 +150,14 @@
     .card {
       width: 300px; max-width: calc(100vw - 40px);
       border-radius: 14px; overflow: hidden;
-      background: rgba(24,24,27,.92); color: #f2f2f2;
+      background: #fff; color: var(--beat-ink); border:1px solid var(--beat-line);
       -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-      box-shadow: 0 12px 40px rgba(0,0,0,.3), 0 2px 8px rgba(0,0,0,.15);
+      box-shadow: 0 12px 40px rgba(26,26,28,.12), 0 2px 8px rgba(26,26,28,.04);
       animation: hcIn .22s cubic-bezier(.2,.8,.3,1);
     }
     .card .head {
       display: flex; align-items: center; gap: 7px;
-      padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,.07);
+      padding: 10px 12px; border-bottom: 1px solid var(--beat-line); background:var(--beat-bg);
     }
     .card .head .code { opacity: .45; font-size: 11px; font-variant-numeric: tabular-nums; }
     .card .head .fold {
@@ -156,7 +165,7 @@
       background: none; border: none; color: inherit; font: inherit; font-size: 13px; line-height: 1;
     }
     .card .head .fold:hover { opacity: 1; }
-    .card .sec { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,.05); }
+    .card .sec { padding: 8px 12px; border-bottom: 1px solid var(--beat-line); }
     .card .sec:last-child { border-bottom: none; }
     .card .lab { font-size: 10px; letter-spacing: .8px; opacity: .45; margin-bottom: 3px; }
     .card .intent { border-left: 2px solid var(--c, #888); padding-left: 8px; opacity: .92; }
@@ -179,21 +188,21 @@
     }
     .ask .head {
       display: flex; align-items: center; gap: 8px;
-      padding: 13px 16px; background: linear-gradient(135deg,#fff7ed,#ffedd5);
+      padding: 13px 16px; background: var(--beat-bg);
       border-bottom: 1px solid rgba(0,0,0,.06); font-weight: 600; font-size: 14px;
     }
-    .ask .head .dot { width: 8px; height: 8px; background: #f97316; animation: hcPulse 1.6s ease-in-out infinite; }
+    .ask .head .dot { width: 8px; height: 8px; background: var(--beat-accent); animation: hcPulse 1.6s ease-in-out infinite; }
     .ask .body { padding: 14px 16px 4px; white-space: pre-wrap; word-break: break-word; }
     .ask .note { width: 100%; box-sizing: border-box; margin: 10px 0 2px; padding: 8px 10px;
                  border: 1px solid #e2e2e2; border-radius: 8px; font: inherit; font-size: 13px;
                  resize: vertical; min-height: 34px; }
-    .ask .note:focus { outline: 2px solid #fdba74; outline-offset: -1px; border-color: transparent; }
+    .ask .note:focus { outline: 2px solid var(--beat-accent); outline-offset: -1px; border-color: transparent; }
     .ask .foot { display: flex; gap: 8px; padding: 10px 16px 14px; align-items: center; }
     .ask .clock { font-size: 12px; color: #9a9a9a; margin-right: auto; font-variant-numeric: tabular-nums; }
     .ask button { font: inherit; font-size: 13px; border-radius: 8px; padding: 7px 14px;
                   border: 1px solid transparent; cursor: pointer; transition: .15s; }
-    .ask .ok { background: #f97316; color: #fff; font-weight: 600; }
-    .ask .ok:hover { background: #ea580c; }
+    .ask .ok { background: var(--beat-ink); color: #fff; font-weight: 600; }
+    .ask .ok:hover { background: #303034; }
     .ask .no { background: #fff; color: #666; border-color: #e2e2e2; }
     .ask .no:hover { background: #f6f6f6; }
     .ask.danger .head { background: linear-gradient(135deg,#fef2f2,#fee2e2); }
@@ -203,16 +212,10 @@
     .ask .what { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: #f8f8f8;
                  font-size: 13px; word-break: break-all; }
     .ask .amount { font-weight: 700; font-size: 16px; color: #dc2626; }
-    @media (prefers-color-scheme: dark) {
-      .ask { background: #1c1c1e; color: #f2f2f2; border-color: rgba(255,255,255,.1); }
-      .ask .head { background: linear-gradient(135deg,#3b2a1a,#2c1f14); border-bottom-color: rgba(255,255,255,.07); }
-      .ask .note { background: #2a2a2c; border-color: #3a3a3c; color: #f2f2f2; }
-      .ask .no { background: #2a2a2c; color: #ccc; border-color: #3a3a3c; }
-      .ask .no:hover { background: #333; }
-      .ask.danger .head { background: linear-gradient(135deg,#3f1d1d,#2a1414); }
-      .ask .what { background: #2a2a2c; }
-      .ask .amount { color: #f87171; }
-    }
+    .card .head::before { content: "//"; font-family:monospace; color:var(--beat-accent); }
+    .ask button:focus-visible,.chip:focus-visible,.card button:focus-visible { outline:2px solid var(--beat-accent); outline-offset:3px; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation:none!important; transition:none!important; } }
+
   `;
 
   // ---------- host ----------
@@ -288,12 +291,12 @@
 
   
 
-  const relTime = (t) => {
-    const s = Math.max(0, Math.round((Date.now() - t) / 1000));
-    if (s < 5) return 'just now';
-    if (s < 60) return `${s}s ago`;
-    if (s < 3600) return `${Math.floor(s / 60)}m ago`;
-    return `${Math.floor(s / 3600)}h ago`;
+  const relTime = (timestamp) => {
+    const s = Math.max(0, Math.round((Date.now() - timestamp) / 1000));
+    if (s < 5) return t('Just now');
+    if (s < 60) return t('{n}s ago',{n:s});
+    if (s < 3600) return t('{n}m ago',{n:Math.floor(s/60)});
+    return t('{n}h ago',{n:Math.floor(s/3600)});
   };
 
   function render() {
@@ -350,7 +353,7 @@
     const who = document.createElement('span'); who.className = 'who'; who.textContent = o.label;
     const code = document.createElement('span'); code.className = 'code'; code.textContent = o.code;
     const fold = document.createElement('button'); fold.className = 'fold'; fold.textContent = '⌄';
-    fold.title = 'Collapse';
+    fold.title = t('Collapse');
     fold.addEventListener('click', () => setExpanded(false));
     head.append(av, who, code, fold);
     card.appendChild(head);
@@ -368,7 +371,7 @@
 
     
     if (tabLabel) {
-      const s = sec('This page');
+      const s = sec(t('Page'));
       const p2 = document.createElement('div'); p2.className = 'plan';
       p2.textContent = tabLabel;
       s.appendChild(p2);
@@ -378,7 +381,7 @@
     
     const intent = intents[o.sid];
     if (intent?.text) {
-      const s = sec('About to do');
+      const s = sec(t('Next'));
       const q = document.createElement('div'); q.className = 'intent';
       q.textContent = intent.text;
       const ago = document.createElement('span'); ago.className = 'ago'; ago.textContent = relTime(intent.t);
@@ -389,25 +392,25 @@
     
     
     if (plan.length) {
-      const s = sec('Next up');
+      const s = sec(t('Plan'));
       const p = document.createElement('div'); p.className = 'plan';
-      p.textContent = plan.slice(0, 3).join(' → ') + (plan.length > 3 ? ` → (${plan.length - 3} more steps)` : '');
+      p.textContent = plan.slice(0, 3).join(' → ') + (plan.length > 3 ? ' → '+t('{n} more',{n:plan.length-3}) : '');
       s.appendChild(p);
     }
 
     const act = actState.get(o.sid);
     if (act) {
-      const s = sec('Doing now');
+      const s = sec(t('Now'));
       const n = document.createElement('div'); n.className = 'now';
       const pulse = document.createElement('span'); pulse.className = 'pulse'; pulse.style.background = o.color;
-      const t = document.createElement('span'); t.textContent = act.text;
-      n.append(pulse, t);
+      const actionText = document.createElement('span'); actionText.textContent = act.text;
+      n.append(pulse, actionText);
       s.appendChild(n);
     }
 
     const rows = logs[o.sid] || [];
     if (rows.length) {
-      const s = sec('Timeline');
+      const s = sec(t('Activity'));
       const tl = document.createElement('div'); tl.className = 'tl';
       for (const r of rows.slice(0, 12)) {
         const row = document.createElement('div'); row.className = 'row';
@@ -521,6 +524,7 @@
   
 
   let askEl = null;
+  let askMessage = null;
   let askSettle = null;   
   let askOutcome = null;  
   let askTimer = null;
@@ -533,6 +537,18 @@
     maybeTeardown();
   }
 
+  function updateAskLanguage() {
+    if (!askEl || !askMessage) return;
+    askEl.lang=language === 'zh' ? 'zh-CN' : 'en';
+    askEl.querySelector('.t').textContent=t(askMessage.title || 'Your turn');
+    askEl.querySelector('.p').textContent=t(askMessage.prompt || '');
+    askEl.querySelector('.ok').textContent=t(askMessage.okText || 'Done');
+    askEl.querySelector('.no').textContent=t(askMessage.noText || 'Cancel');
+    askEl.querySelectorAll('[data-fact-label]').forEach(el => { el.textContent=t(el.dataset.factLabel)+': '; });
+    const note=askEl.querySelector('.note');
+    if (note) note.placeholder=t('Note (optional)');
+  }
+
   function showAsk(msg) {
     ensureHost();
     
@@ -540,6 +556,7 @@
     askOutcome = null;
     askSettle = true;
 
+    askMessage=msg;
     askEl = document.createElement('div');
     askEl.className = 'ask';
     askEl.innerHTML = `
@@ -547,18 +564,16 @@
       <div class="body"><span class="p"></span></div>
       <div class="foot">
         <span class="clock"></span>
-        <button class="no">Cancel</button>
-        <button class="ok">I'm done</button>
+        <button class="no"></button>
+        <button class="ok"></button>
       </div>`;
     
     
     
     askEl.querySelector('.head').prepend(avatarCanvas(20));   
-    askEl.querySelector('.t').textContent = msg.title || 'BeatBrowser needs your help';
-    askEl.querySelector('.p').textContent = msg.prompt || '';
+
     if (msg.danger) askEl.classList.add('danger');
-    if (msg.okText) askEl.querySelector('.ok').textContent = msg.okText;
-    if (msg.noText) askEl.querySelector('.no').textContent = msg.noText;
+
     
     
     if (msg.facts) {
@@ -568,7 +583,8 @@
         if (!v) continue;
         const line = document.createElement('div');
         const key = document.createElement('span');
-        key.textContent = `${k}: `;
+        key.dataset.factLabel=k;
+        key.textContent=t(k)+': ';
         const val = document.createElement('span');
         val.textContent = v;
         if (k === 'Amount') val.className = 'amount';
@@ -582,10 +598,11 @@
     if (msg.wantNote) {
       noteEl = document.createElement('textarea');
       noteEl.className = 'note';
-      noteEl.placeholder = '(optional) a note for the agent';
+      noteEl.placeholder = t('Note (optional)');
       askEl.querySelector('.body').appendChild(noteEl);
     }
 
+    updateAskLanguage();
     askEl.querySelector('.ok').addEventListener('click', () => closeAsk('continued', noteEl?.value));
     askEl.querySelector('.no').addEventListener('click', () => closeAsk('cancelled', noteEl?.value));
 
@@ -612,7 +629,7 @@
       if (!r.width && !r.height) continue;
       const ring = document.createElement('div');
       ring.style.cssText = `position:fixed;left:${r.left - 4}px;top:${r.top - 4}px;`
-        + `width:${r.width + 8}px;height:${r.height + 8}px;border:2px solid #f97316;`
+        + `width:${r.width + 8}px;height:${r.height + 8}px;border:2px solid #3a5bc7;`
         + `border-radius:8px;pointer-events:none;z-index:2147483646;`
         + `box-shadow:0 0 0 9999px rgba(0,0,0,.04);transition:opacity .3s`;
       document.documentElement.appendChild(ring);

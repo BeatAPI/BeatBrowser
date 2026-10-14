@@ -1,3 +1,17 @@
+# BeatBrowser 1.3.1 source preview
+
+Agents can open owned background task windows in the user's existing Chrome profile, report progress and hand control back through a compact Chinese/English workspace. MCP, CLI and the JavaScript SDK use the same local bridge.
+
+- Add named task pages, explicit profile selection, pause/resume/stop and retained-page completion receipts.
+- Add a light workspace, inline language switch and shared control/confirmation copy; language preference stays local.
+- Check current window state before treating queued focus events as takeover. Focused windows still pause execution; native no-interruption acceptance remains incomplete.
+- Diagnose disconnected/frozen pages, preserve request evidence and avoid replaying uncertain writes.
+- Validate 249 tests, isolated package installation, extension packaging and headless browser/UI flows. Daily Chrome opened Xiaohongshu with existing login and displayed the updated extension UI.
+
+This is a source update. Existing GitHub/npm release downloads remain the previously published version until a separate release is made. Minimized headed screenshots and fully invisible native execution remain limitations. Read [preview setup](PREVIEW_TESTING.md) and [test evidence](../TEST_RESULTS.md).
+
+---
+
 # BeatBrowser 1.2.2
 
 Your Chrome. Your choice of agent.
