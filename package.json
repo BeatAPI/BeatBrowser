@@ -1,7 +1,7 @@
 {
   "name": "@beatapi/beat-browser",
   "version": "1.2.2",
-  "description": "BeatBrowser — a local MCP toolkit for your signed-in Chrome. Use it across compatible agents.",
+  "description": "BeatBrowser \u2014 a local MCP toolkit for your signed-in Chrome. Use it across compatible agents.",
   "type": "module",
   "bin": {
     "beat-browser": "src/cli.js"
@@ -30,7 +30,11 @@
     "test/fixtures/fast-agent.html",
     "test/fixtures/demo.html",
     "docs/playbooks/x-reply.md",
-    "docs/playbooks/x-reply-team-pack.md"
+    "docs/playbooks/x-reply-team-pack.md",
+    "docs/TASKSPACES.md",
+    "docs/EGO_PARITY_REVIEW.md",
+    "docs/EGO_API_PARITY.csv",
+    "docs/JAVASCRIPT.md"
   ],
   "engines": {
     "node": ">=20"
@@ -77,5 +81,10 @@
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org"
+  },
+  "exports": {
+    "./browser": "./src/browser.js",
+    "./package.json": "./package.json",
+    "./src/*": "./src/*"
   }
 }

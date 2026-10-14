@@ -10,6 +10,7 @@ const PROTOCOL = '1.3';
 
 // tabId -> { timer, ready }
 const sessions = new Map();
+const backgroundTabs = new Set();
 
 const dialogs = new Map();   // tabId -> { type, message, at }
 
@@ -90,10 +91,21 @@ function touch(tabId) {
   const s = sessions.get(tabId);
   if (!s) return;
   if (s.timer) clearTimeout(s.timer);
-  s.timer = setTimeout(() => detach(tabId), L2_IDLE_MS);
+  if (!backgroundTabs.has(tabId)) s.timer = setTimeout(() => detach(tabId), L2_IDLE_MS);
 }
 
+export async function retainBackground(tabId) {
+  await ensureAttached(tabId);
+  await send(tabId, 'Emulation.setFocusEmulationEnabled', { enabled: true });
+  backgroundTabs.add(tabId);
+  touch(tabId);
+}
+
+export const backgroundHeld = tabId => backgroundTabs.has(tabId) && isAttached(tabId);
+export const releaseBackground = tabId => detach(tabId);
+
 export async function detach(tabId) {
+  backgroundTabs.delete(tabId);
   const s = sessions.get(tabId);
   if (s?.timer) clearTimeout(s.timer);
   sessions.delete(tabId);
@@ -115,6 +127,7 @@ export async function reapAll() {
     if (s?.timer) clearTimeout(s.timer);
   }
   sessions.clear();
+  backgroundTabs.clear();
   dialogs.clear();
   return reap(() => true);
 }
@@ -233,7 +246,16 @@ export async function setFileInput(tabId, selector, files) {
 //
 
 export async function screenshot(tabId, { full = false } = {}) {
-  return withL2(tabId, async (cmd) => {
+  return withL2(tabId, async (sendCommand) => {
+    const cmd = (method, params) => {
+      if (method !== 'Page.captureScreenshot' || !backgroundTabs.has(tabId)) return sendCommand(method, params);
+      let timer;
+      return Promise.race([sendCommand(method, params), new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new L2Unavailable(
+          'Chrome did not render a screenshot while minimized. Use DOM tools, or ask the user to view the page; BeatBrowser will not foreground it automatically.',
+          'BACKGROUND_CAPTURE_UNAVAILABLE')), 3000);
+      })]).finally(() => clearTimeout(timer));
+    };
     if (full) {
       const r = await cmd('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
       return { dataUrl: `data:image/png;base64,${r.data}`, scale: 1 };
@@ -294,6 +316,7 @@ function wireDebuggerEvents() {
     const s = sessions.get(tabId);
     if (s?.timer) clearTimeout(s.timer);
     sessions.delete(tabId);
+    backgroundTabs.delete(tabId);
     dialogs.delete(tabId);
   });
 }

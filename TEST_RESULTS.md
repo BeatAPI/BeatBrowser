@@ -15,6 +15,17 @@ Run from a clean checkout with Node.js 20+ after `npm ci`:
 | `npm run check:security` | No findings (narrow source-pattern and extension cloud-boundary scan; not exhaustive secret detection) |
 | `node src/cli.js run --dry-run --url https://example.com --goal 'Check page readiness'` | Exit 0; `status: "dry_run"`, zero model calls, no browser connection |
 
+### Unreleased TaskSpace development on 2026-10-14
+
+- Full suite: **234 passed, zero failures/skips**. Syntax: 53 JavaScript files.
+- Narrow source-pattern/cloud-boundary scan: 84 files, no findings; not a full security audit.
+- Clean isolated npm installation: 74 package files, SDK import without starting a bridge, stable CLI launcher and discovery of 24 Normal MCP tools passed. Package version remains 1.2.2 as development metadata; no new npm release was made.
+- Real Chrome 153 headless, disposable profile/private bridge: two named pages, input, rendering across 6.5 seconds (40 to 431 frames), confirmation pause, actual extension-popup resume, stop and screenshot passed. The screenshot was visually inspected. System notification delivery was mocked in unit tests, not verified against macOS notification settings.
+- Transport tests cover explicit multi-profile selection, ambiguity rejection, page membership after addition/release, connection replacement/disconnection and no cross-profile fallback.
+- An earlier headed fixture preserved the human window/tab and minimized the task window, but minimized capture failed. No headed rerun after the keychain-prompt report; headless results do not establish headed focus or prompt behavior.
+- Synthetic tests now default to headless, require OS-temporary profiles and use a mock keychain on macOS. They do not import passwords/cookies or change everyday Chrome settings.
+- Daily installed extension, live Grok Bot/Muse clients and signed-in ChatGPT/Gemini were not upgraded or acceptance-tested in this change. See [TaskSpace limitations](docs/TASKSPACES.md).
+
 ### Extension download release preparation on 2026-10-12
 
 - Final CLI, package lockfile and extension versions match at 1.2.2.

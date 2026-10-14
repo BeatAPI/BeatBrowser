@@ -4,6 +4,8 @@
 //
 
 import * as cdp from './cdp.js';
+import { createSpaces } from './spaces.js';
+const taskSpaces = createSpaces(chrome, cdp);
 import { matchChallenge, hostOf, hostMatches, L2_ORIGINS_SEED } from './risk.js';
 import { CRED_URL, redactCreds } from './redact.js';
 import { identityOf, stripMarkPrefix } from './identity.js';
@@ -234,7 +236,7 @@ const reply = (id, ok, payload, k) => {
 };
 const emit = (event, extra = {}) => toBridge({ type: 'event', event, ...extra });
 
-const NO_SLOT_CMDS = new Set(['tabs', 'download', 'reload', 'status']);
+const NO_SLOT_CMDS = new Set(['tabs', 'spaces', 'download', 'reload', 'status']);
 
 async function onMessage(msg) {
   if (msg.type === 'event') return onBridgeEvent(msg);
@@ -243,6 +245,7 @@ async function onMessage(msg) {
     const handler = HANDLERS[msg.cmd];
     if (!handler) throw err('INTERNAL', `Unknown command ${msg.cmd}`);
     if (msg.cmd.startsWith('fast_')) {
+      if (msg.tabId) await taskSpaces.guard(msg.tabId, msg.sid);
       const data = await handler(msg.params || {}, msg.tabId, { sid: msg.sid });
       return reply(msg.id, true, data, msg.__k);
     }
@@ -258,6 +261,9 @@ async function onMessage(msg) {
     const tabId = NO_SLOT_CMDS.has(msg.cmd) ? msg.tabId : await resolveTab(msg.tabId, msg.sid, ctx);
     
     
+    if (tabId) await taskSpaces.guard(tabId, msg.sid, {
+      mayFocus: msg.params?.focus === true || (msg.cmd === 'ask' && msg.params?.focus !== false),
+    });
     if (tabId && msg.sid && !NO_SLOT_CMDS.has(msg.cmd)) await registerTab(msg.sid, tabId);
     let data = await handler(msg.params || {}, tabId, ctx);
     
@@ -566,6 +572,7 @@ const groupTitleOk = (title, sid) => title === GROUP_TITLE || title === identity
 
 async function syncGroup(tabId, owners) {
   try {
+    if (await taskSpaces.contains(tabId)) return;
     if (!chrome.tabGroups) return;   
     const tab = await chrome.tabs.get(tabId);
     const all = await chrome.storage.local.get(null);
@@ -602,7 +609,7 @@ async function syncGroup(tabId, owners) {
     if (gid !== null) {
       await chrome.tabs.group({ tabIds: tabId, groupId: gid });
     } else {
-      gid = await chrome.tabs.group({ tabIds: tabId });
+      gid = await chrome.tabs.group({ tabIds: tabId, createProperties: { windowId: tab.windowId } });
       await chrome.tabGroups.update(gid, { title: GROUP_TITLE, color: o.group });
       await chrome.storage.local.set({ [groupKey(o.sid)]: gid });
     }
@@ -1167,6 +1174,7 @@ function pollPanel(id, timeout) {
 let payTimeout = 180000;
 
 async function confirmPay(id, pay) {
+  if (await taskSpaces.contains(id)) throw err('SPACE_STOPPED', 'Payment confirmation requires an explicit TaskSpace handoff.');
   const tab = await chrome.tabs.get(id);
   await chrome.windows.update(tab.windowId, { focused: true }).catch(() => {});
   await chrome.tabs.update(id, { active: true });
@@ -1603,7 +1611,7 @@ async function fastOpen(p, tabId) {
     } else {
       reason = fastConfiguration(p);
       if (reason) return { blockedReason: reason };
-      tab = await chrome.tabs.create({ url: p.url, active: true });
+      tab = await chrome.tabs.create({ url: p.url, active: false });
       tabId = tab.id;
     }
   } catch { return { blockedReason: 'setup-failed' }; }
@@ -1654,6 +1662,7 @@ chrome.tabs.onUpdated.addListener((tabId, info) => {
 });
 
 const HANDLERS = {
+  async spaces(p, tabId, ctx) { return taskSpaces.command(p, ctx?.sid); },
   async fast_open(p, tabId) { return fastOpen(p, tabId); },
   async fast_snapshot(p, tabId) { return fastObserve(p, tabId, 'fast_snapshot'); },
   async fast_act(p, tabId) { return fastPerform(p, tabId); },
@@ -1733,6 +1742,7 @@ const HANDLERS = {
         return;
       }
       try {
+        await taskSpaces.guard(id, ctx?.sid);
         if (cmd === 'wait') {
           const r = await toContent(id, { __hc: 'wait', ...rest });
           out.push(`✅ ${label}  ${r?.text || ''}`);
@@ -2450,6 +2460,14 @@ chrome.tabs.onUpdated.addListener((tabId, info) => {
 });
 
 chrome.runtime.onMessage.addListener((m, _s, sendResponse) => {
+  if (m?.__hcPopup === 'spaces') {
+    if (_s.id !== chrome.runtime.id || _s.url !== chrome.runtime.getURL('popup.html')) {
+      sendResponse({error:'TaskSpace controls are available only in the extension popup.'});
+      return false;
+    }
+    taskSpaces.humanCommand(m.params || {}).then(sendResponse).catch(error => sendResponse({error:error.message}));
+    return true;
+  }
   
   
   if (m?.__hcBridge === 'in') {

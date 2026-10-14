@@ -24,19 +24,22 @@ function tempDir(t) {
   return dir;
 }
 
-test('default MCP tools exactly preserve the pinned baseline schemas and descriptions', () => {
+test('TaskSpaces adds scope while preserving every existing tool contract', () => {
   const tools = getToolList();
-  assert.deepEqual(tools.map((tool) => tool.name), [
+  const baseline = tools.filter(tool => tool.name !== 'spaces').map(tool => {
+    const copy = structuredClone(tool); delete copy.inputSchema.properties.spaceId; return copy;
+  });
+  assert.deepEqual(baseline.map((tool) => tool.name), [
     'snapshot', 'navigate', 'click', 'type', 'select', 'fill', 'key', 'read_text',
     'screenshot', 'tabs', 'wait', 'network', 'fetch', 'scroll', 'download', 'upload',
     'query', 'act', 'ask', 'status', 'eval', 'learnings', 'reload',
   ]);
   // Independently computed from base 7f674cff63d28b18371da2db5a393c470e4bd72e.
-  assert.equal(crypto.createHash('sha256').update(JSON.stringify(tools)).digest('hex'),
+  assert.equal(crypto.createHash('sha256').update(JSON.stringify(baseline)).digest('hex'),
     '00590d166e65b6926d05b94ac41cdb9d13a8371a6bfb159c92255fae63eff3d3');
   assert.deepEqual(getToolList({ fastAgentEnabled: true }).slice(0, -1), tools);
   assert.equal(getToolList({ fastAgentEnabled: true }).at(-1).name, 'browser_task');
-  assert.equal(getToolList({ fastAgentEnabled: '1' }).length, 23);
+  assert.equal(getToolList({ fastAgentEnabled: '1' }).length, 24);
 });
 
 test('optional task schema exposes no credential, model, code, tab or output-path overrides', () => {
@@ -263,7 +266,7 @@ for (const enabled of [false, true]) {
     t.after(async () => { await client.close(); });
     await client.connect(transport);
     const listed = await client.listTools();
-    assert.equal(listed.tools.length, enabled ? 24 : 23);
+    assert.equal(listed.tools.length, enabled ? 25 : 24);
     assert.equal(listed.tools.some((tool) => tool.name === 'browser_task'), enabled);
     const response = await client.callTool({ name: 'browser_task', arguments: task({ dryRun: true }) });
     const result = body(response);

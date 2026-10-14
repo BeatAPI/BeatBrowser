@@ -48,7 +48,11 @@ Claude Code / Codex CLI / Cursor / other MCP clients
 - **Reuse:** save reviewed site notes and playbooks in `~/.beat-browser/learnings/`. Another agent can read the same local notes. The tool does not automatically learn or fine-tune a model.
 - **Hand back:** use `ask` for login, CAPTCHA, OTP or a decision that needs you.
 
-Multiple clients can connect. Label your tabs and pass `tabId` explicitly; concurrent writes to the same tab are not isolated. When multiple Chrome profiles are connected, Normal commands use the bridge's selected primary extension; per-profile routing is not a promised capability.
+Multiple clients can connect. Label your tabs and pass `tabId` explicitly; concurrent writes to the same tab are not isolated. When multiple Chrome profiles are connected, Normal commands use the bridge's selected primary extension; use explicit profile selection in development TaskSpaces for tasks that must stay on one profile.
+
+## Background TaskSpaces (development)
+
+This branch adds BeatBrowser-owned task windows, named multiple pages, profile-pinned ownership, progress notifications and human takeover controls. MCP, CLI and the new [JavaScript SDK](docs/JAVASCRIPT.md) share the same local bridge. It does not require Ego Lite. These changes are not in the installed 1.2.2 release. See [status and limits](docs/TASKSPACES.md) and the [Ego capability comparison](docs/EGO_PARITY_REVIEW.md).
 
 ## Install
 
@@ -167,7 +171,7 @@ Pick BeatBrowser for one local tool interface across agents or to inspect and ad
 
 ## Tools
 
-Normal mode exposes 23 tools:
+Released 1.2.2 exposes 23 Normal tools. This development branch adds `spaces` (24 total):
 
 | Group | Tools |
 | --- | --- |
@@ -175,7 +179,7 @@ Normal mode exposes 23 tools:
 | Navigate | `navigate`, `tabs` |
 | Act | `act`, `click`, `type`, `fill`, `select`, `key`, `scroll`, `wait` |
 | Data | `network`, `fetch`, `download`, `upload` |
-| Human and context | `ask`, `status`, `learnings` |
+| Human and context | `ask`, `status`, `learnings`, `spaces` (development) |
 | Advanced | `eval`, `reload` |
 
 Read site notes first. Snapshot before actions, batch predictable steps, and use explicit assertions. A click receipt does not prove success. Some Normal tools support iframes and open shadow roots; restricted browser pages, closed roots and unusual editors can need another approach.

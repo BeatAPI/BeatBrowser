@@ -45,6 +45,24 @@ const EXPECT = {
 
 const TOOLS = [
   {
+    name: 'spaces',
+    description: 'BeatBrowser-owned background task window. Open creates a minimized Chrome window using existing logins; pass its tabId on all browser calls. No Ego app is required. User focus pauses control. Handoff alone brings the window forward; resume requires explicit user instruction. Finish releases control and keeps evidence tabs.',
+    inputSchema: {type:'object', properties:{
+      action:{type:'string', enum:['profiles','open','list','status','pages','new-page','adopt','release-page','close-page','events','report','notifications','handoff','resume','stop','finish']},
+      profileId:{type:'string',description:'Connected extension profile ID returned by profiles. Required to open or list spaces when multiple profiles are connected.'},
+      spaceId:{type:'string'}, url:{type:'string'}, label:{type:'string'},
+      leaseMs:{type:'number'}, userConfirmed:{type:'boolean'},
+      pageLabel:{type:'string',description:'Stable name within a space; main is created automatically.'},
+      tabId:TAB,
+      keep:{anyOf:[{type:'string',enum:['all']},{type:'array',items:{type:'string'}}],description:'Finish retention policy. Default all. User, popup and moved pages are always protected.'},
+      after:{type:'number',description:'Read lifecycle events after this sequence.'},
+      notifications:{type:'boolean',description:'Opt in to system progress and review notifications for this space.'},
+      reportIntervalMs:{type:'number',description:'Minimum interval for changed progress reports; 1-60 minutes, default 5.'},
+      message:{type:'string',description:'Concise progress or proposed next action for the human. Do not include credentials.'},
+      needsConfirmation:{type:'boolean',description:'With report, pause subsequent commands until explicit human resume. This does not execute the proposed action.'}
+    }, required:['action']},
+  },
+  {
     name: 'snapshot',
     description:
       'Capture the current page as a compact list of interactive elements with refs and state ' +
@@ -482,6 +500,8 @@ Use this toolkit when the task needs the Chrome profile where BeatBrowser is loa
 Other connected browser integrations may also use existing logins; keep this task on
 one controller and reuse its explicit tabId and reviewed local site notes.
 
+BACKGROUND TASKS. For a new isolated task, use \`spaces\` open, then pass both spaceId and the returned tabId on every page call. Use new-page for additional named pages. Use report with needsConfirmation:true to pause without foregrounding. Never resume without explicit user instruction. Existing-tab tasks can continue using the original tools.
+
 LEARNINGS FIRST. Before acting on a site, call \`learnings\` with its domain — past sessions
 may have mapped its APIs, walls and pitfalls (some as runnable \`\`\`act playbooks).
 Notes are hints, not rules — trust the page when they disagree, then save corrections back.
@@ -521,7 +541,10 @@ function wrapUntrusted(body, meta = '') {
 }
 
 export function getToolList({ fastAgentEnabled = false } = {}) {
-  return fastAgentEnabled === true ? [...TOOLS, BROWSER_TASK_TOOL] : [...TOOLS];
+  const tools = TOOLS.map(tool => ({...tool, inputSchema:{...tool.inputSchema, properties:{...tool.inputSchema.properties,
+    spaceId:{type:'string',description:'Pin this command to an owned BeatBrowser TaskSpace. Also pass its tabId.'}
+  }}}));
+  return fastAgentEnabled === true ? [...tools, BROWSER_TASK_TOOL] : tools;
 }
 
 export async function startMcpServer({ client = 'unknown', fastAgentEnabled = process.env.BEAT_BROWSER_FAST_AGENT === '1' } = {}) {
@@ -578,7 +601,7 @@ export async function startMcpServer({ client = 'unknown', fastAgentEnabled = pr
         const st = fs.statSync(args.path);
         const ext = path.extname(args.path).toLowerCase();
         const mime = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp', '.mp4': 'video/mp4', '.mov': 'video/quicktime', '.pdf': 'application/pdf' }[ext] || 'application/octet-stream';
-        const base = { path: args.path, name: path.basename(args.path), type: mime, bytes: st.size, selector: args.selector, dropSelector: args.dropSelector };
+        const base = { spaceId: args.spaceId, path: args.path, name: path.basename(args.path), type: mime, bytes: st.size, selector: args.selector, dropSelector: args.dropSelector };
         
         const timeoutMs = Math.max(60000, Math.round(st.size / (1024 * 1024)) * 1000);
         let out = args.dropSelector ? null : await bridge.call('upload', base, { tabId: args.tabId, timeoutMs });
@@ -702,7 +725,7 @@ export async function fetchPages(bridge, args) {
     const url = new URL(base);
     if (pg.param) url.searchParams.set(pg.param, String(n));
     if (pg.cursorParam && cursor) url.searchParams.set(pg.cursorParam, cursor);
-    const data = await bridge.call('fetch', { url: url.toString(), init: args.init, maxBody: args.maxBody || 2000000, via: args.via }, { tabId: args.tabId });
+    const data = await bridge.call('fetch', { spaceId: args.spaceId, url: url.toString(), init: args.init, maxBody: args.maxBody || 2000000, via: args.via }, { tabId: args.tabId });
     const m = /^(\d+)\n\n([\s\S]*)$/.exec(data?.text || '');
     const status = Number(m?.[1] || 0), body = m?.[2] ?? '';
     if (!(status >= 200 && status < 300)) { stop = `page ${i + 1} returned ${status}, stopping`; break; }

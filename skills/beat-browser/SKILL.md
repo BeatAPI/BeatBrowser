@@ -33,3 +33,11 @@ Some sites ship extra playbooks under `skills/` and `docs/learnings/` (for examp
 ## Human install reminder
 
 BeatBrowser is **not** on the Chrome Web Store. Load unpacked from the repo `extension/` directory. The bridge listens on `127.0.0.1` ports `18899–18903`; disable any other browser-control extension that could compete for the same tabs.
+
+## Background TaskSpaces
+
+When the matching extension exposes the spaces tool, use it for new background work. Call profiles and select explicitly if multiple profiles are connected. Open a space, retain its spaceId and tabId, and pass both on page commands. Add pages with new-page, not tabs new. Keep the existing tools for tasks intentionally using an existing user tab.
+
+Report real progress with report. Set needsConfirmation:true to pause without bringing the window forward. The user can inspect, stop or explicitly return control from the extension popup. Never infer authorization from elapsed time or call resume automatically. Finish with an explicit keep policy and retain the returned receipt. Lost control or connection must stop without switching profiles or repeating uncertain submissions.
+
+JavaScript-capable agents can use the same transport through [the SDK](../../docs/JAVASCRIPT.md). TaskSpace notifications are opt-in and only report changed progress. Background screenshots may be unavailable on minimized macOS Chrome; use DOM evidence or request an explicit handoff.

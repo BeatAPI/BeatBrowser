@@ -36,7 +36,8 @@ try {
   assert.ok(Array.isArray(pack?.files) && typeof pack.filename === 'string', 'Invalid npm pack metadata');
   const names = new Set(pack.files.map(file => file.path));
   for (const required of ['LICENSE', 'README.md', 'AGENT_INSTALL.md', 'PRIVACY.md', 'TEST_RESULTS.md',
-    'src/cli.js', 'src/agents.json', 'extension/manifest.json', 'extension/background.js',
+    'src/cli.js', 'src/agents.json', 'src/browser.js', 'extension/spaces.js',
+    'docs/TASKSPACES.md', 'docs/JAVASCRIPT.md', 'extension/manifest.json', 'extension/background.js',
     'media/hero.webp', 'media/compare-agents.webp', 'media/architecture.png', 'media/architecture.svg', 'docs/COMPARISON.md', 'docs/DEMO.md',
     'docs/RELEASING.md', 'docs/RELEASE_NOTES.md', 'test/fixtures/demo.html', 'skills/beat-browser/SKILL.md']) {
     assert.ok(names.has(required), `Missing package file: ${required}`);
@@ -50,6 +51,9 @@ try {
   run(npm, ['install', '--prefix', sandbox, '--ignore-scripts', '--no-audit', '--no-fund', '--registry=https://registry.npmjs.org', path.join(temporary, pack.filename)]);
   const installed = path.join(sandbox, 'node_modules', '@beatapi', 'beat-browser');
   const cli = path.join(installed, 'src', 'cli.js');
+  assert.match(run(process.execPath, ['--input-type=module', '-e',
+    "import {createBrowser} from '@beatapi/beat-browser/browser'; const b=createBrowser(); console.log(typeof b.openSpace); b.close();"], sandbox), /function/);
+  assert.ok(!fs.existsSync(path.join(fakeHome, '.beat-browser')), 'SDK import must not start a bridge');
   const metadata = JSON.parse(fs.readFileSync(path.join(installed, 'package.json')));
   const extension = JSON.parse(fs.readFileSync(path.join(installed, 'extension', 'manifest.json')));
   assert.equal(metadata.version, extension.version, 'CLI/extension versions differ');
@@ -70,14 +74,14 @@ try {
   try {
     await client.connect(transport);
     const { tools } = await client.listTools();
-    assert.equal(tools.length, 23);
+    assert.equal(tools.length, 24);
     assert.ok(!tools.some(tool => tool.name === 'browser_task'));
     assert.ok(!fs.existsSync(path.join(fakeHome, '.beat-browser')), 'Tool discovery must not start a browser bridge');
   } finally {
     await client.close();
   }
   console.log(JSON.stringify({ version: metadata.version, files: names.size, tarballBytes: pack.size,
-    cleanInstall: true, stableLauncher: true, normalTools: 23, browserConnected: false }, null, 2));
+    cleanInstall: true, stableLauncher: true, normalTools: 24, browserConnected: false }, null, 2));
 } finally {
   fs.rmSync(temporary, { recursive: true, force: true });
 }

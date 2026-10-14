@@ -78,3 +78,88 @@ test('Normal-mode response belongs to the extension that received the command', 
   await until(() => agent.messages.some(m => m.type === 'res' && m.id === 'read'));
   assert.equal(agent.messages.find(m => m.type === 'res' && m.id === 'read').data, 'owner');
 });
+
+test('TaskSpace stays on its original browser and stops when that browser disconnects', async t => {
+  const server = startBridge({ port: 0, writeInfo: false, token: 'synthetic-release-token', auditFn: () => {} });
+  t.after(() => server.close());
+  await server.ready;
+  const port = server.wss.address().port;
+  const owner = await peer(port, true);
+  hello(owner, true, 'space-owner');
+  await until(() => owner.messages.some(m => m.type === 'welcome'));
+  const agent = await peer(port);
+  hello(agent, false);
+  await until(() => agent.messages.some(m => m.type === 'welcome'));
+  agent.socket.send(JSON.stringify({ type:'cmd', id:'open', cmd:'spaces', params:{action:'open',url:'https://example.test'} }));
+  await until(() => owner.messages.some(m => m.cmd === 'spaces'));
+  const opening = owner.messages.find(m => m.cmd === 'spaces');
+  owner.socket.send(JSON.stringify({type:'res',id:opening.id,__k:opening.__k,ok:true,data:{spaceId:'owned-space',tabId:42,state:'running'}}));
+  await until(() => agent.messages.some(m => m.id === 'open'));
+  const other = await peer(port, true);
+  hello(other, true, 'space-other');
+  await until(() => other.messages.some(m => m.type === 'welcome'));
+  const send = (id, tabId=42) => agent.socket.send(JSON.stringify({type:'cmd',id,cmd:'snapshot',tabId,params:{spaceId:'owned-space'}}));
+  send('wrong-tab', 43);
+  await until(() => agent.messages.some(m => m.id === 'wrong-tab'));
+  assert.equal(agent.messages.find(m => m.id === 'wrong-tab').error.code,'SPACE_STOPPED');
+  send('pinned');
+  await until(() => owner.messages.some(m => m.id === 'pinned'));
+  assert.equal(other.messages.some(m => m.id === 'pinned'),false);
+  const pinned = owner.messages.find(m => m.id === 'pinned');
+  owner.socket.send(JSON.stringify({type:'res',id:pinned.id,__k:pinned.__k,ok:true,data:'owned answer'}));
+  await until(() => agent.messages.some(m => m.id === 'pinned'));
+  const closed = onceClosed(owner.socket);
+  owner.socket.close();
+  await closed;
+  send('after-disconnect');
+  await until(() => agent.messages.some(m => m.id === 'after-disconnect'));
+  assert.equal(agent.messages.find(m => m.id === 'after-disconnect').error.code,'SPACE_STOPPED');
+  assert.equal(other.messages.some(m => m.id === 'after-disconnect'),false);
+});
+
+const onceClosed = socket => new Promise(resolve => socket.once('close',resolve));
+
+test('TaskSpace profile selection and page membership cannot fall back to another profile', async t => {
+  const server = startBridge({ port: 0, writeInfo: false, token: 'synthetic-release-token', auditFn: () => {} });
+  t.after(() => server.close());
+  await server.ready;
+  const port = server.wss.address().port;
+  const first = await peer(port, true), second = await peer(port, true), agent = await peer(port);
+  hello(first, true, 'first-profile'); hello(second, true, 'second-profile'); hello(agent, false);
+  await until(() => [first, second, agent].every(p => p.messages.some(m => m.type === 'welcome')));
+  const send = (id, params, cmd = 'spaces', tabId) => agent.socket.send(JSON.stringify({type:'cmd', id, cmd, params, tabId}));
+  const response = async id => { await until(() => agent.messages.some(m => m.id === id)); return agent.messages.find(m => m.id === id); };
+  const reply = async (id, data) => {
+    await until(() => second.messages.some(m => m.id === id));
+    const command = second.messages.find(m => m.id === id);
+    second.socket.send(JSON.stringify({type:'res',id,__k:command.__k,ok:true,data}));
+    return response(id);
+  };
+  send('profiles', {action:'profiles'});
+  assert.deepEqual((await response('profiles')).data.profiles.map(p => p.profileId).sort(), ['first-profile','second-profile']);
+  for (const action of ['open', 'list']) {
+    send(`ambiguous-${action}`, {action, url:'https://example.test'});
+    assert.equal((await response(`ambiguous-${action}`)).error.code, 'SPACE_STOPPED');
+  }
+  send('missing-profile', {action:'open', profileId:'offline', url:'https://example.test'});
+  assert.equal((await response('missing-profile')).error.code, 'SPACE_STOPPED');
+  send('selected', {action:'open', profileId:'second-profile', url:'https://example.test'});
+  await reply('selected', {spaceId:'multi',state:'running',pages:[{label:'main',tabId:42}]});
+  assert.equal(first.messages.some(m => m.id === 'selected'), false);
+  send('selected-list', {action:'list',profileId:'second-profile'});
+  await reply('selected-list', {spaces:[{spaceId:'multi'}]});
+  send('new-page', {action:'new-page',spaceId:'multi',pageLabel:'reference',url:'https://example.test'});
+  await reply('new-page', {spaceId:'multi',pages:[{label:'main',tabId:42},{label:'reference',tabId:43}]});
+  send('second-page', {spaceId:'multi'}, 'snapshot', 43);
+  await reply('second-page', {text:'reference'});
+  send('released', {action:'release-page',spaceId:'multi',pageLabel:'reference'});
+  await reply('released', {spaceId:'multi',pages:[{label:'main',tabId:42}]});
+  send('released-page', {spaceId:'multi'}, 'snapshot', 43);
+  assert.equal((await response('released-page')).error.code, 'SPACE_STOPPED');
+  const replacement = await peer(port, true);
+  hello(replacement, true, 'second-profile');
+  await until(() => replacement.messages.some(m => m.type === 'welcome'));
+  send('replaced', {spaceId:'multi'}, 'snapshot', 42);
+  assert.equal((await response('replaced')).error.code, 'SPACE_STOPPED');
+  assert.equal(replacement.messages.some(m => m.id === 'replaced'), false);
+});

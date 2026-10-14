@@ -45,6 +45,7 @@ export function startBridge({ port = DEFAULT_PORT, token = newToken(), writeInfo
   // Pin each fast run to one extension socket. A later Chrome heartbeat must
   // never redirect its tab IDs, actions or cancellation to a different browser.
   const fastOwners = new Map();
+  const spaceOwners = new Map();
   let connSeq = 0;
 
   
@@ -168,6 +169,7 @@ export function startBridge({ port = DEFAULT_PORT, token = newToken(), writeInfo
         }
       }
       if (extensions.delete(ws)) {
+        for (const [id, owner] of spaceOwners) if (owner.extension === ws) spaceOwners.delete(id);
         log(`extension disconnected (${extLabel(ws)})`);
         
         //
@@ -216,6 +218,7 @@ export function startBridge({ port = DEFAULT_PORT, token = newToken(), writeInfo
       for (const old of extensions) {
         if (old.instanceId === ws.instanceId && old !== ws) {
           extensions.delete(old);
+          for (const [id, owner] of spaceOwners) if (owner.extension === old) spaceOwners.delete(id);
           if (old.readyState === 1) old.close(4009, 'replaced');
         }
       }
@@ -320,6 +323,30 @@ export function startBridge({ port = DEFAULT_PORT, token = newToken(), writeInfo
   }
 
   function dispatch(ws, msg, target = primary()) {
+    if (msg.cmd === 'spaces' && msg.params?.action === 'profiles') {
+      return send(ws, {type:'res',id:msg.id,ok:true,data:{profiles:liveExtensions().map(e=>({profileId:e.instanceId,description:extLabel(e),default:e===target}))}});
+    }
+    if (msg.cmd === 'spaces' && ['open', 'list'].includes(msg.params?.action)) {
+      const profileId=msg.params.profileId;
+      if (profileId) {
+        target=liveExtensions().find(e=>e.instanceId===profileId);
+        if (!target) return send(ws, {type:'res',id:msg.id,ok:false,error:{code:'SPACE_STOPPED',message:'Selected Chrome profile is not connected. No other profile was selected.'}});
+      } else if (liveExtensions().length>1) {
+        return send(ws, {type:'res',id:msg.id,ok:false,error:{code:'SPACE_STOPPED',message:'Multiple Chrome profiles are connected. List profiles and pass profileId explicitly.'}});
+      }
+    }
+    const spaceId = msg.params?.spaceId;
+    if (spaceId) {
+      const owner = spaceOwners.get(spaceId);
+      if (!owner || owner.sid !== ws.sid || owner.extension.readyState !== 1 || !extensions.has(owner.extension)) {
+        return send(ws, {type:'res', id:msg.id, ok:false, error:{code:'SPACE_STOPPED', message:'TaskSpace connection is unavailable; no other browser was selected.'}});
+      }
+      if (msg.cmd !== 'spaces' && !owner.tabIds.has(msg.tabId)) return send(ws, {type:'res', id:msg.id, ok:false, error:{code:'SPACE_STOPPED', message:'TaskSpace requires an explicit managed tabId.'}});
+      if (msg.cmd === 'tabs' && msg.params?.action === 'new') return send(ws, {type:'res', id:msg.id, ok:false, error:{code:'SPACE_STOPPED', message:'Use spaces new-page to keep this page inside its TaskSpace.'}});
+      target = owner.extension;
+    }
+    if (msg.cmd === 'spaces' && msg.params?.action === 'open' && spaceOwners.size >= 256) return send(ws, {type:'res', id:msg.id, ok:false, error:{code:'SPACE_STOPPED', message:'TaskSpace connection limit reached. Finish an existing space.'}});
+
     if (String(msg.cmd).startsWith('fast_')) {
       const runId = msg.params?.runId;
       if (typeof runId !== 'string' || !/^[A-Za-z0-9_-]{8,80}$/.test(runId)) {
@@ -361,7 +388,7 @@ export function startBridge({ port = DEFAULT_PORT, token = newToken(), writeInfo
     }, ms);
 
     
-    pending.set(key, { agent: ws, ext: target, cmd: msg.cmd, timer, startedAt: Date.now(), id: msg.id });
+    pending.set(key, { agent: ws, ext: target, action:msg.params?.action, spaceId, cmd: msg.cmd, timer, startedAt: Date.now(), id: msg.id });
     
     
     
@@ -400,6 +427,14 @@ export function startBridge({ port = DEFAULT_PORT, token = newToken(), writeInfo
       
       audit({ ev: 'res', id: key, cmd: p.cmd, ok: msg.ok, ms: Date.now() - p.startedAt, error: msg.error?.code,
         bytes: msg.ok ? JSON.stringify(msg.data ?? '').length : undefined });
+      if (p.cmd === 'spaces' && p.action === 'open' && msg.ok && msg.data?.spaceId) {
+        spaceOwners.set(msg.data.spaceId, {sid:p.agent.sid,extension:ws,tabIds:new Set(msg.data.pages?.map(page=>page.tabId) || [msg.data.tabId])});
+      }
+      if (p.cmd === 'spaces' && p.spaceId && msg.ok && Array.isArray(msg.data?.pages)) {
+        const owner=spaceOwners.get(p.spaceId);
+        if (owner?.extension===ws) owner.tabIds=new Set(msg.data.pages.map(page=>page.tabId));
+      }
+      if (p.cmd === 'spaces' && p.action === 'finish' && msg.ok) spaceOwners.delete(p.spaceId);
       const { __k, ...clean } = msg;
       send(p.agent, clean);
       return;

@@ -134,11 +134,11 @@ test('run IDs retain immutable domains and deadlines, and unknown run actions ne
   assert.equal((await h.api.fastObserve({ ...h.config, deadline: h.config.deadline + 1 }, 1, 'fast_snapshot')).blockedReason, 'run-config-changed');
 });
 
-test('explicit initial URL opens an active tab so dynamic pages can render', async () => {
+test('initial fast task opens in the background without taking the user tab', async () => {
   const h = harness(); h.control.provisionalOpen = true;
   const result = await h.api.fastOpen({ ...h.config, url: 'https://example.test/start?filter=one#panel' });
   assert.deepEqual(result, { tabId: 2, url: 'https://example.test/start' });
-  assert.equal(h.calls.find((call) => call.command === 'create').active, true);
+  assert.equal(h.calls.find((call) => call.command === 'create').active, false);
   assert.deepEqual(h.calls.find((call) => call.command === 'ready'), { command: 'ready', id: 2, hardCap: 5000, quiet: 800 });
   assert.equal(h.calls.some((call) => call.command === 'fast_snapshot'), false);
 });
