@@ -70,3 +70,16 @@ BEAT_TEST_CHROME='/absolute/path/to/Chrome for Testing' node scripts/check-space
 The recovery check actually reloads the test extension and restarts Chromium with its disposable profile, then verifies paused recovery, explicit resume, missing-page association and protected cleanup.
 
 The browser check uses a private bridge and synthetic pages; it never imports personal login data. Set `BEAT_TEST_HEADED=1` only for an intentional foreground-behavior experiment.
+
+## Quiet workspace cleanup
+
+Ordinary agent pages keep their page associations and in-page controls without
+creating Chrome tab groups. Recoverable TaskSpaces still use a uniquely named
+group while their pages are retained. Clear operations ungroup matching task
+pages before closing them, and preserve renamed groups and moved pages. A failed
+ungroup/close remains retryable rather than reporting successful cleanup.
+
+Already closed groups saved by older Chrome sessions are separate from task
+records and may need removal in Chrome's saved-group menu. An unavailable page
+inventory is not an empty inventory: the workspace offers Retry and reload
+instructions instead of reporting zero pages.

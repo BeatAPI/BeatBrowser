@@ -41,6 +41,8 @@ try {
  const call=(cmd,params={})=>new Promise((resolve,reject)=>{const id=`test-${++n}`;const timer=setTimeout(()=>{waiting.delete(id);reject(new Error(`${cmd} timed out`));},25000);waiting.set(id,{resolve:x=>{clearTimeout(timer);resolve(x)},reject:e=>{clearTimeout(timer);reject(e)}});socket.send(JSON.stringify({type:'cmd',id,cmd,params,tabId:params.tabId}));});
  const before=await call('__spaces_test_state');
  const human=before.find(w=>w.tabs.some(t=>t.url===`${base}/human`));assert(human);
+ await call('query',{tabId:human.tabs[0].id,selector:'#input',extract:{id:'.@id'}});
+ assert.equal((await call('__spaces_test_state')).find(w=>w.id===human.id).tabs[0].groupId,-1,'Ordinary agent pages must stay ungrouped');
  const s=await call('spaces',{action:'open',url:`${base}/agent`,label:'Isolated background proof'});assert.equal(s.state,'running');console.log('opened-state',JSON.stringify((await call('__spaces_test_state')).map(w=>({id:w.id,state:w.state,focused:w.focused}))));
  const scope={spaceId:s.spaceId,tabId:s.tabId};
  let readinessFailure;

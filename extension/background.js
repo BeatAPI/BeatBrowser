@@ -577,55 +577,26 @@ async function noteMarked(tabId, on) {
 
 //
 
-const groupKey = (sid) => `agentGroup:${sid}`;
-
-const GROUP_TITLE = 'BeatBrowser';
-const groupTitleOk = (title, sid) => title === GROUP_TITLE || title === identityOf(sid).emoji;
-
-async function syncGroup(tabId, owners) {
+// Native groups are reserved for recoverable TaskSpaces. Ordinary agent pages
+// already have page associations and in-page marks; never pin them in Chrome.
+async function syncGroup(tabId) {
   try {
     if (await taskSpaces.contains(tabId)) return;
-    if (!chrome.tabGroups) return;   
     const tab = await chrome.tabs.get(tabId);
+    if (tab.groupId === -1) return;
     const all = await chrome.storage.local.get(null);
-    const ours = new Map(Object.entries(all)
-      .filter(([k]) => k.startsWith('agentGroup:'))
-      .map(([k, v]) => [k.slice('agentGroup:'.length), v]));
-
-    
-    if (!owners.length) {
-      if (tab.groupId === -1) return;
-      for (const [sid, gid] of ours) {
-        if (gid !== tab.groupId) continue;
-        const g = await chrome.tabGroups.get(gid).catch(() => null);
-        if (g && groupTitleOk(g.title, sid)) await chrome.tabs.ungroup(tabId);
-        return;
+    for (const [key, id] of Object.entries(all)) {
+      if (!key.startsWith('agentGroup:') || id !== tab.groupId) continue;
+      const group = await chrome.tabGroups.get(id).catch(() => null);
+      const sid = key.slice('agentGroup:'.length);
+      // Preserve renamed/user groups and all of their other tabs.
+      if (group?.windowId === tab.windowId &&
+          (group.title === 'BeatBrowser' || group.title === identityOf(sid).emoji)) {
+        await chrome.tabs.ungroup(tabId);
       }
       return;
     }
-
-    
-    const o = owners[0];
-    const stored = ours.get(o.sid);
-    if (tab.groupId !== -1) {
-      if (tab.groupId === stored) return;                         
-      if (![...ours.values()].includes(tab.groupId)) return;      
-    }
-    
-    
-    let gid = null;
-    if (stored !== undefined) {
-      const g = await chrome.tabGroups.get(stored).catch(() => null);
-      if (g && g.windowId === tab.windowId && groupTitleOk(g.title, o.sid)) gid = stored;
-    }
-    if (gid !== null) {
-      await chrome.tabs.group({ tabIds: tabId, groupId: gid });
-    } else {
-      gid = await chrome.tabs.group({ tabIds: tabId, createProperties: { windowId: tab.windowId } });
-      await chrome.tabGroups.update(gid, { title: GROUP_TITLE, color: o.group });
-      await chrome.storage.local.set({ [groupKey(o.sid)]: gid });
-    }
-  } catch {  }
+  } catch { /* A closing tab does not block marks or agent commands. */ }
 }
 
 async function resyncMarks() {

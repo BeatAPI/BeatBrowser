@@ -7,7 +7,7 @@ function setup() {
     storage:{session:{get:async()=>structuredClone(data),set:async x=>{data=structuredClone({...data,...x})}},local:{get:async()=>structuredClone(local),set:async x=>{local=structuredClone({...local,...x})}}},
     tabGroups:{query:async()=>[...groups.values()],get:async id=>groups.get(id),update:async(id,p)=>Object.assign(groups.get(id),p)},
     windows:{get:async()=>({...windowState}),create:async p=>{calls.push(['create',p]);tabs.set(8,{id:8,windowId:4,url:p.url});return{id:4,tabs:[{id:8}]};},update:async(id,p)=>{calls.push(['window',id,p]);Object.assign(windowState,p);if(p.state==='minimized')windowState.focused=false;},onFocusChanged:{addListener:fn=>listeners.focus=fn}},
-    tabs:{get:async id=>tabs.get(id),update:async(id,p)=>{calls.push(['tab-update',id,p]);Object.assign(tabs.get(id),p);},create:async p=>{calls.push(['tab-create',p]);const tab={id:nextTab++,windowId:p.windowId,url:p.url};tabs.set(tab.id,tab);return tab;},remove:async id=>{calls.push(['tab-remove',id]);tabs.delete(id);},group:async p=>{const id=p.groupId ?? groups.size+1;groups.set(id,{...(groups.get(id)||{id,windowId:p.createProperties?.windowId}),title:groups.get(id)?.title || ''});for(const tabId of p.tabIds)tabs.get(tabId).groupId=id;return id;},query:async p=>[...tabs.values()].filter(t=>p.windowId===undefined || t.windowId===p.windowId),onCreated:{addListener:fn=>listeners.created=fn},onRemoved:{addListener:fn=>listeners.remove=fn}},
+    tabs:{ungroup:async id=>{calls.push(['ungroup',id]);tabs.get(id).groupId=-1;},get:async id=>tabs.get(id),update:async(id,p)=>{calls.push(['tab-update',id,p]);Object.assign(tabs.get(id),p);},create:async p=>{calls.push(['tab-create',p]);const tab={id:nextTab++,windowId:p.windowId,url:p.url};tabs.set(tab.id,tab);return tab;},remove:async id=>{calls.push(['tab-remove',id]);tabs.delete(id);},group:async p=>{const id=p.groupId ?? groups.size+1;groups.set(id,{...(groups.get(id)||{id,windowId:p.createProperties?.windowId}),title:groups.get(id)?.title || ''});for(const tabId of p.tabIds)tabs.get(tabId).groupId=id;return id;},query:async p=>[...tabs.values()].filter(t=>p.windowId===undefined || t.windowId===p.windowId),onCreated:{addListener:fn=>listeners.created=fn},onRemoved:{addListener:fn=>listeners.remove=fn}},
     notifications:{create:async(id,p)=>{calls.push(['notification',id,p]);}},
     alarms:{create(){},onAlarm:{addListener:fn=>listeners.alarm=fn}}
   };
@@ -236,4 +236,23 @@ test('new agent must explicitly claim a recovered task; claim alone does not res
 test('persistent records contain URL fingerprints rather than raw URLs',async()=>{
  const h=setup();await h.spaces.command({action:'open',url:'https://example.test/?secret=sensitive-test',label:'Test'},'a');
  const saved=JSON.stringify(h.local());assert(!saved.includes('sensitive-test'));assert(!saved.includes('https://'));assert(saved.includes('fingerprint'));
+});
+
+test('cleanup ungroups task pages before closing, without touching renamed or moved groups',async()=>{
+ const h=setup();await open(h);await h.spaces.command({action:'finish',spaceId:'space-one'},'a');
+ await h.spaces.humanCommand({action:'cleanup-ended'});
+ assert(h.calls.findIndex(c=>c[0]==='ungroup') < h.calls.findIndex(c=>c[0]==='tab-remove'));
+ assert(h.calls.some(c=>c[0]==='ungroup'&&c[1]===8));
+ for(const mode of ['renamed','moved']) {
+  const j=setup();await open(j);
+  if(mode==='renamed') j.groups.get(1).title='Personal';
+  else j.tabs.get(8).windowId=99;
+  await j.spaces.humanCommand({action:'cleanup-all',userConfirmed:true});
+  assert(!j.calls.some(c=>c[0]==='ungroup'));
+ }
+});
+test('failed ungroup keeps task cleanup retryable instead of leaving a saved group',async()=>{
+ const h=setup();await open(h);h.chrome.tabs.ungroup=async()=>{throw Error('busy');};
+ assert.equal((await h.spaces.humanCommand({action:'cleanup-all',userConfirmed:true})).failed,1);
+ assert(h.tabs.has(8));assert.equal((await h.spaces.humanCommand({action:'list'})).spaces.length,1);
 });

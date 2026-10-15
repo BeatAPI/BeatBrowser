@@ -109,6 +109,14 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
       ?{tabIds:ids,groupId:s.groupId}:{tabIds:ids,createProperties:{windowId:s.windowId}});
     await chrome.tabGroups.update(groupId,{title:s.groupTitle,color:'blue'});s.groupId=groupId;
   }
+  async function unmarkPage(s, tab) {
+    if (!tab || tab.windowId !== s.windowId || tab.groupId !== s.groupId) return;
+    const group = await chrome.tabGroups.get(s.groupId).catch(() => null);
+    if (group?.title === s.groupTitle && group.windowId === s.windowId) {
+      // Closing a group can save it in Chrome. Ungroup our own page first.
+      await chrome.tabs.ungroup(tab.id);
+    }
+  }
   async function open(p, sid, spaces) {
     webUrl(p.url);
     if (Object.values(spaces).filter(s => s.owner === sid && !TERMINAL.has(s.state)).length >= 4) fail('Finish an existing space before opening another.');
@@ -161,8 +169,10 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
         if (page.openedBy !== 'agent' && p.userConfirmed !== true) fail('Closing a user or popup page requires explicit user authorization.');
         const tab = await chrome.tabs.get(page.tabId);
         if (tab.windowId !== s.windowId) fail('Moved pages are protected; inspect them before closing.');
+        await unmarkPage(s, tab);
         await chrome.tabs.remove(page.tabId);
       }
+      if (p.action === 'release-page') await unmarkPage(s, await chrome.tabs.get(page.tabId));
       await cdp.releaseBackground(page.tabId);
       s.pages = pages(s).filter(item => item !== page);
       record(s, p.action === 'release-page' ? 'page-released' : 'page-closed', { pageLabel: label, tabId: page.tabId });
@@ -181,7 +191,7 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
       if (!tab) continue;
       // Unmanaged tabs are never touched; user/popup/moved pages are protected.
       if (keep === 'all' || keep.includes(page.label) || page.openedBy !== 'agent' || tab.windowId !== s.windowId) retained.push(page.label);
-      else { await chrome.tabs.remove(page.tabId); closed.push(page.label); }
+      else { await unmarkPage(s, tab); await chrome.tabs.remove(page.tabId); closed.push(page.label); }
     }
     s.pages = pages(s).filter(page => retained.includes(page.label));
     record(s, 'receipt', { retained, closed });
@@ -204,6 +214,7 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
           if (!/No tab with id|Invalid tab ID/i.test(error.message)) throw error;
         }
         if (!tab) continue;
+        await unmarkPage(s, tab);
         if (page.openedBy !== 'agent' || page.handedToUser || handedOff || tab.windowId !== s.windowId) kept.push(page.label);
         else { await chrome.tabs.remove(page.tabId); closed.push(page.label); }
       } catch { failed.push(page); }
