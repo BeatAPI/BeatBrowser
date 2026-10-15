@@ -4,14 +4,14 @@ You are an AI agent setting up BeatBrowser for the user. Done = `node src/cli.js
 
 ## Extension ZIP download
 
-The GitHub [latest release](https://github.com/BeatAPI/beat-browser/releases/latest) provides `beat-browser-extension.zip` and SHA-256 checksums. Extract it into a permanent folder and load that folder through Chrome's **Load unpacked** control. The ZIP alone does not install the local MCP server; complete the CLI setup below. Match the CLI and extension versions, and load only one copy of the extension.
+The GitHub [latest release](https://github.com/BeatAPI/BeatBrowser/releases/latest) provides `beat-browser-extension.zip` and SHA-256 checksums. Extract it into a permanent folder and load that folder through Chrome's **Load unpacked** control. The ZIP alone does not install the local MCP server; complete the CLI setup below. Match the CLI and extension versions, and load only one copy of the extension.
 
 ## CLI installation from GitHub
 
 Install the matching CLI from the release asset, preview client config changes and print the extension folder:
 
 ```bash
-npm install --global https://github.com/BeatAPI/beat-browser/releases/download/v1.2.2/beat-browser-cli.tgz
+npm install --global https://github.com/BeatAPI/BeatBrowser/releases/download/v1.2.2/beat-browser-cli.tgz
 beat-browser install --dry-run
 beat-browser extension
 ```
@@ -35,7 +35,7 @@ restart the agent. For development, use the source installation below.
 
 ## 0. Preconditions
 
-- For source installation, repo checked out locally (typical: `~/Desktop/beat-browser` or a clone of `BeatAPI/beat-browser`).
+- For source installation, repo checked out locally (typical: `~/Desktop/beat-browser` or a clone of `BeatAPI/BeatBrowser`).
 - Node.js 20+ (matches `engines` in `package.json`).
 - Google Chrome (or Chromium) installed.
 - If another unpacked browser-control extension is loaded, ask the user to **Disable or Remove** it first so it does not compete for the same tabs (BeatBrowser's bridge uses `127.0.0.1` ports `18899–18903`).

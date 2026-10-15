@@ -103,4 +103,4 @@ Chrome connection, response ownership is checked, and disconnected fast
 commands are not queued for replay; these controls do not undo effects that
 the site has already performed.
 
-Source: [BeatAPI/beat-browser](https://github.com/BeatAPI/beat-browser).
+Source: [BeatAPI/BeatBrowser](https://github.com/BeatAPI/BeatBrowser).

@@ -77,11 +77,11 @@
   "author": "BeatAPI",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/BeatAPI/beat-browser.git"
+    "url": "git+https://github.com/BeatAPI/BeatBrowser.git"
   },
-  "homepage": "https://github.com/BeatAPI/beat-browser",
+  "homepage": "https://github.com/BeatAPI/BeatBrowser",
   "bugs": {
-    "url": "https://github.com/BeatAPI/beat-browser/issues"
+    "url": "https://github.com/BeatAPI/BeatBrowser/issues"
   },
   "publishConfig": {
     "access": "public",

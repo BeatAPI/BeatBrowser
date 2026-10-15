@@ -91,7 +91,7 @@ function looksLikeMcp(f) {
   }
 }
 
-const REPO = 'https://github.com/BeatAPI/beat-browser';
+const REPO = 'https://github.com/BeatAPI/BeatBrowser';
 
 function nodeBin() {
   try {
