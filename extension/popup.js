@@ -168,7 +168,11 @@ async function refreshSpaces() {
   const result=await chrome.runtime.sendMessage({__hcPopup:'spaces',params:{action:'list'}});
   const openHistory=new Set([...root.querySelectorAll('.space')].filter(c=>c.querySelector('.timeline')?.open).map(c=>c.dataset.spaceId));
   if (sequence !== renderSequence) return;
-  if (result?.error) { showMessage(t('Task spaces unavailable'),true);return; }
+  if (!Array.isArray(result?.spaces) || result?.error) {
+    document.getElementById('task-count').textContent='—';
+    clearEnded.disabled=true;clearAll.disabled=true;
+    root.replaceChildren();showMessage(t('Task spaces unavailable'),true);return;
+  }
   root.replaceChildren();
   const spaces=result?.spaces || [];
   document.getElementById('task-count').textContent=String(spaces.length);
@@ -179,8 +183,8 @@ async function refreshSpaces() {
   document.getElementById('task-summary').textContent=spaces.length ? t('{active} active · {review} paused',{active,review}) : '';
   if (!spaces.length) {
     root.className='empty-space';
-    const title=document.createElement('strong');title.textContent=t('No tasks');
-    const description=document.createElement('p');description.textContent=t('Ask your agent to start a background task.');
+    const title=document.createElement('strong');title.textContent=t('No background tasks');
+    const description=document.createElement('p');description.textContent=t('Browser pages are listed below.');
     const icon=document.createElement('span');icon.className='empty-icon';icon.setAttribute('aria-hidden','true');icon.textContent='{ }';
     root.append(icon,title,description);return;
   }
@@ -270,3 +274,69 @@ chrome.storage.onChanged.addListener((changes,area)=>{
   }
   if(area==='session' && changes.beatTaskSpaces) refreshSpaces().catch(()=>{});
 });
+
+const pageRoot = document.getElementById('browser-pages-list');
+const closePages = document.getElementById('close-browser-pages');
+const pageConfirmation = document.getElementById('browser-pages-confirm');
+const pageMessage = document.getElementById('browser-pages-message');
+let browserPages = [], pendingPages = [], pagesBusy = false, pagesSequence = 0;
+async function pageControl(params) {
+  const result = await chrome.runtime.sendMessage({__hcPopup:'workspacePages',params});
+  if (!result || result.error) throw Error(result?.error || 'Pages unavailable');
+  return result;
+}
+function confirmPages(pages) {
+  pendingPages = pages.map(p => ({tabId:p.tabId,windowId:p.windowId,url:p.url}));
+  document.getElementById('browser-pages-confirm-text').textContent=t('Close {count} selected pages?',{count:pendingPages.length});
+  pageConfirmation.hidden=false;
+}
+async function refreshBrowserPages() {
+  const sequence=++pagesSequence;
+  try {
+    const result=await pageControl({action:'list'});
+    if(sequence!==pagesSequence)return;
+    browserPages=result.pages;
+    document.getElementById('browser-page-count').textContent=String(browserPages.length);
+    document.getElementById('browser-page-summary').textContent=t('Linked pages in this Chrome profile')+' · '+t('{windows} windows · {pages} pages',{windows:result.windows,pages:browserPages.length});
+    closePages.disabled=pagesBusy || !browserPages.length;
+    pageRoot.replaceChildren();
+    if (!browserPages.length) {
+      const empty=document.createElement('p');empty.className='meta';empty.textContent=t('No linked pages');pageRoot.append(empty);
+    }
+    for (const page of browserPages) {
+      const row=document.createElement('div');row.className='browser-page';row.dataset.tabId=page.tabId;
+      const name=document.createElement('span');name.className='browser-page-title';name.textContent=page.title || t('Page');name.title=page.url;
+      const actions=document.createElement('div');actions.className='cleanup-actions';
+      const view=document.createElement('button');view.type='button';view.textContent=t('View');view.dataset.pageAction='view';
+      view.onclick=async()=>{try{await pageControl({action:'view',tabId:page.tabId});}catch{pageMessage.textContent=t('Pages unavailable');}};
+      const close=document.createElement('button');close.type='button';close.textContent=t('Close');close.dataset.pageAction='close';close.disabled=pagesBusy;
+      close.onclick=()=>confirmPages([page]);actions.append(view,close);row.append(name,actions);pageRoot.append(row);
+    }
+  } catch {
+    if(sequence!==pagesSequence)return;
+    browserPages=[];closePages.disabled=true;pageRoot.replaceChildren();
+    document.getElementById('browser-page-count').textContent='—';
+    document.getElementById('browser-page-summary').textContent=t('Pages unavailable');
+  }
+}
+closePages.onclick=()=>confirmPages(browserPages);
+document.getElementById('browser-pages-cancel').onclick=()=>{pendingPages=[];pageConfirmation.hidden=true;};
+document.getElementById('browser-pages-confirm-yes').onclick=async()=>{
+  if(pagesBusy)return;
+  pagesBusy=true;closePages.disabled=true;pageConfirmation.hidden=true;
+  try {
+    const result=await pageControl({action:'close',userConfirmed:true,pages:pendingPages});
+    pageMessage.textContent=t('Closed {closed} · Kept {skipped}',result)+(result.failed?' · '+t('{failed} failed; retry',result):'');
+  } catch {pageMessage.textContent=t('Pages unavailable');}
+  finally {pendingPages=[];pagesBusy=false;await refreshBrowserPages();}
+};
+const pagesTimer=setInterval(refreshBrowserPages,3000);
+window.addEventListener('pagehide',()=>clearInterval(pagesTimer));
+chrome.storage.onChanged.addListener((changes,area)=>{
+  if(area==='local' && changes.uiLanguage) {
+    pageMessage.textContent='';
+    if(!pageConfirmation.hidden)confirmPages(pendingPages);
+    refreshBrowserPages();
+  }
+});
+refreshBrowserPages();

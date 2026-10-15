@@ -5,6 +5,17 @@
 (() => {
   if (globalThis.BeatBrowserUI) return;
   const chinese = {
+  "Browser pages": "浏览器页面",
+  "Linked pages in this Chrome profile": "当前 Chrome 配置的关联页面",
+  "{windows} windows · {pages} pages": "{windows} 个窗口 · {pages} 个页面",
+  "No linked pages": "没有关联页面",
+  "Close pages": "关闭页面",
+  "Close": "关闭",
+  "Close {count} selected pages?": "关闭选中的 {count} 个页面？",
+  "Closed {closed} · Kept {skipped}": "关闭 {closed} 页 · 保留 {skipped} 页",
+  "Pages unavailable": "页面暂不可用",
+  "No background tasks": "暂无后台任务",
+  "Browser pages are listed below.": "浏览器页面见下方。",
   "Clear": "清理",
   "Clear ended": "清理已结束",
   "Clear all": "全部清理",

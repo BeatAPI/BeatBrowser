@@ -7,10 +7,12 @@ const uiText = async key => globalThis.BeatBrowserUI.text(key, await globalThis.
 
 import * as cdp from './cdp.js';
 import { createSpaces } from './spaces.js';
+import { createWorkspacePages } from './workspace-pages.js';
 import { createContentTransport } from './content-transport.js';
 import { createWriteEvidence, writesText } from './write-evidence.js';
 const writeEvidence = createWriteEvidence(chrome);
 const taskSpaces = createSpaces(chrome, cdp);
+const workspacePages = createWorkspacePages(chrome, taskSpaces);
 import { matchChallenge, hostOf, hostMatches, L2_ORIGINS_SEED } from './risk.js';
 import { CRED_URL, redactCreds } from './redact.js';
 import { identityOf, stripMarkPrefix } from './identity.js';
@@ -2441,12 +2443,12 @@ chrome.tabs.onUpdated.addListener((tabId, info) => {
 });
 
 chrome.runtime.onMessage.addListener((m, _s, sendResponse) => {
-  if (m?.__hcPopup === 'spaces') {
+  if (m?.__hcPopup === 'spaces' || m?.__hcPopup === 'workspacePages') {
     if (_s.id !== chrome.runtime.id || !['popup.html', 'panel.html'].some(path => _s.url === chrome.runtime.getURL(path))) {
       sendResponse({error:'TaskSpace controls are available only in the extension workspace.'});
       return false;
     }
-    taskSpaces.humanCommand(m.params || {}).then(sendResponse).catch(error => sendResponse({error:error.message}));
+    (m.__hcPopup === 'spaces' ? taskSpaces.humanCommand(m.params || {}) : workspacePages.command(m.params || {})).then(sendResponse).catch(error => sendResponse({error:error.message}));
     return true;
   }
   
