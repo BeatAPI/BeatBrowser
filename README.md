@@ -10,7 +10,7 @@ An open-source browser toolkit by [BeatAPI](https://beatapi.io). Connect MCP-cap
 
 [Quick start](#quick-start) · [Background workspace](#background-workspace) · [Tools](#tools) · [JavaScript SDK](docs/JAVASCRIPT.md) · [Privacy](PRIVACY.md) · [MIT](LICENSE)
 
-> **Two versions, clearly separated:** the repository contains the **1.3.1 source preview**, including TaskSpaces and task recovery. The published **1.2.2** release does not contain those features. [Preview guide](docs/PREVIEW_TESTING.md) · [Stable installation](docs/INSTALL.md)
+> **Version 1.3.1** includes background TaskSpaces, task recovery and the updated workspace. [Install](docs/INSTALL.md) · [Release notes](docs/RELEASE_NOTES.md)
 
 ## One browser toolkit across your agents
 
@@ -27,27 +27,25 @@ Normal browser control needs no BeatBrowser account or API key. Your agent needs
 
 ## Quick start
 
-For the current source preview, prepare **Git, Node.js 20+, Chrome 116+**, and a compatible local MCP client.
+Prepare **Node.js 20+, Chrome 116+**, and a compatible local MCP client.
 
 ```sh
-git clone --branch main https://github.com/BeatAPI/BeatBrowser.git
-cd BeatBrowser
-npm ci
-node src/cli.js install --dry-run
-node src/cli.js install
-node src/cli.js extension
+npm install --global @beatapi/beat-browser@1.3.1
+beat-browser install --dry-run
+beat-browser install
+beat-browser extension
 ```
 
-1. Keep the checkout in a permanent folder. In the Chrome profile you want to use, open `chrome://extensions` and enable **Developer mode**.
+1. Keep the global installation in place. In the Chrome profile you want to use, open `chrome://extensions` and enable **Developer mode**.
 2. Choose **Load unpacked** and select the extension folder printed by the command. Load only one copy per profile.
-3. Restart your Agent client. Run `node src/cli.js doctor --json`; readiness requires `ok: true` and `extensionOnline: true`.
+3. Restart your Agent client. Run `beat-browser doctor --json`; readiness requires `ok: true` and `extensionOnline: true`.
 4. Ask the agent to list connected profiles, choose the intended one and start a small read-only task. Open the extension → **Workspace** to follow it.
 
 The installer previews client configuration changes with `--dry-run` and backs up changed configurations when applied. An installed configuration adapter is not an end-to-end certification of every Agent client. [Agent installation](AGENT_INSTALL.md)
 
 **Using BeatGEO?** Follow its setup instead. It installs a fixed BeatBrowser revision and prepares the extension; you do not need another clone or global CLI.
 
-Prefer the stable release? [Install matching 1.2.2 CLI and extension](docs/INSTALL.md). The extension ZIP alone is not the full installation. The Chrome extension is loaded unpacked and is not listed in the Chrome Web Store.
+[Download the matching CLI and extension, or install from source](docs/INSTALL.md). The extension ZIP alone is not the full installation. The Chrome extension is loaded unpacked and is not listed in the Chrome Web Store.
 
 ## From installation to a finished task
 
@@ -87,7 +85,7 @@ When updating, finish active work first, update the matching source, reload the 
 
 ## Tools
 
-The source preview exposes **24 normal MCP tools**; stable 1.2.2 exposes 23 without `spaces`.
+BeatBrowser exposes **24 normal MCP tools**, including `spaces` for background tasks.
 
 | Purpose | Tools |
 | --- | --- |
@@ -107,7 +105,7 @@ Reviewed site notes and playbooks can be shared locally through `~/.beat-browser
 The optional **Fast JEV** executor lets a BeatAPI model choose from a bounded set of browser actions. It uses the same connection and is **off by default**. Live use requires a BeatAPI key and explicit task consent. Normal mode does not require it.
 
 ```sh
-node src/cli.js run --dry-run \
+beat-browser run --dry-run \
   --url https://example.com \
   --goal 'Check that the Example Domain page is ready'
 ```
@@ -131,7 +129,7 @@ npm run check:package
 npm run build:extension
 ```
 
-Task recovery passed isolated real Chromium extension-reload and browser-restart checks. These do not establish macOS foreground-focus behavior or every Agent client's compatibility. See [preview acceptance](docs/PREVIEW_TESTING.md), [TaskSpace checks](docs/TASKSPACES.md), [historical results](TEST_RESULTS.md) and [release procedure](docs/RELEASING.md).
+Task recovery passed isolated real Chromium extension-reload and browser-restart checks. These do not establish macOS foreground-focus behavior or every Agent client's compatibility. See [workspace acceptance](docs/PREVIEW_TESTING.md), [TaskSpace checks](docs/TASKSPACES.md), [historical results](TEST_RESULTS.md) and [release procedure](docs/RELEASING.md).
 
 ## Credits and license
 

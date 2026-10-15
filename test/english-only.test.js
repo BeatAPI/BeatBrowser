@@ -20,8 +20,15 @@ function walk(dir, out = []) {
 }
 
 test('agent-facing files remain English; bilingual UI text stays in its catalog and selector', () => {
-  const localized = new Set(['extension/ui-language.js', 'extension/popup.html', 'extension/panel.html']);
-  const bad = walk(ROOT).filter(f => !localized.has(path.relative(ROOT, f)) && CJK.test(fs.readFileSync(f, 'utf8')));
+  // Human-facing translated documentation is distinct from agent instructions.
+  const localized = new Set(['README.zh-CN.md', 'extension/ui-language.js', 'extension/popup.html', 'extension/panel.html']);
+  const bad = walk(ROOT).filter(f => {
+    const relative = path.relative(ROOT, f);
+    if (localized.has(relative)) return false;
+    let text = fs.readFileSync(f, 'utf8');
+    if (relative === 'README.md') text = text.replace('[\u7b80\u4f53\u4e2d\u6587](README.zh-CN.md)', '');
+    return CJK.test(text);
+  });
   assert.deepEqual(bad.map((f) => path.relative(ROOT, f)), []);
 });
 

@@ -10,7 +10,7 @@
 
 [快速开始](#快速开始) · [后台工作区](#后台工作区) · [工具](#工具) · [JavaScript SDK](docs/JAVASCRIPT.md) · [隐私](PRIVACY.md) · [MIT](LICENSE)
 
-> **请区分版本：** 仓库当前是 **1.3.1 源码预览版**，包含后台任务与重载恢复；已发布的 **1.2.2** 不含这些功能。[预览版说明](docs/PREVIEW_TESTING.md) · [稳定版安装](docs/INSTALL.md)
+> **1.3.1 版本**包含后台任务、重载恢复和新版工作区。[安装指南](docs/INSTALL.md) · [更新说明](docs/RELEASE_NOTES.md)
 
 ## 一套浏览器能力，供多个 Agent 使用
 
@@ -27,27 +27,25 @@
 
 ## 快速开始
 
-当前源码预览版需要 **Git、Node.js 20+、Chrome 116+** 和兼容的本地 MCP 客户端。
+需要 **Node.js 20+、Chrome 116+** 和兼容的本地 MCP 客户端。
 
 ```sh
-git clone --branch main https://github.com/BeatAPI/BeatBrowser.git
-cd BeatBrowser
-npm ci
-node src/cli.js install --dry-run
-node src/cli.js install
-node src/cli.js extension
+npm install --global @beatapi/beat-browser@1.3.1
+beat-browser install --dry-run
+beat-browser install
+beat-browser extension
 ```
 
-1. 将仓库保存在固定目录。在要使用的 Chrome 配置中打开 `chrome://extensions`，启用**开发者模式**。
+1. 保留全局安装目录。在要使用的 Chrome 配置中打开 `chrome://extensions`，启用**开发者模式**。
 2. 点击**加载已解压的扩展程序**，选择命令输出的扩展目录。每个配置只加载一份。
-3. 重启 Agent 客户端。运行 `node src/cli.js doctor --json`，就绪状态应为 `ok: true`、`extensionOnline: true`。
+3. 重启 Agent 客户端。运行 `beat-browser doctor --json`，就绪状态应为 `ok: true`、`extensionOnline: true`。
 4. 让 Agent 列出已连接配置，选中目标配置，先做一个小型只读任务。点击扩展 → **工作区**查看进度。
 
 `--dry-run` 预览客户端配置改动，实际安装会备份被修改的配置。支持某个客户端的安装配置，不代表已经对每个客户端完成端到端验收。[Agent 安装指南](AGENT_INSTALL.md)
 
 **使用 BeatGEO 的用户：** 直接按 BeatGEO 的安装流程操作。它会安装固定版本并准备扩展，不需要第二次克隆或安装全局 CLI。
 
-如需稳定版，见[配套的 1.2.2 CLI 与扩展安装](docs/INSTALL.md)。扩展 ZIP 只是其中一部分。当前通过加载已解压扩展安装，尚未上架 Chrome 应用商店。
+见[配套 CLI、扩展下载与源码安装](docs/INSTALL.md)。扩展 ZIP 只是其中一部分。当前通过加载已解压扩展安装，尚未上架 Chrome 应用商店。
 
 ## 从安装到完成任务
 
@@ -87,7 +85,7 @@ flowchart LR
 
 ## 工具
 
-源码预览版包含 **24 个普通 MCP 工具**；稳定版 1.2.2 为 23 个，不含 `spaces`。
+包含 **24 个普通 MCP 工具**，其中 `spaces` 用于后台任务。
 
 | 用途 | 工具 |
 | --- | --- |
@@ -107,7 +105,7 @@ flowchart LR
 **Fast JEV** 让 BeatAPI 模型从有限的浏览器动作中选择下一步，复用相同连接，**默认关闭**。真实调用需要 BeatAPI Key 和明确的任务授权，普通模式不需要。
 
 ```sh
-node src/cli.js run --dry-run \
+beat-browser run --dry-run \
   --url https://example.com \
   --goal 'Check that the Example Domain page is ready'
 ```
@@ -131,7 +129,7 @@ npm run check:package
 npm run build:extension
 ```
 
-任务恢复已通过隔离的真实 Chromium 扩展重载与浏览器重启测试；这不代表 macOS 原生焦点或每个 Agent 客户端都已验收。详见[预览版验收](docs/PREVIEW_TESTING.md)、[任务测试](docs/TASKSPACES.md)、[历史结果](TEST_RESULTS.md)和[发布流程](docs/RELEASING.md)。
+任务恢复已通过隔离的真实 Chromium 扩展重载与浏览器重启测试；这不代表 macOS 原生焦点或每个 Agent 客户端都已验收。详见[工作区验收](docs/PREVIEW_TESTING.md)、[任务测试](docs/TASKSPACES.md)、[历史结果](TEST_RESULTS.md)和[发布流程](docs/RELEASING.md)。
 
 ## 致谢与许可
 
