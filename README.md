@@ -56,7 +56,7 @@ Multiple clients can connect. Label your tabs and pass `tabId` explicitly; concu
 
 Give agents their own task windows inside your signed-in Chrome. Follow progress in a compact Chinese/English sidebar, review their work, and take over whenever you want. The extension reconnects automatically when its local bridge becomes available. MCP, CLI and the [JavaScript SDK](docs/JAVASCRIPT.md) all share one connection. No extra browser or account required.
 
-The 1.3.1 source preview is not published to npm. Start with [preview setup](docs/PREVIEW_TESTING.md). Native focus behavior, recovery boundaries and other technical details are documented in [TaskSpaces](docs/TASKSPACES.md) and the [Ego capability comparison](docs/EGO_PARITY_REVIEW.md).
+The 1.3.1 source preview is available on this repository’s `main` branch, but is not published to npm. Start with [current-source setup](docs/PREVIEW_TESTING.md); the stable download links below still provide 1.2.2. [BeatGeo](https://github.com/BeatAPI/BeatGeo) installs its pinned BeatBrowser automatically, so its users do not need a second clone. Native focus behavior, recovery boundaries and other technical details are documented in [TaskSpaces](docs/TASKSPACES.md) and the [Ego capability comparison](docs/EGO_PARITY_REVIEW.md).
 
 ## Install
 
