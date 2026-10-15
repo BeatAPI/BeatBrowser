@@ -27,10 +27,12 @@ Normal browser control needs no BeatBrowser account or API key. Your agent needs
 
 ## Quick start
 
+Install the current GitHub release below. The npm `latest` tag is still 1.2.2 while trusted publishing is being repaired.
+
 Prepare **Node.js 20+, Chrome 116+**, and a compatible local MCP client.
 
 ```sh
-npm install --global @beatapi/beat-browser@1.3.1
+npm install --global https://github.com/BeatAPI/BeatBrowser/releases/download/v1.3.1/beat-browser-cli.tgz
 beat-browser install --dry-run
 beat-browser install
 beat-browser extension
