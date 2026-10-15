@@ -47,6 +47,17 @@ export async function checkSpacesPopup({profileDirectory,url,output,cleanup=fals
       }
       assert.equal(await evaluate("document.querySelector('#task-count').textContent"),'0');
       assert.equal(await evaluate("document.querySelector('#cleanup-ended').disabled"),true);
+      await evaluate("chrome.storage.local.set({uiLanguage:'zh'})");
+      await command('Page.navigate',{url:url.replace('panel.html','popup.html')},sessionId);
+      const emptyReady=Date.now()+5000;
+      while (!await evaluate("document.documentElement.lang==='zh-CN' && !!document.querySelector('.empty-space')")) {
+        if(Date.now()>emptyReady)throw Error('Empty popup did not render');
+        await new Promise(r=>setTimeout(r,100));
+      }
+      await command('Emulation.setDeviceMetricsOverride',{width:340,height:440,deviceScaleFactor:1,mobile:false},sessionId);
+      await evaluate('document.fonts.ready');
+      const emptyShot=await command('Page.captureScreenshot',{format:'png'},sessionId);
+      fs.writeFileSync(output.replace(/\.png$/, '-empty.png'),Buffer.from(emptyShot.data,'base64'));
       return {cleanupButton:true,confirmationCancel:true,endedRemoved:true,noOverflow:true};
     }
     const end=Date.now()+10000;
