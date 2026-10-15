@@ -1,8 +1,8 @@
 # Install BeatBrowser
 
-[Back to BeatBrowser](../README.md) · [Current-source setup](PREVIEW_TESTING.md)
+[Back to BeatBrowser](../README.md) · [Workspace and acceptance guide](PREVIEW_TESTING.md)
 
-This guide describes stable 1.2.2 installation. For background TaskSpaces and recovery, use the current-source guide above.
+Install the matching 1.3.1 CLI and extension for background TaskSpaces, task recovery and the updated workspace.
 
 Requirements: Node.js 20+, Chrome 116+ and a client that can launch a local stdio MCP server. The extension is loaded unpacked; it is not listed on the Chrome Web Store.
 
@@ -22,7 +22,7 @@ The ZIP contains the Chrome extension only. It needs the local BeatBrowser MCP s
 Install the exact matching CLI directly from this GitHub release:
 
 ```bash
-npm install --global https://github.com/BeatAPI/BeatBrowser/releases/download/v1.2.2/beat-browser-cli.tgz
+npm install --global https://github.com/BeatAPI/BeatBrowser/releases/download/v1.3.1/beat-browser-cli.tgz
 beat-browser install --dry-run
 beat-browser install
 ```
@@ -37,7 +37,7 @@ Install the CLI from the official npm registry. Use the source path below when d
 Install globally so Chrome's extension folder stays at a stable path:
 
 ```bash
-npm install --global @beatapi/beat-browser@1.2.2
+npm install --global @beatapi/beat-browser@1.3.1
 beat-browser install --dry-run   # preview client config changes
 beat-browser install             # apply; backs up each changed config
 beat-browser extension           # print the extension folder
@@ -52,7 +52,7 @@ If this exact version is not yet available on npm, install from the matching sou
 ### From source
 
 ```bash
-git clone --branch v1.2.2 https://github.com/BeatAPI/BeatBrowser.git
+git clone --branch v1.3.1 https://github.com/BeatAPI/BeatBrowser.git
 cd BeatBrowser
 npm ci
 node src/cli.js install --dry-run

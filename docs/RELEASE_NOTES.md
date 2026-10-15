@@ -1,51 +1,39 @@
-# BeatBrowser 1.3.1 source preview
+# BeatBrowser 1.3.1
 
-Agents can open owned background task windows in the user's existing Chrome profile, report progress and hand control back through a compact Chinese/English workspace. MCP, CLI and the JavaScript SDK use the same local bridge.
+Your everyday Chrome, now a workspace for AI agents.
 
-- Add named task pages, explicit profile selection, pause/resume/stop and retained-page completion receipts.
-- Add a light workspace, inline language switch and shared control/confirmation copy; language preference stays local.
-- Check current window state before treating queued focus events as takeover. Focused windows still pause execution; native no-interruption acceptance remains incomplete.
-- Diagnose disconnected/frozen pages, preserve request evidence and avoid replaying uncertain writes.
-- Validate 249 tests, isolated package installation, extension packaging and headless browser/UI flows. Daily Chrome opened Xiaohongshu with existing login and displayed the updated extension UI.
+## What changed
 
-This is a source update. Existing GitHub/npm release downloads remain the previously published version until a separate release is made. Minimized headed screenshots and fully invisible native execution remain limitations. Read [preview setup](PREVIEW_TESTING.md) and [test evidence](../TEST_RESULTS.md).
+- Background TaskSpaces in your existing signed-in Chrome profile, with named pages, progress, takeover, pause, resume and stop. MCP, CLI and the JavaScript SDK share one local bridge.
+- Task recovery across extension reloads and browser restarts. Unfinished tasks restore paused; missing pages can be explicitly reassociated. No uncertain input is replayed.
+- Single-task cleanup, batch cleanup and a Browser pages inventory for associated tabs, including retained legacy pages. User-associated, handed-over and moved pages are protected.
+- A compact Chinese/English workspace, refreshed BeatAPI styling and local fonts. Language preferences stay on your device.
+- Current-window focus checks, disconnected-page diagnostics, bounded screenshot failures and request evidence.
+- Updated installation guides, project cover and package documentation. Matching CLI and extension downloads are attached below.
 
----
+## Install or update
 
-# BeatBrowser 1.2.2
-
-Your Chrome. Your choice of agent.
-
-- Direct Chrome extension ZIP and matching local CLI downloads from GitHub, including a stable latest-download URL and SHA-256 checksums.
-- Clear instructions for ZIP extraction, Chrome's Load unpacked control, local MCP setup and updates.
-- Extension archives include the MIT license and privacy notice; the public manifest key is removed from the archive.
-- Matching CLI/extension versions, archive regression checks and npm 10/11/12 package-check compatibility.
-- Updated BeatBrowser brand mark and X draft playbooks that hand the final Reply click to the user.
-
-## Install
-
-Download `beat-browser-extension.zip` below and extract it into a permanent folder. Open `chrome://extensions`, enable Developer mode and choose Load unpacked. Select the extracted folder containing `manifest.json`.
-
-The extension alone is not enough. Install the matching local CLI/MCP server:
-
-```bash
-npm install --global https://github.com/BeatAPI/BeatBrowser/releases/download/v1.2.2/beat-browser-cli.tgz
+```sh
+npm install --global @beatapi/beat-browser@1.3.1
 beat-browser install --dry-run
 beat-browser install
+beat-browser extension
 ```
 
-The CLI download has a separate `CLI-SHA256SUMS.txt` checksum. npm registry publication is a separate step; the GitHub CLI download works even while that publication is pending. You can also install from the matching source tag:
+Alternatively, install the matching CLI archive directly:
 
-```bash
-git clone --branch v1.2.2 https://github.com/BeatAPI/BeatBrowser.git
-cd BeatBrowser
-npm ci
-node src/cli.js install --dry-run
-node src/cli.js install
+```sh
+npm install --global https://github.com/BeatAPI/BeatBrowser/releases/download/v1.3.1/beat-browser-cli.tgz
 ```
 
-Load only one copy of the extension, restart your MCP client and run `beat-browser doctor --json` (or `node src/cli.js doctor --json` from source). Setup is ready when `ok` and `extensionOnline` are true.
+Load the printed extension folder, or extract `beat-browser-extension.zip` into a permanent directory and load that folder in Chrome. Load only one copy per profile. The ZIP is the extension, not the local MCP server. SHA-256 files accompany both downloads.
 
-Check the ZIP against `SHA256SUMS.txt` if desired. This is an unpacked extension download, not a Chrome Web Store listing. Normal mode needs no BeatBrowser account or key; Fast JEV is optional and requires a BeatAPI key and explicit cloud consent. Connect trusted agents; tool results reach your chosen agent/provider.
+For an update, finish active operations, reload the existing extension, restart the local bridge and reconnect Agent clients. Keep local extension storage so task records survive. Inspect recovered pages before continuing. Run `beat-browser doctor --json`; readiness requires both `ok` and `extensionOnline`.
 
-For updates, keep a permanent extension folder, replace its files with the matching release, reload it in Chrome and restart your agent.
+## Verification and limits
+
+The release workflow runs unit tests, syntax/security checks, clean package installation and extension packaging. Isolated real Chromium fixtures cover task recovery and workspace controls; they do not certify every Agent client or macOS foreground-focus behavior.
+
+Task windows share the selected profile's logins. Native windows or website popups can still gain focus; minimized headed screenshots remain limited. This is an unpacked Chrome extension, not a Chrome Web Store listing. Normal mode needs no BeatBrowser account or key. Optional Fast JEV requires a BeatAPI key and explicit consent.
+
+[Installation](INSTALL.md) · [Workspace acceptance](PREVIEW_TESTING.md) · [Task recovery](TASKSPACES.md) · [Privacy](../PRIVACY.md)

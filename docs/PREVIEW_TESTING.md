@@ -1,6 +1,6 @@
-# BeatBrowser 1.3.1 local preview
+# BeatBrowser 1.3.1 workspace and acceptance
 
-Unpublished preview. Both package and extension use 1.3.1; the extension is labelled `1.3.1 local preview`. This is not an npm release. AEO work remains separate.
+Both package and extension use 1.3.1. Use the [release installation guide](INSTALL.md) for matching downloads, or the source route below for development. AEO work remains separate.
 
 ## Install the current GitHub source
 
@@ -19,7 +19,7 @@ node src/cli.js extension
 
 Keep this checkout in a permanent folder. In the intended Chrome profile, open `chrome://extensions`, enable Developer mode and load the extension folder printed above. Restart your Agent client, then run `node src/cli.js doctor --json`. No Chrome profile or cookies need importing. Click BeatBrowser's toolbar icon, then **Workspace**; the sidebar does not open automatically during task execution.
 
-Existing users should finish browser tasks before updating. Load only one BeatBrowser extension per profile, and keep the CLI and extension on the same source revision. The regular README download links still point to the stable 1.2.2 GitHub/npm release; they do not contain these source-preview features.
+Existing users should finish browser tasks before updating. Load only one BeatBrowser extension per profile, and keep the CLI and extension on the same source revision. Use matching CLI and extension versions; do not combine an older CLI with the current extension.
 
 ## Language and compact UI
 
@@ -41,7 +41,7 @@ The workspace separates background **Tasks** from **Browser pages**. Ordinary ag
 
 View locates a page. Close and Close pages require confirmation; they act only on the listed snapshot. Unrelated tabs, task pages, and pages moved or navigated since confirmation remain open. Closing the last listed tab may close its window. This inventory also finds legacy grouped/associated pages whose original task records were never saved. Those pages do not imply a running task.
 
-## What changed in this preview
+## Workspace behavior
 
 The popup, workspace sidebar and in-page control/confirmation surfaces use BeatAPI's light blue-gray palette, local DM Sans/DM Mono fonts, white cards and black primary buttons. Font licenses are included. No remote font request is made.
 
