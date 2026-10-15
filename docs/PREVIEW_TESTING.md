@@ -20,6 +20,10 @@ The inline language switch offers Chinese and English without a native dropdown.
 
 The workspace removes the large slogan, duplicate introduction and routine connection metadata. It keeps tasks, status, actions and pause reasons; connection help lives under Settings. Payment confirmations retain the amount, destination and explicit confirmation.
 
+## Task cleanup follow-up
+
+For an existing matching 1.3.1 installation, this extension-only change needs an extension reload after active tasks finish. It does not require an MCP reinstall. Open the popup/sidebar and try **Clear** on an ended task, **Clear ended** for a batch, or **Clear all** with confirmation to stop and clear every task. Explicitly handed-over, adopted and moved pages remain open. Reloading the extension loses session task records, so finish existing tasks and keep track of retained pages before reloading.
+
 ## What changed in this preview
 
 The popup, workspace sidebar and in-page control/confirmation surfaces use BeatAPI's light blue-gray palette, local DM Sans/DM Mono fonts, white cards and black primary buttons. Font licenses are included. No remote font request is made.

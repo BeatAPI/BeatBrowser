@@ -25,7 +25,7 @@ button:disabled { opacity:.5; cursor:default; }
 [hidden] { display:none!important; }
 button:focus-visible,summary:focus-visible,input:focus-visible,a:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
 .top { display:flex; align-items:center; gap:9px; }
-.logo { width:30px; height:30px; padding:4px; object-fit:contain; background:var(--panel); border:1px solid var(--line); border-radius:9px; flex:none; }
+.logo { width:30px; height:30px; padding:4px; object-fit:contain; flex:none; }
 .brand { flex:1; min-width:0; }
 .name { font-size:15px; font-weight:650; letter-spacing:-.4px; }
 .language-switch { display:flex; gap:2px; padding:3px; border:1px solid var(--line); border-radius:8px; background:#ebedf6; flex:none; }
@@ -115,3 +115,12 @@ body:not(.panel) .space { padding:12px; }
 @media(prefers-reduced-motion:reduce) {
   *,*::before,*::after { transition:none!important; animation:none!important; }
 }
+
+.cleanup-actions { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+.cleanup-actions button { font:inherit; font-size:12px; border:1px solid var(--line); background:var(--panel); color:var(--muted); border-radius:8px; padding:7px 10px; cursor:pointer; }
+.cleanup-actions button:hover { color:var(--ink); border-color:var(--accent); }
+.cleanup-actions button:disabled { opacity:.45; cursor:default; }
+.cleanup-confirm { padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--panel); font-size:12px; }
+.cleanup-confirm[hidden] { display:none; }
+.cleanup-confirm p { margin:0; }
+#cleanup-confirm-yes { color:var(--danger); }

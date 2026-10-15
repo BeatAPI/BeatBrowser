@@ -175,6 +175,34 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
     await write(spaces);
     return { ...publicSpace(s), receipt: { retained, closed, finishedAt: now() } };
   }
+  async function cleanup(s, spaces) {
+    const handedOff = s.pauseReason === 'handoff';
+    if (handedOff) for (const page of pages(s)) page.handedToUser = true;
+    if (!TERMINAL.has(s.state)) await pause(s, 'stopped', spaces);
+    s.pauseReason = null;
+    const failed = [], kept = [], closed = [];
+    for (const page of pages(s)) {
+      try {
+        await cdp.releaseBackground(page.tabId);
+        let tab;
+        try { tab = await chrome.tabs.get(page.tabId); }
+        catch (error) {
+          if (!/No tab with id|Invalid tab ID/i.test(error.message)) throw error;
+        }
+        if (!tab) continue;
+        if (page.openedBy !== 'agent' || page.handedToUser || handedOff || tab.windowId !== s.windowId) kept.push(page.label);
+        else { await chrome.tabs.remove(page.tabId); closed.push(page.label); }
+      } catch { failed.push(page); }
+    }
+    // Keep unsuccessful pages retryable. Never remove a whole window: it may
+    // contain tabs the person opened, or pages moved there after task creation.
+    if (failed.length) {
+      s.pages = failed;
+      record(s, 'cleanup-incomplete');
+    } else delete spaces[s.id];
+    await write(spaces);
+    return {removed:failed.length ? 0 : 1, closed:closed.length, kept:kept.length, failed:failed.length};
+  }
   async function command(p, sid) {
     if (!sid) fail('TaskSpace requires an identified local session.');
     return serial(async () => {
@@ -199,6 +227,7 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
       } else if (p.action === 'stop' || p.action === 'handoff') {
         if (!TERMINAL.has(s.state)) await pause(s, p.action === 'stop' ? 'stopped' : 'user', spaces, p.action === 'stop' ? 'stopped' : 'handoff');
         if (p.action === 'handoff') {
+          for (const page of pages(s)) if (!p.pageLabel || page.label === p.pageLabel) page.handedToUser = true;
           if (p.pageLabel) {
             const page = pages(s).find(page => page.label === p.pageLabel);
             if (!page) fail('This page is no longer managed.');
@@ -216,6 +245,7 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
           if (tab.windowId !== s.windowId) fail('The task page moved out of its window; start a new task instead.');
         }
         await retain(s);
+        if (s.state === 'running') for (const page of pages(s)) page.handedToUser = false;
         s.expiresAt = now() + 900000;
         record(s, 'resumed');
       } else if (p.action === 'finish') return finish(s, p, spaces);
@@ -280,6 +310,21 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
   const contains = async tabId => Object.values(await read()).some(s => pages(s).some(p => p.tabId === tabId));
   async function humanCommand(p) {
     if (p.action === 'list') return { spaces: Object.values(await read()).map(publicSpace) };
+    if (p.action === 'cleanup' || p.action === 'cleanup-ended' || p.action === 'cleanup-all') {
+      return serial(async () => {
+        const spaces = await read();
+        const selected = p.action === 'cleanup' ? [spaces[p.spaceId]].filter(Boolean)
+          : Object.values(spaces).filter(s => p.action === 'cleanup-all' || TERMINAL.has(s.state));
+        if (p.action === 'cleanup' && selected.some(s => !TERMINAL.has(s.state))) fail('Stop this task before cleaning it.');
+        if (p.action === 'cleanup-all' && p.userConfirmed !== true) fail('Confirm before stopping all tasks.');
+        const result = {removed:0,closed:0,kept:0,failed:0};
+        for (const s of selected) {
+          const receipt = await cleanup(s, spaces);
+          for (const key of Object.keys(result)) result[key] += receipt[key];
+        }
+        return result;
+      });
+    }
     if (!['handoff', 'resume', 'stop', 'notifications', 'events'].includes(p.action)) fail('Unknown human control.');
     const s = (await read())[p.spaceId];
     if (!s) fail('TaskSpace no longer exists.');

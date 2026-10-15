@@ -128,3 +128,55 @@ test('unknown focus state remains a conservative pause',async()=>{
  h.listeners.focus(4);await assert.rejects(h.spaces.guard(8,'a'),/user/);
  assert.equal(h.held.size,0);
 });
+
+
+test('human cleanup closes ended agent pages and removes stale cards',async()=>{
+ const h=setup();await open(h);await h.spaces.command({action:'finish',spaceId:'space-one'},'a');
+ assert.deepEqual(await h.spaces.humanCommand({action:'cleanup',spaceId:'space-one'}),{removed:1,closed:1,kept:0,failed:0});
+ assert.equal(h.tabs.has(8),false);assert.deepEqual(await h.spaces.humanCommand({action:'list'}),{spaces:[]});
+ assert.deepEqual(await h.spaces.humanCommand({action:'cleanup',spaceId:'space-one'}),{removed:0,closed:0,kept:0,failed:0});
+});
+test('bulk ended cleanup leaves running and paused tasks untouched',async()=>{
+ const h=setup();await open(h);
+ assert.equal((await h.spaces.humanCommand({action:'cleanup-ended'})).removed,0);
+ await h.spaces.command({action:'report',spaceId:'space-one',needsConfirmation:true},'a');
+ assert.equal((await h.spaces.humanCommand({action:'cleanup-ended'})).removed,0);
+ await assert.rejects(h.spaces.humanCommand({action:'cleanup',spaceId:'space-one'}),/Stop/);
+ await assert.rejects(h.spaces.humanCommand({action:'cleanup-all'}),/Confirm/);
+ assert(h.tabs.has(8));assert.equal(h.calls.filter(c=>c[0]==='tab-remove').length,0);
+ const result=await h.spaces.humanCommand({action:'cleanup-all',userConfirmed:true});
+ assert.equal(result.closed,1);assert.equal(h.held.size,0);
+});
+test('cleanup preserves user, moved, handed-off and unmanaged tabs',async()=>{
+ const h=setup();await open(h);
+ await h.spaces.command({action:'new-page',spaceId:'space-one',pageLabel:'moved',url:'https://example.test'},'a');
+ h.tabs.get(9).windowId=99;
+ h.tabs.set(90,{id:90,windowId:4});
+ await h.spaces.command({action:'adopt',spaceId:'space-one',pageLabel:'user',tabId:90,userConfirmed:true},'a');
+ h.tabs.set(91,{id:91,windowId:4});
+ await h.spaces.humanCommand({action:'handoff',spaceId:'space-one',pageLabel:'main'});
+ await h.spaces.command({action:'stop',spaceId:'space-one'},'a');
+ const result=await h.spaces.humanCommand({action:'cleanup-ended'});
+ assert.deepEqual(result,{removed:1,closed:0,kept:3,failed:0});
+ assert.deepEqual([...h.tabs.keys()],[8,9,90,91]);assert.equal(h.held.size,0);
+});
+test('failed tab closure remains retryable, missing tabs do not block cleanup',async()=>{
+ const h=setup();await open(h);await h.spaces.command({action:'stop',spaceId:'space-one'},'a');
+ const remove=h.chrome.tabs.remove;h.chrome.tabs.remove=async()=>{throw Error('Browser unavailable')};
+ assert.equal((await h.spaces.humanCommand({action:'cleanup-ended'})).failed,1);
+ assert.equal((await h.spaces.humanCommand({action:'list'})).spaces[0].pages.length,1);
+ h.chrome.tabs.remove=remove;h.tabs.delete(8);
+ assert.equal((await h.spaces.humanCommand({action:'cleanup-ended'})).removed,1);
+});
+test('agent commands cannot invoke cross-session human cleanup',async()=>{
+ const h=setup();await open(h);
+ await assert.rejects(h.spaces.command({action:'cleanup-all',userConfirmed:true},'a'),/Unknown TaskSpace/);
+ await assert.rejects(h.spaces.command({action:'cleanup',spaceId:'space-one'},'a'),/Unknown TaskSpace action/);
+ assert(h.tabs.has(8));
+});
+test('cleanup does not discard a record when tab lookup fails unexpectedly',async()=>{
+ const h=setup();await open(h);await h.spaces.command({action:'finish',spaceId:'space-one'},'a');
+ h.chrome.tabs.get=async()=>{throw Error('Service disconnected')};
+ assert.equal((await h.spaces.humanCommand({action:'cleanup-ended'})).failed,1);
+ assert(h.tabs.has(8));assert.equal((await h.spaces.humanCommand({action:'list'})).spaces.length,1);
+});

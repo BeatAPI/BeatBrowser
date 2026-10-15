@@ -5,7 +5,7 @@ import WebSocket from 'ws';
 import {once} from 'node:events';
 import assert from 'node:assert/strict';
 
-export async function checkSpacesPopup({profileDirectory,url,output}) {
+export async function checkSpacesPopup({profileDirectory,url,output,cleanup=false}) {
   const [port,route]=fs.readFileSync(path.join(profileDirectory,'DevToolsActivePort'),'utf8').trim().split('\n');
   const ws=new WebSocket(`ws://127.0.0.1:${Number(port)}${route}`);
   await once(ws,'open');let sequence=0;const pending=new Map();
@@ -22,6 +22,33 @@ export async function checkSpacesPopup({profileDirectory,url,output}) {
       const r=await command('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true},sessionId);
       if(r.exceptionDetails)throw Error(r.exceptionDetails.exception?.description || r.exceptionDetails.text);return r.result.value;
     };
+    if (cleanup) {
+      const ready=Date.now()+10000;
+      while (!await evaluate("document.querySelector('[data-action=cleanup]') !== null")) {
+        if(Date.now()>ready)throw Error('No cleanup action rendered');
+        await new Promise(r=>setTimeout(r,100));
+      }
+      assert.equal(await evaluate("document.querySelector('.pause-detail').hidden"),true);
+      await evaluate("document.querySelector('#cleanup-all').click()");
+      assert.equal(await evaluate("document.querySelector('#cleanup-confirm').hidden"),false);
+      assert.equal(await evaluate("document.querySelectorAll('.space').length"),1);
+      await evaluate("document.querySelector('#cleanup-cancel').click()");
+      assert.equal(await evaluate("document.querySelector('#cleanup-confirm').hidden"),true);
+      await command('Emulation.setDeviceMetricsOverride',{width:340,height:900,deviceScaleFactor:1,mobile:false},sessionId);
+      await evaluate('document.fonts.ready');
+      assert.equal(await evaluate('document.documentElement.scrollWidth > innerWidth'),false);
+      const shot=await command('Page.captureScreenshot',{format:'png'},sessionId);
+      fs.mkdirSync(path.dirname(output),{recursive:true});fs.writeFileSync(output,Buffer.from(shot.data,'base64'));
+      await evaluate("document.querySelector('#cleanup-ended').click()");
+      const removed=Date.now()+10000;
+      while (await evaluate("document.querySelectorAll('.space').length")) {
+        if(Date.now()>removed)throw Error('Ended tasks not removed');
+        await new Promise(r=>setTimeout(r,100));
+      }
+      assert.equal(await evaluate("document.querySelector('#task-count').textContent"),'0');
+      assert.equal(await evaluate("document.querySelector('#cleanup-ended').disabled"),true);
+      return {cleanupButton:true,confirmationCancel:true,endedRemoved:true,noOverflow:true};
+    }
     const end=Date.now()+10000;
     while(!await evaluate("document.querySelector('#spaces-list')?.textContent.includes('Both test pages completed.')")){
       if(Date.now()>end)throw Error('TaskSpace popup did not display progress');

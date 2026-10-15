@@ -6,6 +6,14 @@ live runs are small samples and are labelled as such.
 
 ## Automated checks
 
+### 1.3.1 task cleanup follow-up on 2026-10-15
+
+- **256 tests passed**, zero failures. Coverage includes single/bulk cleanup, explicit confirmation for active tasks, adopted/moved/handed-over/unmanaged page protection, retryable failures and human-only cleanup commands.
+- Syntax: 63 JavaScript files. Source/security scan: 99 files, no findings.
+- Isolated Chrome 153 headless: popup/sidebar controls and bilingual persistence passed. The actual sidebar document displayed cleanup controls at 340px without horizontal overflow; cancel preserved the task, and Clear ended removed the card and both task tabs while leaving the ordinary fixture tab open. Screenshot visually reviewed.
+- This used a disposable profile, private bridge and mock keychain. It did not clean the user's live tasks or reload the daily extension, and does not establish native macOS focus behavior.
+
+
 ### 1.3.1 bilingual compact UI follow-up on 2026-10-14
 
 - Follow-up design refinement replaces the OS-native dropdown with inline language buttons, compacts connection/workspace controls, moves the build label into Settings and uses the homepage palette for empty/task cards. The actual daily Chrome popup displayed both language buttons and the new layout without another extension reload. Isolated bilingual switch/persistence and task interaction checks passed again (121 to 512 frames).

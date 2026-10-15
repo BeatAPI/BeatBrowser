@@ -88,6 +88,11 @@ try {
  const panel=await checkSpacesPopup({profileDirectory:path.join(tmp,'profile'),url:(await call('__spaces_test_popup_url')).url.replace('popup.html','panel.html'),output:path.join(root,'screenshots-local/taskspaces-panel.png')});
  assert.equal((await call('spaces',{action:'status',spaceId:s.spaceId})).state,'running');
  await call('spaces',{action:'stop',spaceId:s.spaceId});await assert.rejects(call('type',{...scope,selector:'#input',text:'must-not-type'}),/stopped/);
- console.log(JSON.stringify({passed:true,popup,panel,headless,writeRequestEvidence:true,mockKeychain:process.platform==='darwin',backgroundInput:true,namedPages:true,fileInputUpload:true,binaryFetchToDisk:true,reviewBlocksInput:true,framesBefore:first.frames,framesAfter:second.frames,visibility:second.visibility,humanWindowFocusUnchanged:headless?null:true,humanTabUnchanged:true,agentWindowMinimized:headless?null:true,backgroundScreenshot,screenshotReturnsOrReportsLimitation:true,stopBlocksInput:true},null,2));
+ const cleanup=await checkSpacesPopup({profileDirectory:path.join(tmp,'profile'),url:(await call('__spaces_test_popup_url')).url.replace('popup.html','panel.html'),output:path.join(root,'screenshots-local/taskspaces-cleanup.png'),cleanup:true});
+ assert.equal((await call('spaces',{action:'list'})).spaces.length,0);
+ const afterCleanup=await call('__spaces_test_state');
+ assert(afterCleanup.some(w=>w.tabs.some(t=>t.id===human.tabs.find(t=>t.active).id)),'Human tab must survive cleanup');
+ assert(!afterCleanup.some(w=>w.tabs.some(t=>[s.tabId,secondTab].includes(t.id))),'Task tabs must close');
+ console.log(JSON.stringify({passed:true,popup,panel,cleanup,headless,writeRequestEvidence:true,mockKeychain:process.platform==='darwin',backgroundInput:true,namedPages:true,fileInputUpload:true,binaryFetchToDisk:true,reviewBlocksInput:true,framesBefore:first.frames,framesAfter:second.frames,visibility:second.visibility,humanWindowFocusUnchanged:headless?null:true,humanTabUnchanged:true,agentWindowMinimized:headless?null:true,backgroundScreenshot,screenshotReturnsOrReportsLimitation:true,stopBlocksInput:true},null,2));
 } catch(e){ console.error(e.message);console.error(stderr.slice(-1500));process.exitCode=1; }
 finally{socket?.close();browser.kill('SIGTERM');fixture.close();bridge.close();await new Promise(r=>setTimeout(r,500));fs.rmSync(tmp,{recursive:true,force:true});}

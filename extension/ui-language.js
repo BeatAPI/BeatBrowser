@@ -5,6 +5,15 @@
 (() => {
   if (globalThis.BeatBrowserUI) return;
   const chinese = {
+  "Clear": "清理",
+  "Clear ended": "清理已结束",
+  "Clear all": "全部清理",
+  "Confirm": "确认",
+  "Stop all tasks and close task pages?": "停止全部任务并关闭任务页面？接管的页面保留。",
+  "Removed {removed} · Closed {closed} · Kept {kept}": "清理 {removed} 项 · 关闭 {closed} 页 · 保留 {kept} 页",
+  "{failed} failed; retry": "{failed} 项失败，可重试",
+  "Linked page": "关联页面",
+  "No linked page": "未关联页面",
   "Checking…": "连接中…",
   "Connected": "已连接",
   "Disconnected": "未连接",
