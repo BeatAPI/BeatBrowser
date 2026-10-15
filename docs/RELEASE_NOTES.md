@@ -14,17 +14,13 @@ Your everyday Chrome, now a workspace for AI agents.
 ## Install or update
 
 ```sh
-npm install --global @beatapi/beat-browser@1.3.1
+npm install --global https://github.com/BeatAPI/BeatBrowser/releases/download/v1.3.1/beat-browser-cli.tgz
 beat-browser install --dry-run
 beat-browser install
 beat-browser extension
 ```
 
-Alternatively, install the matching CLI archive directly:
-
-```sh
-npm install --global https://github.com/BeatAPI/BeatBrowser/releases/download/v1.3.1/beat-browser-cli.tgz
-```
+The GitHub CLI and extension downloads are published. npm publication is pending a trusted-publisher authorization repair; its `latest` tag still points to 1.2.2. Use the command above for 1.3.1.
 
 Load the printed extension folder, or extract `beat-browser-extension.zip` into a permanent directory and load that folder in Chrome. Load only one copy per profile. The ZIP is the extension, not the local MCP server. SHA-256 files accompany both downloads.
 
@@ -36,4 +32,4 @@ The release workflow runs unit tests, syntax/security checks, clean package inst
 
 Task windows share the selected profile's logins. Native windows or website popups can still gain focus; minimized headed screenshots remain limited. This is an unpacked Chrome extension, not a Chrome Web Store listing. Normal mode needs no BeatBrowser account or key. Optional Fast JEV requires a BeatAPI key and explicit consent.
 
-[Installation](INSTALL.md) · [Workspace acceptance](PREVIEW_TESTING.md) · [Task recovery](TASKSPACES.md) · [Privacy](../PRIVACY.md)
+[Installation](https://github.com/BeatAPI/BeatBrowser/blob/main/docs/INSTALL.md) · [Workspace acceptance](https://github.com/BeatAPI/BeatBrowser/blob/main/docs/PREVIEW_TESTING.md) · [Task recovery](https://github.com/BeatAPI/BeatBrowser/blob/main/docs/TASKSPACES.md) · [Privacy](https://github.com/BeatAPI/BeatBrowser/blob/main/PRIVACY.md)

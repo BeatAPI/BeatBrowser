@@ -27,10 +27,12 @@
 
 ## 快速开始
 
+下方命令直接安装最新 GitHub 发行包。npm 发布授权修复期间，npm 的 `latest` 仍为 1.2.2。
+
 需要 **Node.js 20+、Chrome 116+** 和兼容的本地 MCP 客户端。
 
 ```sh
-npm install --global @beatapi/beat-browser@1.3.1
+npm install --global https://github.com/BeatAPI/BeatBrowser/releases/download/v1.3.1/beat-browser-cli.tgz
 beat-browser install --dry-run
 beat-browser install
 beat-browser extension
