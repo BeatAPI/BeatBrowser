@@ -16,7 +16,9 @@
   --sans:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif;
 }
 * { box-sizing:border-box; }
-body { width:340px; margin:0; padding:18px; font:13px/1.55 var(--sans); color:var(--ink); background:var(--bg); }
+body { width:340px; margin:0; padding:18px; font:13px/1.55 var(--sans); color:var(--ink); background:var(--bg); position:relative; isolation:isolate; }
+/* Static brand texture stays outside the interaction and accessibility layers. */
+body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:none; background:url('icons/code-texture.svg') top center / 360px 720px no-repeat; opacity:.24; }
 body.panel { width:100%; min-width:260px; padding:22px 18px; }
 button,input,textarea { font:inherit; }
 button,summary { cursor:pointer; }
@@ -74,7 +76,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,a:focus-visible {
 .timeline ol { list-style:none; padding:0 0 0 9px; margin:8px 0 0; border-left:1px solid var(--line); max-height:180px; overflow:auto; line-height:1.7; }
 .timeline li { padding:3px 0; }
 .empty-space { position:relative; overflow:hidden; padding:20px 15px; border:1px solid var(--line); border-radius:10px; color:var(--muted); font-size:11px; background:linear-gradient(120deg,#fff 40%,#f8f9ff); }
-.empty-space::after { content:''; pointer-events:none; position:absolute; right:-10px; top:0; width:110px; height:100%; opacity:.35; transform:skew(-12deg); background:repeating-linear-gradient(0deg,transparent 0 17px,#e4e7f0 17px 18px),repeating-linear-gradient(90deg,transparent 0 17px,#e4e7f0 17px 18px); mask-image:linear-gradient(90deg,transparent,#000); }
+.empty-space::after { content:''; pointer-events:none; position:absolute; inset:0; opacity:.34; background:url('icons/code-texture.svg') right -12px top -24px / 360px 720px no-repeat; mask-image:linear-gradient(90deg,transparent 35%,#000 85%); }
 .empty-icon { display:block; color:var(--accent); font:13px var(--mono); margin-bottom:12px; }
 .empty-space strong { position:relative; z-index:1; display:block; color:var(--ink); font-size:12px; font-weight:600; margin-bottom:4px; }
 .empty-space p { position:relative; z-index:1; margin:0; font-size:11px; }
