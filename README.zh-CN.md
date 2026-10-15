@@ -1,4 +1,4 @@
-![BeatBrowser — 你的 Chrome，你的 Agent，由你掌控](media/readme-cover.svg)
+![BeatBrowser — 你的 Chrome，你的 Agent，由你掌控](media/readme-cover.png)
 
 # BeatBrowser
 

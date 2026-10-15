@@ -41,6 +41,7 @@
     "docs/PREVIEW_TESTING.md",
     "README.zh-CN.md",
     "media/readme-cover.svg",
+    "media/readme-cover.png",
     "docs/INSTALL.md"
   ],
   "engines": {

@@ -1,10 +1,10 @@
-![BeatBrowser — your Chrome, your agents, your control](media/readme-cover.svg)
+![BeatBrowser — your everyday Chrome, now a workspace for AI agents](media/readme-cover.png)
 
 # BeatBrowser
 
 [English](README.md) · [简体中文](README.zh-CN.md)
 
-**Your Chrome. Your agents. Your control.**
+**Your everyday Chrome, now a workspace for AI agents.**
 
 An open-source browser toolkit by [BeatAPI](https://beatapi.io). Connect MCP-capable agents to the Chrome profile you already use, with its existing website sessions. Give background tasks their own windows, follow their progress and take over when needed.
 
