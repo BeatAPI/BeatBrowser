@@ -1,6 +1,6 @@
 # Background TaskSpaces — development status
 
-Unreleased 1.3.1 source preview, reviewed 2026-10-15. The installed 1.2.2 extension does not acquire it merely because local source changed. No Ego installation or native browser engine is required.
+BeatBrowser 1.3.2. Update the CLI and reload the matching extension to apply changes. No Ego installation or native browser engine is required.
 
 ## Execution model
 
@@ -32,7 +32,17 @@ The default lease is 15 minutes; requested leases range from 30 seconds to one h
 
 ### Reload and restart recovery
 
-Tasks mark their pages with a uniquely named Chrome tab group. Recovery requires that group and a unique matching URL fingerprint; old numeric tab/window IDs alone are never sufficient. Browser restart recovery depends on Chrome restoring the tabs and groups. If restoration finishes late, use **Check again**. Renamed/deleted groups, changed URLs and ambiguous duplicate pages stay unlinked.
+Tasks are managed entirely in the popup and sidebar, without Chrome tab groups.
+Recovery uses the native debug-target identity, saved task window and URL
+fingerprint; an old numeric tab ID or matching URL alone never grants ownership.
+An extension reload recovers the same live pages paused. A full browser restart
+creates new identities: labels, progress and history survive, while page
+associations require **Reconnect pages** and explicit **Continue**. Moved,
+replaced or navigated pages also stay unlinked when ownership is uncertain.
+
+Version 1 archives migrate only when a uniquely named legacy task group and a
+unique URL fingerprint still prove the association. Proven pages are ungrouped
+after their native identity is saved. Renamed/user groups are preserved.
 
 **Reconnect pages** lets the human explicitly select a current page for each missing label. Association does not run the task; a separate **Continue** is required. Manually associated pages are protected from cleanup. If a page closes while running, the task is interrupted rather than marked completed.
 
@@ -73,13 +83,10 @@ The browser check uses a private bridge and synthetic pages; it never imports pe
 
 ## Quiet workspace cleanup
 
-Ordinary agent pages keep their page associations and in-page controls without
-creating Chrome tab groups. Recoverable TaskSpaces still use a uniquely named
-group while their pages are retained. Clear operations ungroup matching task
-pages before closing them, and preserve renamed groups and moved pages. A failed
-ungroup/close remains retryable rather than reporting successful cleanup.
-
-Already closed groups saved by older Chrome sessions are separate from task
-records and may need removal in Chrome's saved-group menu. An unavailable page
-inventory is not an empty inventory: the workspace offers Retry and reload
-instructions instead of reporting zero pages.
+Ordinary agent pages and TaskSpaces keep their associations and controls in the
+extension without creating Chrome tab groups. Upgrades ungroup proven legacy
+task pages, preserving renamed groups and moved pages. Already closed groups
+saved by older Chrome sessions are separate from task records and may need
+removal in Chrome's saved-group menu. An unavailable page inventory is not an
+empty inventory: the workspace offers Retry and reload instructions instead of
+reporting zero pages.

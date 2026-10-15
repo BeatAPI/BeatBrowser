@@ -10,7 +10,7 @@
 
 [快速开始](#快速开始) · [后台工作区](#后台工作区) · [工具](#工具) · [JavaScript SDK](docs/JAVASCRIPT.md) · [隐私](PRIVACY.md) · [MIT](LICENSE)
 
-> **1.3.1 版本**包含后台任务、重载恢复和新版工作区。[安装指南](docs/INSTALL.md) · [更新说明](docs/RELEASE_NOTES.md)
+> **1.3.2 版本**在插件工作区管理任务，不再自动创建 Chrome 标签组。[安装指南](docs/INSTALL.md) · [更新说明](docs/RELEASE_NOTES.md)
 
 ## 一套浏览器能力，供多个 Agent 使用
 
@@ -30,7 +30,7 @@
 需要 **Node.js 20+、Chrome 116+** 和兼容的本地 MCP 客户端。
 
 ```sh
-npm install --global @beatapi/beat-browser@1.3.1
+npm install --global @beatapi/beat-browser@1.3.2
 beat-browser install --dry-run
 beat-browser install
 beat-browser extension
@@ -79,7 +79,7 @@ flowchart LR
 
 任务窗口复用同一配置的登录态，并不是独立 Cookie 容器。网站弹窗或浏览器原生行为仍可能获得焦点。任务窗口被聚焦时会暂停后续自动化，但无法撤回已经发出的操作。后台执行是目标体验，不等于绝对隐形或永不抢焦点。
 
-重载后先确认恢复的页面，再继续任务。Chrome 尚未恢复标签页或分组时，可以点击**重新查找**或**关联页面**。此前已丢失的旧记录无法补回。原 Agent 重连后可恢复路由；新 Agent 经明确授权可以接手恢复的任务，但不会因此自动继续执行。
+重载后先确认恢复的页面，再继续任务。扩展重载后按 Chrome 原生页面标识恢复关联；浏览器彻底重启后，通过**关联页面**确认归属，再继续任务。不会仅凭相同网址接管页面。此前已丢失的旧记录无法补回。原 Agent 重连后可恢复路由；新 Agent 经明确授权可以接手恢复的任务，但不会因此自动继续执行。
 
 更新前先结束正在执行的操作，更新配套源码，重载扩展，再重启本地桥接服务和 Agent 连接。更新不需要删除本地存储。[任务生命周期与恢复](docs/TASKSPACES.md)
 

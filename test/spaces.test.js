@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import {createSpaces} from '../extension/spaces.js';
 function setup() {
   let data={},local={},time=1000,nextTab=9;let groups=new Map(); const calls=[],held=new Set(),tabs=new Map(),listeners={},windowState={id:4,state:"minimized",focused:false};
+  let targetEpoch=0;
   const chrome={
+    debugger:{getTargets:async()=>[...tabs.values()].map(t=>({id:`target-${targetEpoch}-${t.id}`,tabId:t.id,type:'page'}))},
     storage:{session:{get:async()=>structuredClone(data),set:async x=>{data=structuredClone({...data,...x})}},local:{get:async()=>structuredClone(local),set:async x=>{local=structuredClone({...local,...x})}}},
     tabGroups:{query:async()=>[...groups.values()],get:async id=>groups.get(id),update:async(id,p)=>Object.assign(groups.get(id),p)},
     windows:{get:async()=>({...windowState}),create:async p=>{calls.push(['create',p]);tabs.set(8,{id:8,windowId:4,url:p.url});return{id:4,tabs:[{id:8}]};},update:async(id,p)=>{calls.push(['window',id,p]);Object.assign(windowState,p);if(p.state==='minimized')windowState.focused=false;},onFocusChanged:{addListener:fn=>listeners.focus=fn}},
@@ -13,7 +15,7 @@ function setup() {
   };
   const cdp={retainBackground:async id=>held.add(id),releaseBackground:async id=>{held.delete(id);calls.push(['release',id]);},backgroundHeld:id=>held.has(id)};
   const spaces=createSpaces(chrome,cdp,{now:()=>time,uuid:()=> 'space-one'});
-  return{spaces,calls,held,tabs,groups,listeners,windowState,chrome,advance:ms=>time+=ms,local:()=>local,reload:()=>{data={};held.clear();return createSpaces(chrome,cdp,{now:()=>time,uuid:()=> 'space-two'});}};
+  return{spaces,calls,held,tabs,groups,listeners,windowState,chrome,restart:()=>{targetEpoch++;data={};held.clear();return createSpaces(chrome,cdp,{now:()=>time});},advance:ms=>time+=ms,local:()=>local,reload:()=>{data={};held.clear();return createSpaces(chrome,cdp,{now:()=>time,uuid:()=> 'space-two'});}};
 }
 const open=h=>h.spaces.command({action:'open',url:'https://example.test',label:'test'},'a');
 test('owned task opens minimized without changing a human tab or adding account storage',async()=>{
@@ -191,23 +193,19 @@ test('reload restores progress paused, keeps completed state and requires explic
  await restored.command({action:'finish',spaceId:s.spaceId},'a');
  const again=h.reload();assert.equal((await again.humanCommand({action:'list'})).spaces[0].state,'finished');
 });
-test('browser restart rebinds unique task group and URL instead of stale tab IDs',async()=>{
- const h=setup();await open(h);const original={...h.tabs.get(8)};h.tabs.clear();
- h.tabs.set(8,{id:8,windowId:4,url:'https://unrelated.test'});
- h.tabs.set(80,{...original,id:80,windowId:40,groupId:10});
- const group={...h.groups.get(1),id:10,windowId:40};h.groups.clear();h.groups.set(10,group);
- const restored=h.reload();const s=(await restored.humanCommand({action:'list'})).spaces[0];
- assert.equal(s.pages[0].tabId,80);assert.equal(s.windowId,40);
- await restored.humanCommand({action:'cleanup-all',userConfirmed:true});assert(h.tabs.has(8));assert(!h.tabs.has(80));
- assert.equal(Object.keys(h.local().beatTaskArchive.tasks).length,0);
- assert.equal((await h.reload().humanCommand({action:'list'})).spaces.length,0);
+test('browser restart keeps records unlinked instead of trusting reused tab IDs and URLs',async()=>{
+ const h=setup();await open(h);
+ const restored=h.restart(),s=(await restored.humanCommand({action:'list'})).spaces[0];
+ assert.equal(s.pages.length,0);assert.equal(s.missingPages.length,1);assert.equal(s.state,'recovered');
+ await assert.rejects(restored.humanCommand({action:'resume',spaceId:s.spaceId}),/missing pages/);
+ await restored.humanCommand({action:'cleanup-all',userConfirmed:true});assert(h.tabs.has(8));
 });
-test('missing or ambiguous pages are not resumed or closed by cleanup',async()=>{
- for(const kind of ['missing','duplicate','renamed']) {
+test('missing, replaced or moved pages are not resumed or closed by cleanup',async()=>{
+ for(const kind of ['missing','replaced','moved']) {
   const h=setup();await open(h);
   if(kind==='missing')h.tabs.delete(8);
-  if(kind==='duplicate')h.tabs.set(90,{...h.tabs.get(8),id:90});
-  if(kind==='renamed')h.groups.get(1).title='Personal';
+  if(kind==='replaced')h.tabs.get(8).url='https://unrelated.test';
+  if(kind==='moved')h.tabs.get(8).windowId=99;
   const restored=h.reload(),s=(await restored.humanCommand({action:'list'})).spaces[0];
   assert.equal(s.pages.length,0);assert.equal(s.missingPages.length,1);assert.equal(s.state,'recovered');
   await assert.rejects(restored.humanCommand({action:'resume',spaceId:s.spaceId}),/missing pages/);
@@ -238,21 +236,40 @@ test('persistent records contain URL fingerprints rather than raw URLs',async()=
  const saved=JSON.stringify(h.local());assert(!saved.includes('sensitive-test'));assert(!saved.includes('https://'));assert(saved.includes('fingerprint'));
 });
 
-test('cleanup ungroups task pages before closing, without touching renamed or moved groups',async()=>{
- const h=setup();await open(h);await h.spaces.command({action:'finish',spaceId:'space-one'},'a');
- await h.spaces.humanCommand({action:'cleanup-ended'});
- assert(h.calls.findIndex(c=>c[0]==='ungroup') < h.calls.findIndex(c=>c[0]==='tab-remove'));
- assert(h.calls.some(c=>c[0]==='ungroup'&&c[1]===8));
- for(const mode of ['renamed','moved']) {
-  const j=setup();await open(j);
-  if(mode==='renamed') j.groups.get(1).title='Personal';
-  else j.tabs.get(8).windowId=99;
-  await j.spaces.humanCommand({action:'cleanup-all',userConfirmed:true});
-  assert(!j.calls.some(c=>c[0]==='ungroup'));
- }
+test('tasks open, add, restore and clean up without creating any tab group',async()=>{
+ const h=setup();h.chrome.tabs.group=async()=>{throw Error('must not group');};await open(h);
+ await h.spaces.command({action:'new-page',spaceId:'space-one',pageLabel:'second',url:'https://example.test/second'},'a');
+ const restored=h.reload(),s=(await restored.humanCommand({action:'list'})).spaces[0];
+ assert.equal(s.pages.length,2);assert.equal(h.groups.size,0);
+ await restored.humanCommand({action:'cleanup-all',userConfirmed:true});
+ assert.equal(h.groups.size,0);assert.equal(h.tabs.size,0);
 });
-test('failed ungroup keeps task cleanup retryable instead of leaving a saved group',async()=>{
- const h=setup();await open(h);h.chrome.tabs.ungroup=async()=>{throw Error('busy');};
- assert.equal((await h.spaces.humanCommand({action:'cleanup-all',userConfirmed:true})).failed,1);
- assert(h.tabs.has(8));assert.equal((await h.spaces.humanCommand({action:'list'})).spaces.length,1);
+test('same-URL pages remain distinct through their Chrome target identities',async()=>{
+ const h=setup();await open(h);
+ await h.spaces.command({action:'new-page',spaceId:'space-one',pageLabel:'second',url:'https://example.test'},'a');
+ const s=(await h.reload().humanCommand({action:'list'})).spaces[0];
+ assert.deepEqual(s.pages.map(p=>p.tabId),[8,9]);
+});
+
+test('upgrading a v1 archive migrates proven task pages and removes its old group marker',async()=>{
+ const h=setup();await open(h);
+ const saved=h.local().beatTaskArchive;saved.version=1;
+ const task=saved.tasks['space-one'];task.groupTitle='BeatBrowser · space-on';task.groupId=7;
+ delete task.pages[0].targetId;h.tabs.get(8).groupId=7;
+ h.groups.set(7,{id:7,windowId:4,title:task.groupTitle});
+ await h.chrome.storage.local.set({beatTaskArchive:saved});
+ const s=(await h.restart().humanCommand({action:'list'})).spaces[0];
+ assert.equal(s.pages[0].tabId,8);assert.equal(h.tabs.get(8).groupId,-1);
+ const migrated=h.local().beatTaskArchive;assert.equal(migrated.version,2);
+ assert(migrated.tasks['space-one'].pages[0].targetId);assert.equal(migrated.tasks['space-one'].groupTitle,undefined);
+});
+test('migration preserves a renamed personal group and leaves its pages unlinked',async()=>{
+ const h=setup();await open(h);
+ const saved=h.local().beatTaskArchive;saved.version=1;
+ const task=saved.tasks['space-one'];task.groupTitle='BeatBrowser · space-on';task.groupId=7;
+ delete task.pages[0].targetId;h.tabs.get(8).groupId=7;
+ h.groups.set(7,{id:7,windowId:4,title:'Personal'});
+ await h.chrome.storage.local.set({beatTaskArchive:saved});
+ const s=(await h.restart().humanCommand({action:'list'})).spaces[0];
+ assert.equal(s.pages.length,0);assert.equal(h.tabs.get(8).groupId,7);
 });

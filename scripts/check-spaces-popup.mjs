@@ -63,7 +63,7 @@ export async function checkSpacesPopup({profileDirectory,url,output,cleanup=fals
         await new Promise(r=>setTimeout(r,100));
       }
       assert.equal(await evaluate("document.querySelector('#browser-page-count').textContent"),'—');
-      assert.match(await evaluate("document.querySelector('#browser-page-summary').textContent"),/重新加载/);
+      assert.equal(await evaluate("document.querySelector('#browser-page-summary').textContent"),await evaluate("BeatBrowserUI.text('Reload BeatBrowser to update its background service.','zh')"));
       await evaluate("chrome.runtime.sendMessage=window.originalSendMessage; document.querySelector('#retry-browser-pages').click()");
       const retried=Date.now()+5000;
       while(!await evaluate("document.querySelector('#retry-browser-pages').hidden")) {

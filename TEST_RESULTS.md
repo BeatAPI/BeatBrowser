@@ -1,5 +1,18 @@
 # Test results
 
+### 1.3.2 group-free workspace, 2026-10-16
+
+- Ordinary agent pages and TaskSpaces create no native Chrome groups.
+- Unit coverage checks target-based reload recovery, same-URL page separation,
+  restart ownership boundaries, v1 migration and preservation of user groups.
+- Isolated real Chromium verifies task input, popup/sidebar controls, explicit
+  cleanup and page-list error/retry UI. No daily Chrome profile is used.
+- The recovery check verifies actual extension reload and browser restart:
+  reload retains exact live page associations; restart retains metadata and
+  requires explicit reassociation, then a separate resume. No input is replayed.
+- Native macOS no-focus acceptance remains unverified for this release.
+
+
 This file records what has actually been executed against BeatBrowser. It is
 evidence for specific claims in the README, not a certification. Numbers from
 live runs are small samples and are labelled as such.

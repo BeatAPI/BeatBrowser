@@ -70,6 +70,7 @@ try {
  const first=await frames();await new Promise(r=>setTimeout(r,6500));const second=await frames();assert(second.frames>first.frames,'Background animation must continue beyond the old 5s detach interval');
  const after=await call('__spaces_test_state');const same=after.find(w=>w.id===human.id);const agent=after.find(w=>w.id===s.windowId);
  assert.equal(same.tabs.find(t=>t.active).id,human.tabs.find(t=>t.active).id);
+ assert(agent.tabs.every(t=>t.groupId===-1),'Task pages must remain ungrouped');
  if(!headless){assert.equal(same.focused,human.focused);assert.equal(agent.state,'minimized');assert.equal(agent.focused,false);}
  let backgroundScreenshot=false;
  try { const shot=await call('screenshot',scope);assert(shot.dataUrl?.startsWith('data:image/'));backgroundScreenshot=true; }
