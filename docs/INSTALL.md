@@ -29,10 +29,10 @@ beat-browser install
 
 This installs the local Node CLI and its public npm dependencies. It does not load the Chrome extension for you. The CLI archive and its checksum are also listed on the [release page](https://github.com/BeatAPI/BeatBrowser/releases/latest).
 
-### npm registry status
+### npm registry alternative
 
 
-npm 1.3.1 publication is pending a trusted-publisher authorization repair. Its `latest` tag still points to 1.2.2. Use the GitHub CLI download above now; the command below applies once npm 1.3.1 is available. Use the source path below when developing BeatBrowser.
+Version 1.3.1 is published on the official npm registry, matching the GitHub CLI and extension downloads. Use the source path below when developing BeatBrowser.
 
 Install globally so Chrome's extension folder stays at a stable path:
 
@@ -47,7 +47,7 @@ If you downloaded the extension ZIP, load its extracted folder. Otherwise load t
 
 Avoid loading an extension from a temporary `npx` cache. Keep the installation while Chrome uses its extension folder. After an update, reload the extension and restart your MCP client.
 
-If this exact version is not yet available on npm, install from the matching source tag below. GitHub extension downloads and npm publication are separate release steps.
+You can also install from the matching source tag below. GitHub extension downloads and npm publication are verified separately.
 
 ### From source
 
