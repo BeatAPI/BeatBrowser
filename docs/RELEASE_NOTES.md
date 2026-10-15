@@ -14,13 +14,13 @@ Your everyday Chrome, now a workspace for AI agents.
 ## Install or update
 
 ```sh
-npm install --global https://github.com/BeatAPI/BeatBrowser/releases/download/v1.3.1/beat-browser-cli.tgz
+npm install --global @beatapi/beat-browser@1.3.1
 beat-browser install --dry-run
 beat-browser install
 beat-browser extension
 ```
 
-The GitHub CLI and extension downloads are published. npm publication is pending a trusted-publisher authorization repair; its `latest` tag still points to 1.2.2. Use the command above for 1.3.1.
+Version 1.3.1 is available on npm and GitHub. The matching `beat-browser-cli.tgz` archive is also attached to this release for direct installation.
 
 Load the printed extension folder, or extract `beat-browser-extension.zip` into a permanent directory and load that folder in Chrome. Load only one copy per profile. The ZIP is the extension, not the local MCP server. SHA-256 files accompany both downloads.
 
