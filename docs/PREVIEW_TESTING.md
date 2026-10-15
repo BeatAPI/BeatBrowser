@@ -9,8 +9,8 @@ For BeatGeo users, use [BeatGeo's setup](https://github.com/BeatAPI/BeatGeo#quic
 To try BeatBrowser independently, use the current source (Node.js 20+ and Git):
 
 ```sh
-git clone --branch main https://github.com/BeatAPI/beat-browser.git
-cd beat-browser
+git clone --branch main https://github.com/BeatAPI/BeatBrowser.git
+cd BeatBrowser
 npm ci
 node src/cli.js install --dry-run
 node src/cli.js install

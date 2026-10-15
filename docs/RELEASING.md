@@ -39,8 +39,10 @@ Report an authentication failure as a blocked publication, not a release.
 ## Subsequent GitHub Actions releases
 
 Configure an npm trusted publisher for organization `BeatAPI`, repository
-`beat-browser`, workflow file `publish.yml`. Setting `id-token: write` in
-GitHub alone does not establish that trust relationship. The package workflow
+`BeatBrowser`, workflow file `publish.yml`. Setting `id-token: write` in
+GitHub alone does not establish that trust relationship. After a repository rename,
+verify that the npm trusted publisher names `BeatBrowser` before pushing a release tag;
+renaming GitHub does not update npm settings. The package workflow
 runs on a `v*` tag (or manual dispatch targeting that tag), verifies that the tag,
 CLI, lockfile and extension versions match, and runs the release checks. It then
 creates the GitHub Release with `beat-browser-<version>.zip`, the stable
@@ -53,7 +55,7 @@ GitHub release assets and `id-token: write` for npm trusted publishing. On rerun
 existing release assets are retained and only missing assets are uploaded.
 
 The stable README download URL is
-`https://github.com/BeatAPI/beat-browser/releases/latest/download/beat-browser-extension.zip`.
+`https://github.com/BeatAPI/BeatBrowser/releases/latest/download/beat-browser-extension.zip`.
 The archive has `manifest.json` at its root, includes LICENSE and PRIVACY.md,
 and omits `manifest.key`. Users extract it into a permanent folder before using
 Chrome's Load unpacked control; the local CLI/MCP server is still required.

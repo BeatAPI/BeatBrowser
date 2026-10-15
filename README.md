@@ -15,7 +15,7 @@ Keep your signed-in sessions when you switch between Claude Code, Codex CLI, Cur
 ![Node 20+](https://img.shields.io/badge/node-20%2B-343b49)
 ![24 MCP tools](https://img.shields.io/badge/MCP-24_tools-2463eb)
 
-[**Download Chrome extension ZIP**](https://github.com/BeatAPI/beat-browser/releases/latest/download/beat-browser-extension.zip) · [Releases](https://github.com/BeatAPI/beat-browser/releases) · [Install](#install) · [Compare](#how-it-compares) · [Tools](#tools) · [Demo guide](docs/DEMO.md) · [Security](#security-and-privacy)
+[**Download Chrome extension ZIP**](https://github.com/BeatAPI/BeatBrowser/releases/latest/download/beat-browser-extension.zip) · [Releases](https://github.com/BeatAPI/BeatBrowser/releases) · [Install](#install) · [Compare](#how-it-compares) · [Tools](#tools) · [Demo guide](docs/DEMO.md) · [Security](#security-and-privacy)
 
 </div>
 
@@ -64,7 +64,7 @@ Requirements: Node.js 20+, Chrome 116+ and a client that can launch a local stdi
 
 ### Download the Chrome extension
 
-[**Download the latest extension ZIP**](https://github.com/BeatAPI/beat-browser/releases/latest/download/beat-browser-extension.zip) · [Release notes and SHA-256 checksums](https://github.com/BeatAPI/beat-browser/releases/latest)
+[**Download the latest extension ZIP**](https://github.com/BeatAPI/BeatBrowser/releases/latest/download/beat-browser-extension.zip) · [Release notes and SHA-256 checksums](https://github.com/BeatAPI/BeatBrowser/releases/latest)
 
 1. Extract the ZIP into a permanent folder, such as `~/beat-browser-extension`. Keep that folder while the extension is installed.
 2. Open `chrome://extensions` in the Chrome profile you want to use and enable **Developer mode**.
@@ -78,12 +78,12 @@ The ZIP contains the Chrome extension only. It needs the local BeatBrowser MCP s
 Install the exact matching CLI directly from this GitHub release:
 
 ```bash
-npm install --global https://github.com/BeatAPI/beat-browser/releases/download/v1.2.2/beat-browser-cli.tgz
+npm install --global https://github.com/BeatAPI/BeatBrowser/releases/download/v1.2.2/beat-browser-cli.tgz
 beat-browser install --dry-run
 beat-browser install
 ```
 
-This installs the local Node CLI and its public npm dependencies. It does not load the Chrome extension for you. The CLI archive and its checksum are also listed on the [release page](https://github.com/BeatAPI/beat-browser/releases/latest).
+This installs the local Node CLI and its public npm dependencies. It does not load the Chrome extension for you. The CLI archive and its checksum are also listed on the [release page](https://github.com/BeatAPI/BeatBrowser/releases/latest).
 
 ### npm registry alternative
 
@@ -108,8 +108,8 @@ If this exact version is not yet available on npm, install from the matching sou
 ### From source
 
 ```bash
-git clone --branch v1.2.2 https://github.com/BeatAPI/beat-browser.git
-cd beat-browser
+git clone --branch v1.2.2 https://github.com/BeatAPI/BeatBrowser.git
+cd BeatBrowser
 npm ci
 node src/cli.js install --dry-run
 node src/cli.js install
