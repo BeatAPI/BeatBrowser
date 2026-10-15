@@ -2,17 +2,18 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createSpaces} from '../extension/spaces.js';
 function setup() {
-  let data={},time=1000,nextTab=9; const calls=[],held=new Set(),tabs=new Map(),listeners={},windowState={id:4,state:"minimized",focused:false};
+  let data={},local={},time=1000,nextTab=9;let groups=new Map(); const calls=[],held=new Set(),tabs=new Map(),listeners={},windowState={id:4,state:"minimized",focused:false};
   const chrome={
-    storage:{session:{get:async()=>structuredClone(data),set:async x=>{data=structuredClone({...data,...x})}}},
-    windows:{get:async()=>({...windowState}),create:async p=>{calls.push(['create',p]);tabs.set(8,{id:8,windowId:4});return{id:4,tabs:[{id:8}]};},update:async(id,p)=>{calls.push(['window',id,p]);Object.assign(windowState,p);if(p.state==='minimized')windowState.focused=false;},onFocusChanged:{addListener:fn=>listeners.focus=fn}},
-    tabs:{get:async id=>tabs.get(id),update:async(id,p)=>{calls.push(['tab-update',id,p]);Object.assign(tabs.get(id),p);},create:async p=>{calls.push(['tab-create',p]);const tab={id:nextTab++,windowId:p.windowId};tabs.set(tab.id,tab);return tab;},remove:async id=>{calls.push(['tab-remove',id]);tabs.delete(id);},query:async p=>[...tabs.values()].filter(t=>t.windowId===p.windowId),onCreated:{addListener:fn=>listeners.created=fn},onRemoved:{addListener:fn=>listeners.remove=fn}},
+    storage:{session:{get:async()=>structuredClone(data),set:async x=>{data=structuredClone({...data,...x})}},local:{get:async()=>structuredClone(local),set:async x=>{local=structuredClone({...local,...x})}}},
+    tabGroups:{query:async()=>[...groups.values()],get:async id=>groups.get(id),update:async(id,p)=>Object.assign(groups.get(id),p)},
+    windows:{get:async()=>({...windowState}),create:async p=>{calls.push(['create',p]);tabs.set(8,{id:8,windowId:4,url:p.url});return{id:4,tabs:[{id:8}]};},update:async(id,p)=>{calls.push(['window',id,p]);Object.assign(windowState,p);if(p.state==='minimized')windowState.focused=false;},onFocusChanged:{addListener:fn=>listeners.focus=fn}},
+    tabs:{get:async id=>tabs.get(id),update:async(id,p)=>{calls.push(['tab-update',id,p]);Object.assign(tabs.get(id),p);},create:async p=>{calls.push(['tab-create',p]);const tab={id:nextTab++,windowId:p.windowId,url:p.url};tabs.set(tab.id,tab);return tab;},remove:async id=>{calls.push(['tab-remove',id]);tabs.delete(id);},group:async p=>{const id=p.groupId ?? groups.size+1;groups.set(id,{...(groups.get(id)||{id,windowId:p.createProperties?.windowId}),title:groups.get(id)?.title || ''});for(const tabId of p.tabIds)tabs.get(tabId).groupId=id;return id;},query:async p=>[...tabs.values()].filter(t=>p.windowId===undefined || t.windowId===p.windowId),onCreated:{addListener:fn=>listeners.created=fn},onRemoved:{addListener:fn=>listeners.remove=fn}},
     notifications:{create:async(id,p)=>{calls.push(['notification',id,p]);}},
     alarms:{create(){},onAlarm:{addListener:fn=>listeners.alarm=fn}}
   };
   const cdp={retainBackground:async id=>held.add(id),releaseBackground:async id=>{held.delete(id);calls.push(['release',id]);},backgroundHeld:id=>held.has(id)};
   const spaces=createSpaces(chrome,cdp,{now:()=>time,uuid:()=> 'space-one'});
-  return{spaces,calls,held,tabs,listeners,windowState,chrome,advance:ms=>time+=ms};
+  return{spaces,calls,held,tabs,groups,listeners,windowState,chrome,advance:ms=>time+=ms,local:()=>local,reload:()=>{data={};held.clear();return createSpaces(chrome,cdp,{now:()=>time,uuid:()=> 'space-two'});}};
 }
 const open=h=>h.spaces.command({action:'open',url:'https://example.test',label:'test'},'a');
 test('owned task opens minimized without changing a human tab or adding account storage',async()=>{
@@ -179,4 +180,60 @@ test('cleanup does not discard a record when tab lookup fails unexpectedly',asyn
  h.chrome.tabs.get=async()=>{throw Error('Service disconnected')};
  assert.equal((await h.spaces.humanCommand({action:'cleanup-ended'})).failed,1);
  assert(h.tabs.has(8));assert.equal((await h.spaces.humanCommand({action:'list'})).spaces.length,1);
+});
+
+test('reload restores progress paused, keeps completed state and requires explicit resume',async()=>{
+ const h=setup();await open(h);await h.spaces.command({action:'report',spaceId:'space-one',message:'Step 2 ready'},'a');
+ const restored=h.reload(),s=(await restored.humanCommand({action:'list'})).spaces[0];
+ assert.equal(s.state,'recovered');assert.equal(s.progress,'Step 2 ready');assert.equal(s.pages[0].tabId,8);assert.equal(h.held.size,0);
+ await assert.rejects(restored.guard(8,'a'),/recovered/);
+ await restored.humanCommand({action:'resume',spaceId:s.spaceId});await restored.guard(8,'a');
+ await restored.command({action:'finish',spaceId:s.spaceId},'a');
+ const again=h.reload();assert.equal((await again.humanCommand({action:'list'})).spaces[0].state,'finished');
+});
+test('browser restart rebinds unique task group and URL instead of stale tab IDs',async()=>{
+ const h=setup();await open(h);const original={...h.tabs.get(8)};h.tabs.clear();
+ h.tabs.set(8,{id:8,windowId:4,url:'https://unrelated.test'});
+ h.tabs.set(80,{...original,id:80,windowId:40,groupId:10});
+ const group={...h.groups.get(1),id:10,windowId:40};h.groups.clear();h.groups.set(10,group);
+ const restored=h.reload();const s=(await restored.humanCommand({action:'list'})).spaces[0];
+ assert.equal(s.pages[0].tabId,80);assert.equal(s.windowId,40);
+ await restored.humanCommand({action:'cleanup-all',userConfirmed:true});assert(h.tabs.has(8));assert(!h.tabs.has(80));
+ assert.equal(Object.keys(h.local().beatTaskArchive.tasks).length,0);
+ assert.equal((await h.reload().humanCommand({action:'list'})).spaces.length,0);
+});
+test('missing or ambiguous pages are not resumed or closed by cleanup',async()=>{
+ for(const kind of ['missing','duplicate','renamed']) {
+  const h=setup();await open(h);
+  if(kind==='missing')h.tabs.delete(8);
+  if(kind==='duplicate')h.tabs.set(90,{...h.tabs.get(8),id:90});
+  if(kind==='renamed')h.groups.get(1).title='Personal';
+  const restored=h.reload(),s=(await restored.humanCommand({action:'list'})).spaces[0];
+  assert.equal(s.pages.length,0);assert.equal(s.missingPages.length,1);assert.equal(s.state,'recovered');
+  await assert.rejects(restored.humanCommand({action:'resume',spaceId:s.spaceId}),/missing pages/);
+  await restored.humanCommand({action:'cleanup-all',userConfirmed:true});
+  if(kind!=='missing')assert(h.tabs.has(8));
+ }
+});
+test('manually reconnect a missing page without replaying, and protect it from cleanup',async()=>{
+ const h=setup();await open(h);h.tabs.delete(8);
+ const restored=h.reload();await restored.humanCommand({action:'list'});
+ h.tabs.set(81,{id:81,windowId:50,url:'https://example.test'});
+ const p={action:'relink',spaceId:'space-one',pageLabel:'main',tabId:81,windowId:50,url:'https://example.test',userConfirmed:true};
+ await assert.rejects(restored.humanCommand({...p,userConfirmed:false}),/Confirm/);
+ await restored.humanCommand(p);assert.equal(h.held.size,0);
+ await restored.humanCommand({action:'cleanup-all',userConfirmed:true});assert(h.tabs.has(81));
+});
+test('new agent must explicitly claim a recovered task; claim alone does not resume',async()=>{
+ const h=setup();await open(h);const restored=h.reload();
+ const listed=(await restored.command({action:'list'},'new-agent')).spaces[0];assert.equal(listed.owned,false);
+ await assert.rejects(restored.command({action:'claim',spaceId:'space-one'},'new-agent'),/authorization/);
+ await restored.command({action:'claim',spaceId:'space-one',userConfirmed:true},'new-agent');
+ await assert.rejects(restored.guard(8,'new-agent'),/recovered/);
+ await restored.command({action:'resume',spaceId:'space-one',userConfirmed:true},'new-agent');
+ await restored.guard(8,'new-agent');await assert.rejects(restored.guard(8,'a'),/another session/);
+});
+test('persistent records contain URL fingerprints rather than raw URLs',async()=>{
+ const h=setup();await h.spaces.command({action:'open',url:'https://example.test/?secret=sensitive-test',label:'Test'},'a');
+ const saved=JSON.stringify(h.local());assert(!saved.includes('sensitive-test'));assert(!saved.includes('https://'));assert(saved.includes('fingerprint'));
 });

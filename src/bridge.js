@@ -334,7 +334,7 @@ export function startBridge({ port = DEFAULT_PORT, token = newToken(), writeInfo
     if (msg.cmd === 'spaces' && msg.params?.action === 'profiles') {
       return send(ws, {type:'res',id:msg.id,ok:true,data:{profiles:liveExtensions().map(e=>({profileId:e.instanceId,description:extLabel(e),default:e===target}))}});
     }
-    if (msg.cmd === 'spaces' && ['open', 'list'].includes(msg.params?.action)) {
+    if (msg.cmd === 'spaces' && ['open', 'list', 'claim'].includes(msg.params?.action)) {
       const profileId=msg.params.profileId;
       if (profileId) {
         target=liveExtensions().find(e=>e.instanceId===profileId);
@@ -344,7 +344,7 @@ export function startBridge({ port = DEFAULT_PORT, token = newToken(), writeInfo
       }
     }
     const spaceId = msg.params?.spaceId;
-    if (spaceId) {
+    if (spaceId && !(msg.cmd === 'spaces' && msg.params?.action === 'claim')) {
       const owner = spaceOwners.get(spaceId);
       if (!owner || owner.sid !== ws.sid || owner.extension.readyState !== 1 || !extensions.has(owner.extension)) {
         return send(ws, {type:'res', id:msg.id, ok:false, error:{code:'SPACE_STOPPED', message:'TaskSpace connection is unavailable; no other browser was selected.'}});
@@ -435,8 +435,16 @@ export function startBridge({ port = DEFAULT_PORT, token = newToken(), writeInfo
       
       audit({ ev: 'res', id: key, cmd: p.cmd, ok: msg.ok, ms: Date.now() - p.startedAt, error: msg.error?.code,
         bytes: msg.ok ? JSON.stringify(msg.data ?? '').length : undefined });
-      if (p.cmd === 'spaces' && p.action === 'open' && msg.ok && msg.data?.spaceId) {
+      if (p.cmd === 'spaces' && ['open','claim'].includes(p.action) && msg.ok && msg.data?.spaceId) {
         spaceOwners.set(msg.data.spaceId, {sid:p.agent.sid,extension:ws,tabIds:new Set(msg.data.pages?.map(page=>page.tabId) || [msg.data.tabId])});
+      }
+      if(p.cmd==='spaces' && p.action==='list' && msg.ok && Array.isArray(msg.data?.spaces)) {
+        for(const space of msg.data.spaces) if(space.owned!==false && Array.isArray(space.pages)) {
+          const existing=spaceOwners.get(space.spaceId);
+          if(!existing || (existing.sid===p.agent.sid && existing.extension===ws)) {
+            spaceOwners.set(space.spaceId,{sid:p.agent.sid,extension:ws,tabIds:new Set(space.pages.map(page=>page.tabId))});
+          }
+        }
       }
       if (p.cmd === 'spaces' && p.spaceId && msg.ok && Array.isArray(msg.data?.pages)) {
         const owner=spaceOwners.get(p.spaceId);

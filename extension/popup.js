@@ -130,7 +130,7 @@ async function control(params) {
     const reply=await chrome.runtime.sendMessage({__hcPopup:'spaces',params});
     if (!reply || reply.error) throw Error(reply?.error || 'No response from the extension. Reload BeatBrowser and reconnect.');
     return reply;
-  } catch(error) { showMessage(t('Connection unavailable. Try reconnecting.'),true);throw error; }
+  } catch(error) { showMessage(t(error.message),true);throw error; }
 }
 const workspaceButton = document.getElementById('open-workspace');
 if (workspaceButton) {
@@ -229,6 +229,39 @@ async function refreshSpaces() {
     card.append(title,state,detail,progress,pageCount);
     if (!presentation.terminal) card.append(notifyLabel);
     card.append(actions);
+    if(space.missingPages?.length) {
+      const missing=document.createElement('p');missing.className='pause-detail';missing.textContent=t('Missing pages: {count}',{count:space.missingPages.length});
+      const reconnect=document.createElement('button');reconnect.type='button';reconnect.textContent=t('Reconnect pages');
+      const retry=document.createElement('button');retry.type='button';retry.textContent=t('Check again');
+      retry.onclick=async()=>{try{await control({action:'retry-recovery',spaceId:space.spaceId});await refreshSpaces();}catch{}};
+      const picker=document.createElement('div');picker.className='recovery-picker';
+      reconnect.onclick=async()=>{
+        try {
+          const result=await control({action:'candidates',spaceId:space.spaceId});picker.replaceChildren();
+          for(const page of space.missingPages) {
+            const row=document.createElement('div');
+            const label=document.createElement('label');label.textContent=page.label;
+            const select=document.createElement('select');select.setAttribute('aria-label',page.label+' · '+t('Select page'));
+            const empty=document.createElement('option');empty.value='';empty.textContent=t('Select page');select.append(empty);
+            for(const candidate of result.pages) {
+              const option=document.createElement('option');option.value=String(candidate.tabId);
+              option.textContent=(candidate.title || new URL(candidate.url).hostname).slice(0,70);select.append(option);
+            }
+            const link=document.createElement('button');link.type='button';link.textContent=t('Link');link.disabled=true;
+            select.onchange=()=>{link.disabled=!select.value;};
+            link.onclick=async()=>{
+              const selected=result.pages.find(p=>p.tabId===Number(select.value));if(!selected)return;
+              link.disabled=true;
+              try {await control({action:'relink',spaceId:space.spaceId,pageLabel:page.label,...selected,userConfirmed:true});await refreshSpaces();}
+              catch {link.disabled=false;}
+            };
+            label.append(select);row.append(label,link);picker.append(row);
+          }
+        } catch {}
+      };
+      const recoveryActions=document.createElement('div');recoveryActions.className='cleanup-actions';recoveryActions.append(reconnect,retry);
+      card.append(missing,recoveryActions,picker);
+    }
     if (isPanel) {
       const list=document.createElement('ul');list.className='page-list';
       for (const page of space.pages || []) {

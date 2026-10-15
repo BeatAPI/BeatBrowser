@@ -1,4 +1,5 @@
 import './ui-language.js';
+import {createTaskStore} from './task-store.js';
 // [INPUT] Identified local sessions and explicit task-window requests.
 // [OUTPUT] Owned background workspaces, page handles and lifecycle receipts.
 // [POS] BeatBrowser execution isolation. [PROTOCOL] No product accounts or job queue.
@@ -7,21 +8,22 @@ const MAX_PAGES = 16;
 const MAX_EVENTS = 80;
 
 export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.randomUUID(), headless = /HeadlessChrome/.test(globalThis.navigator?.userAgent || '') } = {}) {
-  const key = 'beatTaskSpaces';
+  const store = createTaskStore(chrome, {now});
   let chain = Promise.resolve();
   const serial = fn => {
     const next = chain.then(fn, fn);
     chain = next.catch(() => {});
     return next;
   };
-  const read = async () => (await chrome.storage.session.get(key))[key] || {};
-  const write = spaces => chrome.storage.session.set({ [key]: spaces });
+  const read = store.read;
+  const write = store.write;
   const fail = message => { throw Object.assign(new Error(message), { code: 'SPACE_STOPPED' }); };
   // Upgrade transient records from the first single-page prototype in place.
   const pages = s => s.pages ||= [{ label: 'main', tabId: s.tabId, openedBy: 'agent' }];
   const publicSpace = s => ({
     spaceId: s.id, label: s.label, windowId: s.windowId,
-    tabId: pages(s)[0]?.tabId ?? null, pages: pages(s).map(p => ({ ...p })),
+    tabId: pages(s)[0]?.tabId ?? null, pages: pages(s).map(({label,tabId,openedBy,handedToUser}) => ({label,tabId,openedBy,handedToUser})),
+    missingPages:(s.missingPages || []).map(p=>({label:p.label})), recovered:!!s.recovered,
     state: s.state, expiresAt: s.expiresAt, progress: s.progress || '',
     updatedAt: s.updatedAt || null, notifications: !!s.notifications,
     pauseReason: s.pauseReason || null,
@@ -98,6 +100,15 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
       await Promise.all(pages(s).map(p => cdp.releaseBackground(p.tabId)));
     }
   }
+  async function markPages(s) {
+    const ids=pages(s).map(p=>p.tabId);
+    if(!ids.length)return;
+    s.groupTitle ||= `BeatBrowser · ${s.id.slice(0,8)}`;
+    const current=s.groupId!=null?await chrome.tabGroups.get(s.groupId).catch(()=>null):null;
+    const groupId=await chrome.tabs.group(current?.title===s.groupTitle && current.windowId===s.windowId
+      ?{tabIds:ids,groupId:s.groupId}:{tabIds:ids,createProperties:{windowId:s.windowId}});
+    await chrome.tabGroups.update(groupId,{title:s.groupTitle,color:'blue'});s.groupId=groupId;
+  }
   async function open(p, sid, spaces) {
     webUrl(p.url);
     if (Object.values(spaces).filter(s => s.owner === sid && !TERMINAL.has(s.state)).length >= 4) fail('Finish an existing space before opening another.');
@@ -115,6 +126,8 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
     };
     spaces[s.id] = s;
     await write(spaces);
+    await markPages(s);
+    await write(spaces);
     await retain(s);
     record(s, 'opened');
     await write(spaces);
@@ -124,7 +137,7 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
     await validateRunning(s, spaces);
     const label = pageLabel(p.pageLabel);
     if (p.action === 'new-page' || p.action === 'adopt') {
-      if (pages(s).some(page => page.label === label)) fail('That page label is already in use.');
+      if ([...pages(s),...(s.missingPages || [])].some(page => page.label === label)) fail('That page label is already in use.');
       if (pages(s).length >= MAX_PAGES) fail('TaskSpace page limit reached.');
       let tab;
       if (p.action === 'adopt') {
@@ -136,6 +149,7 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
         tab = await chrome.tabs.create({ windowId: s.windowId, url: webUrl(p.url), active: false });
       }
       pages(s).push({ label, tabId: tab.id, openedBy: p.action === 'adopt' ? 'user' : 'agent' });
+      await markPages(s);
       await write(spaces);
       try { await cdp.retainBackground(tab.id); }
       catch { await pause(s, 'interrupted', spaces); }
@@ -207,9 +221,13 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
     if (!sid) fail('TaskSpace requires an identified local session.');
     return serial(async () => {
       const spaces = await read();
-      if (p.action === 'list') return { spaces: Object.values(spaces).filter(s => s.owner === sid).map(publicSpace) };
+      if (p.action === 'list') return { spaces: Object.values(spaces).filter(s => s.owner === sid || s.recovered).map(s=>({...publicSpace(s),owned:s.owner===sid})) };
       if (p.action === 'open') return open(p, sid, spaces);
       const s = spaces[p.spaceId];
+      if(p.action==='claim' && s?.recovered && !TERMINAL.has(s.state) && s.state!=='running') {
+        if(p.userConfirmed!==true)fail('Connecting a recovered task requires explicit user authorization.');
+        s.owner=sid;record(s,'reconnected');await write(spaces);return publicSpace(s);
+      }
       if (!s || s.owner !== sid) fail('Unknown TaskSpace for this session.');
       if (p.action === 'status' || p.action === 'pages') return publicSpace(s);
       if (p.action === 'events') return { ...publicSpace(s), events: (s.events || []).filter(e => e.sequence > (Number(p.after) || 0)), truncated: !!s.events?.length && Number(p.after) < s.events[0].sequence - 1 };
@@ -227,6 +245,7 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
       } else if (p.action === 'stop' || p.action === 'handoff') {
         if (!TERMINAL.has(s.state)) await pause(s, p.action === 'stop' ? 'stopped' : 'user', spaces, p.action === 'stop' ? 'stopped' : 'handoff');
         if (p.action === 'handoff') {
+          if(!pages(s).length)fail('No linked page remains.');
           for (const page of pages(s)) if (!p.pageLabel || page.label === p.pageLabel) page.handedToUser = true;
           if (p.pageLabel) {
             const page = pages(s).find(page => page.label === p.pageLabel);
@@ -240,12 +259,13 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
       } else if (p.action === 'resume') {
         if (p.userConfirmed !== true) fail('Resume requires userConfirmed:true after the user asks to return control.');
         if (TERMINAL.has(s.state)) fail('A stopped or finished TaskSpace cannot resume. Start a new explicitly authorized task.');
+        if(!pages(s).length || s.missingPages?.length) fail('Reconnect missing pages before continuing.');
         for (const page of pages(s)) {
           const tab = await chrome.tabs.get(page.tabId);
           if (tab.windowId !== s.windowId) fail('The task page moved out of its window; start a new task instead.');
         }
         await retain(s);
-        if (s.state === 'running') for (const page of pages(s)) page.handedToUser = false;
+        if (s.state === 'running') {s.recovered=false;for (const page of pages(s)) page.handedToUser = false;}
         s.expiresAt = now() + 900000;
         record(s, 'resumed');
       } else if (p.action === 'finish') return finish(s, p, spaces);
@@ -288,9 +308,12 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
       const spaces = await read();
       for (const s of Object.values(spaces)) if (pages(s).some(p => p.tabId === tabId)) {
         await cdp.releaseBackground(tabId);
+        const closed=pages(s).find(p=>p.tabId===tabId);
+        const {tabId:closedId,...missing}=closed;
+        s.missingPages=[...(s.missingPages || []),missing];
         s.pages = pages(s).filter(p => p.tabId !== tabId);
         record(s, 'page-closed', { tabId });
-        if (!s.pages.length && !TERMINAL.has(s.state)) s.state = 'finished';
+        if (!TERMINAL.has(s.state)) await pause(s, 'interrupted', spaces, 'page-closed');
       }
       await write(spaces);
     });
@@ -307,9 +330,17 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
       await write(spaces);
     });
   });
+  chrome.tabs.onUpdated?.addListener((tabId,change)=>{
+    if(!change.url)return;
+    void serial(async()=>{const spaces=await read();if(Object.values(spaces).some(s=>pages(s).some(p=>p.tabId===tabId)))await write(spaces);});
+  });
+  // Capture a previous in-memory generation before an upcoming extension update.
+  void serial(async()=>{const spaces=await read();for(const s of Object.values(spaces)) {
+    if(!s.groupTitle && pages(s).length)await markPages(s);
+  }await write(spaces);}).catch(()=>{});
   const contains = async tabId => Object.values(await read()).some(s => pages(s).some(p => p.tabId === tabId));
   async function humanCommand(p) {
-    if (p.action === 'list') return { spaces: Object.values(await read()).map(publicSpace) };
+    if (p.action === 'list') return serial(async()=>({ spaces: Object.values(await read()).map(publicSpace) }));
     if (p.action === 'cleanup' || p.action === 'cleanup-ended' || p.action === 'cleanup-all') {
       return serial(async () => {
         const spaces = await read();
@@ -325,6 +356,28 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
         return result;
       });
     }
+    if(['candidates','relink','retry-recovery'].includes(p.action)) return serial(async()=>{
+      const spaces=await read(),s=spaces[p.spaceId];
+      if(!s || s.state==='running')fail('Pause the task before reconnecting pages.');
+      if(p.action==='retry-recovery') {await store.retry(s);await write(spaces);return publicSpace(s);}
+      if(p.action==='candidates') {
+        const tabs=await chrome.tabs.query({});
+        const used=new Set(Object.values(spaces).flatMap(task=>pages(task).map(page=>page.tabId)));
+        return {pages:tabs.filter(t=>!used.has(t.id) && /^https?:/.test(t.url || ''))
+          .map(t=>({tabId:t.id,windowId:t.windowId,title:t.title || '',url:t.url}))};
+      }
+      if(p.userConfirmed!==true)fail('Confirm the page association.');
+      const missing=s.missingPages?.find(page=>page.label===p.pageLabel);
+      if(!missing)fail('Missing page no longer exists.');
+      const tab=await chrome.tabs.get(p.tabId);
+      if(!tab || tab.url!==p.url || tab.windowId!==p.windowId)fail('Page changed; select it again.');
+      if(Object.values(spaces).some(task=>pages(task).some(page=>page.tabId===tab.id)))fail('Page is already managed.');
+      if(pages(s).length && s.windowId!==tab.windowId)fail('Select a page in the same task window.');
+      webUrl(tab.url);s.windowId=tab.windowId;
+      pages(s).push({...missing,tabId:tab.id,openedBy:'user',handedToUser:true});
+      s.missingPages=s.missingPages.filter(page=>page!==missing);
+      await markPages(s);record(s,'page-linked',{pageLabel:p.pageLabel});await write(spaces);return publicSpace(s);
+    });
     if (!['handoff', 'resume', 'stop', 'notifications', 'events'].includes(p.action)) fail('Unknown human control.');
     const s = (await read())[p.spaceId];
     if (!s) fail('TaskSpace no longer exists.');

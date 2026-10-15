@@ -9,7 +9,7 @@ export function createWorkspacePages(chrome, taskSpaces) {
     ]);
     const taskTabs = new Set(tasks.spaces.flatMap(s => s.pages.map(p => p.tabId)));
     const associated = new Set();
-    const groupIds = new Set(groups.filter(g => g.title === 'BeatBrowser').map(g => g.id));
+    const groupIds = new Set(groups.filter(g => (g.title === 'BeatBrowser' || /^BeatBrowser · [a-zA-Z0-9-]{8}$/.test(g.title))).map(g => g.id));
     for (const [key, value] of Object.entries(stored)) {
       if (key.startsWith('ownTabs:') && Array.isArray(value)) value.forEach(id => associated.add(id));
       if (key.startsWith('agentTab:') && Number.isInteger(value)) associated.add(value);

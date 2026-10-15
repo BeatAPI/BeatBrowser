@@ -131,3 +131,7 @@ body:not(.panel) .space { padding:12px; }
 .browser-page { padding:10px 12px; margin-top:8px; border:1px solid var(--line); border-radius:10px; background:var(--panel); }
 .browser-page-title { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; font-weight:500; }
 .browser-page .cleanup-actions { margin:7px 0 0; }
+
+.recovery-picker select { display:block; width:100%; max-width:100%; padding:8px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font:inherit; }
+.recovery-picker label { display:block; font-size:12px; }
+.recovery-picker button { margin:8px 0; }

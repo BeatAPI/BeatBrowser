@@ -14,6 +14,24 @@ where those results go. The browser continues to contact the sites it visits.
 "Local bridge" does not mean that visited websites or an outer cloud agent
 receive no data.
 
+## Local task recovery
+
+Background task labels, caller-supplied progress notes, bounded lifecycle history,
+owner IDs and page associations persist in Chrome extension local storage until
+the task is cleared or the extension's data is removed. These notes may contain
+information supplied by the agent; avoid putting secrets in task labels or reports.
+Recovery stores SHA-256 URL fingerprints rather than raw URLs. Fingerprints are
+matching aids, not encryption. The archive does not automatically capture page
+bodies, cookies, passwords or browser profile files. It is local to this Chrome
+profile and does not use Chrome Sync or an additional server/database.
+
+Recovery reads current tab URLs to match fingerprints. The manual association
+picker displays live page titles; these are not added to the archive. Listing
+recovered tasks exposes their task metadata to the connected local agent client;
+reassigning ownership and resuming execution require explicit user instruction.
+Clearing a task removes its local task record; separate bridge logs and agent
+conversation history are not erased by that action.
+
 ## Explicit fast-task cloud processing
 
 The optional JEV executor is disabled by default. A CLI task must include

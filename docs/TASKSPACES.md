@@ -1,6 +1,6 @@
 # Background TaskSpaces — development status
 
-Unreleased 1.3.1 source preview, reviewed 2026-10-14. The installed 1.2.2 extension does not acquire it merely because local source changed. No Ego installation or native browser engine is required.
+Unreleased 1.3.1 source preview, reviewed 2026-10-15. The installed 1.2.2 extension does not acquire it merely because local source changed. No Ego installation or native browser engine is required.
 
 ## Execution model
 
@@ -28,13 +28,23 @@ Ended tasks offer **Clear**. **Clear ended** removes all finished/stopped task c
 
 Agent session titles are labelled **Linked page**: they identify that session's associated tab, not necessarily the active tab or an ongoing action. Ended tasks do not display stale pause instructions.
 
-The default lease is 15 minutes; requested leases range from 30 seconds to one hour. Explicit resume renews for 15 minutes. There are at most four nonterminal tasks per owner, 16 pages per task and 80 retained lifecycle events per task. Session state uses existing `chrome.storage.session`; it is not a durable job queue. An extension/browser restart loses task state, and bridge reconnection does not automatically recover ownership. Finish or stop when done.
+The default lease is 15 minutes; requested leases range from 30 seconds to one hour. Explicit resume renews for 15 minutes. There are at most four nonterminal tasks per owner, 16 pages per task and 80 retained lifecycle events per task. Task metadata is saved in `chrome.storage.local` and mirrored in session storage. Reload/update restores task labels, progress, history and completed states. Unfinished tasks restore paused; no interrupted input or submission is replayed. This is task recovery, not a durable job scheduler.
+
+### Reload and restart recovery
+
+Tasks mark their pages with a uniquely named Chrome tab group. Recovery requires that group and a unique matching URL fingerprint; old numeric tab/window IDs alone are never sufficient. Browser restart recovery depends on Chrome restoring the tabs and groups. If restoration finishes late, use **Check again**. Renamed/deleted groups, changed URLs and ambiguous duplicate pages stay unlinked.
+
+**Reconnect pages** lets the human explicitly select a current page for each missing label. Association does not run the task; a separate **Continue** is required. Manually associated pages are protected from cleanup. If a page closes while running, the task is interrupted rather than marked completed.
+
+After a bridge/extension reconnect, the original agent calls `spaces list` in the selected profile to reestablish routing. A new agent session can inspect recovered tasks and, only after explicit user instruction, use `spaces claim` with `userConfirmed:true`. Claim changes ownership but leaves execution paused; resume remains a separate explicit action. Completed/stopped tasks cannot be claimed or resumed.
+
+Records already lost before installing this recovery version cannot be reconstructed. Existing grouped pages remain available in **Browser pages**. Removing the extension or clearing its local storage removes the archive. Use **Clear**, **Clear ended** or **Clear all** to remove retained records.
 
 ## Agent access
 
 Use the existing MCP or CLI `spaces` command with explicit `spaceId` and `tabId`. Node agents can use [the JavaScript SDK](JAVASCRIPT.md), including named pages and waits for human control, URLs and popups. Existing page tools are reused. Ordinary input with no visible effect is not automatically repeated through another input layer. Write-request receipts include method/status only and do not prove business success. Frozen tabs can be thawed before dispatch; timed-out writes are never resent. Discarded, busy and confirmed-dialog states are distinguished. The optional Fast JEV loop has not been validated with TaskSpaces. Grok Bot and Muse have not individually undergone client acceptance in this change.
 
-Open Profound will own schedules and product run records. BeatBrowser executes assigned work and returns evidence. BeatAPI remains an optional capability layer for analysis, research and generation, not a prerequisite to ordinary local browser control.
+BeatGEO owns schedules and product run records. BeatBrowser executes assigned work and returns evidence. BeatAPI remains an optional capability layer for analysis, research and generation, not a prerequisite to ordinary local browser control.
 
 ## Verification and remaining gaps
 
@@ -54,6 +64,9 @@ npm run check:syntax
 npm run check:security
 npm run check:package
 BEAT_TEST_CHROME='/absolute/path/to/Chrome for Testing' node scripts/check-spaces-browser.mjs
+BEAT_TEST_CHROME='/absolute/path/to/Chrome for Testing' node scripts/check-spaces-recovery.mjs
 ```
+
+The recovery check actually reloads the test extension and restarts Chromium with its disposable profile, then verifies paused recovery, explicit resume, missing-page association and protected cleanup.
 
 The browser check uses a private bridge and synthetic pages; it never imports personal login data. Set `BEAT_TEST_HEADED=1` only for an intentional foreground-behavior experiment.
