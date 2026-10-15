@@ -41,6 +41,8 @@ try {
  const call=(cmd,params={})=>new Promise((resolve,reject)=>{const id=`test-${++n}`;const timer=setTimeout(()=>{waiting.delete(id);reject(new Error(`${cmd} timed out`));},25000);waiting.set(id,{resolve:x=>{clearTimeout(timer);resolve(x)},reject:e=>{clearTimeout(timer);reject(e)}});socket.send(JSON.stringify({type:'cmd',id,cmd,params,tabId:params.tabId}));});
  const before=await call('__spaces_test_state');
  const human=before.find(w=>w.tabs.some(t=>t.url===`${base}/human`));assert(human);
+ await call('query',{tabId:human.tabs[0].id,selector:'#input',extract:{id:'.@id'}});
+ assert.equal((await call('__spaces_test_state')).find(w=>w.id===human.id).tabs[0].groupId,-1,'Ordinary agent pages must stay ungrouped');
  const s=await call('spaces',{action:'open',url:`${base}/agent`,label:'Isolated background proof'});assert.equal(s.state,'running');console.log('opened-state',JSON.stringify((await call('__spaces_test_state')).map(w=>({id:w.id,state:w.state,focused:w.focused}))));
  const scope={spaceId:s.spaceId,tabId:s.tabId};
  let readinessFailure;
@@ -68,6 +70,7 @@ try {
  const first=await frames();await new Promise(r=>setTimeout(r,6500));const second=await frames();assert(second.frames>first.frames,'Background animation must continue beyond the old 5s detach interval');
  const after=await call('__spaces_test_state');const same=after.find(w=>w.id===human.id);const agent=after.find(w=>w.id===s.windowId);
  assert.equal(same.tabs.find(t=>t.active).id,human.tabs.find(t=>t.active).id);
+ assert(agent.tabs.every(t=>t.groupId===-1),'Task pages must remain ungrouped');
  if(!headless){assert.equal(same.focused,human.focused);assert.equal(agent.state,'minimized');assert.equal(agent.focused,false);}
  let backgroundScreenshot=false;
  try { const shot=await call('screenshot',scope);assert(shot.dataUrl?.startsWith('data:image/'));backgroundScreenshot=true; }

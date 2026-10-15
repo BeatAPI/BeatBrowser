@@ -74,6 +74,7 @@ try {
  assert.equal(restored.length,3);assert.equal(restored.find(s=>s.spaceId===task.spaceId).state,'recovered');
  assert.equal(restored.find(s=>s.spaceId===completed.spaceId).state,'finished');
  assert.equal(restored.find(s=>s.spaceId===task.spaceId).progress,'Checkpoint before update');
+ assert.equal(restored.find(s=>s.spaceId===task.spaceId).pages.length,1,'Reload keeps exact live target associations');
  await assert.rejects(call('type',{spaceId:task.spaceId,tabId:task.tabId,selector:'#input',text:'must-not-replay'}),/recovered/);
  let panel=await cdp('Target.createTarget',{url:popupUrl.replace('popup.html','panel.html')});
  let panelSession=(await cdp('Target.attachToTarget',{targetId:panel.targetId,flatten:true})).sessionId;
@@ -97,15 +98,27 @@ try {
  panelSession=(await cdp('Target.attachToTarget',{targetId:panel.targetId,flatten:true})).sessionId;
  await until(()=>evaluate(panelSession,'!!chrome.runtime?.id'));
  const human=p=>evaluate(panelSession,`chrome.runtime.sendMessage({__hcPopup:'spaces',params:${JSON.stringify(p)}})`);
- // Browser session restoration may finish after the extension starts.
- await until(async()=>{await human({action:'retry-recovery',spaceId:task.spaceId});const s=(await call('spaces',{action:'list'})).spaces.find(s=>s.spaceId===task.spaceId);return s.pages.length===1;});
+ // Browser restart gives pages new native identities. Preserve records and ask
+ // for explicit association rather than guessing ownership from matching URLs.
+ await human({action:'retry-recovery',spaceId:task.spaceId});
  restored=(await call('spaces',{action:'list'})).spaces;
  const afterRestart=restored.find(s=>s.spaceId===task.spaceId);
- assert.equal(afterRestart.state,'recovered');assert.equal(restored.find(s=>s.spaceId===completed.spaceId).state,'finished');
+ assert.equal(afterRestart.state,'recovered');assert.equal(afterRestart.pages.length,0);
+ assert.equal(afterRestart.missingPages.length,1);
+ assert.equal(restored.find(s=>s.spaceId===completed.spaceId).state,'finished');
  assert.equal(restored.find(s=>s.spaceId===missing.spaceId).missingPages.length,1);
+ assert((await human({action:'resume',spaceId:task.spaceId})).error,'Missing pages must block resume');
+ let nativeCandidate;
+ await until(async()=>{
+   nativeCandidate=(await human({action:'candidates',spaceId:task.spaceId})).pages.find(t=>t.url===`${base}/agent`);
+   return !!nativeCandidate;
+ });
+ const relinked=await human({action:'relink',spaceId:task.spaceId,pageLabel:'main',...nativeCandidate,userConfirmed:true});
+ assert.equal(relinked.state,'recovered');
  assert.equal((await human({action:'resume',spaceId:task.spaceId})).state,'running');
  await call('spaces',{action:'list'});
- await call('type',{spaceId:task.spaceId,tabId:afterRestart.tabId,selector:'#input',text:'explicit-resume'});
+ await call('type',{spaceId:task.spaceId,tabId:relinked.tabId,selector:'#input',text:'explicit-resume'});
+ assert.deepEqual(await evaluate(panelSession,'chrome.tabGroups.query({})'),[],'Task lifecycle must not create native groups');
  const candidates=await human({action:'candidates',spaceId:missing.spaceId});
  const candidate=candidates.pages.find(t=>t.url===`${base}/legacy`);assert(candidate);
  const linked=await human({action:'relink',spaceId:missing.spaceId,pageLabel:'main',...candidate,userConfirmed:true});
@@ -114,6 +127,6 @@ try {
  assert.equal((await call('spaces',{action:'list'})).spaces.length,0);
  assert.deepEqual(await evaluate(panelSession,"chrome.storage.local.get('beatTaskArchive').then(x=>Object.keys(x.beatTaskArchive.tasks))"),[]);
  const all=await call('__spaces_test_state');assert(all.some(w=>w.tabs.some(t=>t.id===candidate.tabId)));
- console.log(JSON.stringify({passed:true,reloadPreservesTasks:true,restartRestoresPages:true,completedStatePreserved:true,progressPreserved:true,noAutomaticReplay:true,explicitResumeWorks:true,missingPageRelink:true,userPagePreserved:true,cleanupPersistent:true,isolated:true},null,2));
+ console.log(JSON.stringify({passed:true,reloadPreservesTasks:true,restartPreservesRecords:true,restartRequiresAssociation:true,noNativeGroups:true,completedStatePreserved:true,progressPreserved:true,noAutomaticReplay:true,explicitResumeWorks:true,missingPageRelink:true,userPagePreserved:true,cleanupPersistent:true,isolated:true},null,2));
 } catch(e){ console.error(e.message);console.error(stderr.slice(-1500));process.exitCode=1; }
 finally{debug?.close();socket?.close();browser.kill('SIGTERM');fixture.close();bridge.close();await new Promise(r=>setTimeout(r,500));fs.rmSync(tmp,{recursive:true,force:true});}

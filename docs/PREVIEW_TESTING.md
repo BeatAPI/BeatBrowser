@@ -1,6 +1,6 @@
-# BeatBrowser 1.3.1 workspace and acceptance
+# BeatBrowser 1.3.2 workspace and acceptance
 
-Both package and extension use 1.3.1. Use the [release installation guide](INSTALL.md) for matching downloads, or the source route below for development. AEO work remains separate.
+Both package and extension use 1.3.2. Use the [release installation guide](INSTALL.md) for matching downloads, or the source route below for development. AEO work remains separate.
 
 ## Install the current GitHub source
 
@@ -31,7 +31,7 @@ The workspace removes the large slogan, duplicate introduction and routine conne
 
 Update the source/dependency and reload the existing extension. This revision also changes bridge routing: after active Agent work finishes, restart the shared BeatBrowser bridge and reconnect Agent clients so both sides use the same revision. Do not install a second extension or import Chrome data.
 
-Task records now survive reload/update in local extension storage. Unfinished tasks show **Ready to restore** until you inspect their pages and choose **Continue**. Finished tasks remain finished. Missing pages offer **Check again** and **Reconnect pages**. No prior input or submission is automatically replayed. Recovery after a full browser restart also requires Chrome to restore the corresponding tabs/groups.
+Task records now survive reload/update in local extension storage. Unfinished tasks show **Ready to restore** until you inspect their pages and choose **Continue**. Finished tasks remain finished. Missing pages offer **Check again** and **Reconnect pages**. No prior input or submission is automatically replayed. Reload recovery uses native Chrome page identities. A full browser restart preserves task records but requires explicit page association and a separate Continue; no native groups are created.
 
 Records already lost by an older version cannot be recovered retroactively. Use **Browser pages** for retained grouped pages. Open the popup/sidebar and try **Clear** on an ended task, **Clear ended** for a batch, or **Clear all** with confirmation. Explicitly handed-over, adopted and moved pages remain open.
 

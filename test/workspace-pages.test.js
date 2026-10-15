@@ -9,8 +9,8 @@ function setup() {
   [4,{id:4,windowId:12,groupId:-1,url:'https://example.test/associated',title:'Associated page'}],
  ]);
  const calls=[],tasks=[{pages:[{tabId:3}]}];
- const chrome={tabs:{query:async()=>[...tabs.values()],remove:async id=>{calls.push(['remove',id]);tabs.delete(id);},update:async(id,p)=>calls.push(['tab',id,p])},
-  tabGroups:{query:async()=>[{id:7,title:'BeatBrowser'}]},
+ const chrome={tabs:{get:async id=>tabs.get(id),ungroup:async id=>{calls.push(['ungroup',id]);tabs.get(id).groupId=-1;},query:async()=>[...tabs.values()],remove:async id=>{calls.push(['remove',id]);tabs.delete(id);},update:async(id,p)=>calls.push(['tab',id,p])},
+  tabGroups:{get:async id=>({id,title:'BeatBrowser'}),query:async()=>[{id:7,title:'BeatBrowser'}]},
   storage:{local:{get:async()=>({'ownTabs:a':[4,999]})}},windows:{update:async(id,p)=>calls.push(['window',id,p])}};
  const inventory=createWorkspacePages(chrome,{humanCommand:async()=>({spaces:tasks})});
  return {inventory,tabs,calls,tasks,chrome};

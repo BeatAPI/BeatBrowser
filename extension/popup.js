@@ -308,6 +308,7 @@ chrome.storage.onChanged.addListener((changes,area)=>{
   if(area==='session' && changes.beatTaskSpaces) refreshSpaces().catch(()=>{});
 });
 
+const retryPages = document.getElementById('retry-browser-pages');
 const pageRoot = document.getElementById('browser-pages-list');
 const closePages = document.getElementById('close-browser-pages');
 const pageConfirmation = document.getElementById('browser-pages-confirm');
@@ -315,7 +316,8 @@ const pageMessage = document.getElementById('browser-pages-message');
 let browserPages = [], pendingPages = [], pagesBusy = false, pagesSequence = 0;
 async function pageControl(params) {
   const result = await chrome.runtime.sendMessage({__hcPopup:'workspacePages',params});
-  if (!result || result.error) throw Error(result?.error || 'Pages unavailable');
+  if (!result) throw Error('Reload BeatBrowser to update its background service.');
+  if (result.error) throw Error(result.error);
   return result;
 }
 function confirmPages(pages) {
@@ -329,6 +331,8 @@ async function refreshBrowserPages() {
     const result=await pageControl({action:'list'});
     if(sequence!==pagesSequence)return;
     browserPages=result.pages;
+    retryPages.hidden=true;
+    closePages.hidden=!browserPages.length;
     document.getElementById('browser-page-count').textContent=String(browserPages.length);
     document.getElementById('browser-page-summary').textContent=t('Linked pages in this Chrome profile')+' · '+t('{windows} windows · {pages} pages',{windows:result.windows,pages:browserPages.length});
     closePages.disabled=pagesBusy || !browserPages.length;
@@ -345,13 +349,15 @@ async function refreshBrowserPages() {
       const close=document.createElement('button');close.type='button';close.textContent=t('Close');close.dataset.pageAction='close';close.disabled=pagesBusy;
       close.onclick=()=>confirmPages([page]);actions.append(view,close);row.append(name,actions);pageRoot.append(row);
     }
-  } catch {
+  } catch (error) {
     if(sequence!==pagesSequence)return;
     browserPages=[];closePages.disabled=true;pageRoot.replaceChildren();
     document.getElementById('browser-page-count').textContent='—';
-    document.getElementById('browser-page-summary').textContent=t('Pages unavailable');
+    retryPages.hidden=false;closePages.hidden=true;
+    document.getElementById('browser-page-summary').textContent=t(error.message === 'Reload BeatBrowser to update its background service.' ? error.message : 'Page list failed to load. Retry or reload BeatBrowser.');
   }
 }
+retryPages.onclick=()=>refreshBrowserPages();
 closePages.onclick=()=>confirmPages(browserPages);
 document.getElementById('browser-pages-cancel').onclick=()=>{pendingPages=[];pageConfirmation.hidden=true;};
 document.getElementById('browser-pages-confirm-yes').onclick=async()=>{

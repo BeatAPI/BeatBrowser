@@ -10,7 +10,7 @@ An open-source browser toolkit by [BeatAPI](https://beatapi.io). Connect MCP-cap
 
 [Quick start](#quick-start) · [Background workspace](#background-workspace) · [Tools](#tools) · [JavaScript SDK](docs/JAVASCRIPT.md) · [Privacy](PRIVACY.md) · [MIT](LICENSE)
 
-> **Version 1.3.1** includes background TaskSpaces, task recovery and the updated workspace. [Install](docs/INSTALL.md) · [Release notes](docs/RELEASE_NOTES.md)
+> **Version 1.3.2** keeps tasks in the extension workspace without creating Chrome tab groups. [Install](docs/INSTALL.md) · [Release notes](docs/RELEASE_NOTES.md)
 
 ## One browser toolkit across your agents
 
@@ -30,7 +30,7 @@ Normal browser control needs no BeatBrowser account or API key. Your agent needs
 Prepare **Node.js 20+, Chrome 116+**, and a compatible local MCP client.
 
 ```sh
-npm install --global @beatapi/beat-browser@1.3.1
+npm install --global @beatapi/beat-browser@1.3.2
 beat-browser install --dry-run
 beat-browser install
 beat-browser extension
@@ -79,7 +79,7 @@ flowchart LR
 
 TaskSpaces use a separate window in your existing profile; they are not separate cookie containers. A site popup or native browser behavior can still gain focus. Focusing a running task pauses subsequent automation; this cannot undo an action already in flight. Background work is the intended experience, not a guarantee of invisible operation.
 
-After a reload, inspect recovered pages before continuing. If Chrome has not restored the tabs/groups, use **Check again** or **Reconnect pages**. Tasks lost before recovery was introduced cannot be reconstructed. Agent reconnection restores routing; an explicitly authorized new session can claim a recovered task without resuming it automatically.
+After a reload, inspect recovered pages before continuing. Live pages are recovered by their native Chrome target identity. After a full browser restart, use **Reconnect pages** to confirm page associations; matching URLs alone never transfer control. Tasks lost before recovery was introduced cannot be reconstructed. Agent reconnection restores routing; an explicitly authorized new session can claim a recovered task without resuming it automatically.
 
 When updating, finish active work first, update the matching source, reload the extension and restart the local bridge and Agent connections. Do not delete local storage to update. [Task lifecycle and recovery](docs/TASKSPACES.md)
 

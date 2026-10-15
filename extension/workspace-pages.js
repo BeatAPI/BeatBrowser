@@ -41,7 +41,16 @@ export function createWorkspacePages(chrome, taskSpaces) {
       if (!current || current.windowId !== requested.windowId || current.url !== requested.url) {
         result.skipped++;continue;
       }
-      try { await chrome.tabs.remove(current.tabId);result.closed++; }
+      try {
+        const tab = await chrome.tabs.get(current.tabId);
+        if (tab.groupId >= 0) {
+          const group = await chrome.tabGroups.get(tab.groupId);
+          if (group.title === 'BeatBrowser' || /^BeatBrowser · [a-zA-Z0-9-]{8}$/.test(group.title)) {
+            await chrome.tabs.ungroup(current.tabId);
+          }
+        }
+        await chrome.tabs.remove(current.tabId);result.closed++;
+      }
       catch { result.failed++; }
     }
     return result;

@@ -54,16 +54,34 @@ export async function checkSpacesPopup({profileDirectory,url,output,cleanup=fals
         if(Date.now()>emptyReady)throw Error('Empty popup did not render');
         await new Promise(r=>setTimeout(r,100));
       }
+      await evaluate(`window.originalSendMessage=chrome.runtime.sendMessage.bind(chrome.runtime);
+        chrome.runtime.sendMessage=(m,...args)=>m?.__hcPopup==='workspacePages'?Promise.resolve(undefined):window.originalSendMessage(m,...args);
+        document.querySelector('#retry-browser-pages').click();`);
+      const errorReady=Date.now()+5000;
+      while(!await evaluate("!document.querySelector('#retry-browser-pages').hidden")) {
+        if(Date.now()>errorReady)throw Error('Missing page handler did not expose recovery');
+        await new Promise(r=>setTimeout(r,100));
+      }
+      assert.equal(await evaluate("document.querySelector('#browser-page-count').textContent"),'—');
+      assert.equal(await evaluate("document.querySelector('#browser-page-summary').textContent"),await evaluate("BeatBrowserUI.text('Reload BeatBrowser to update its background service.','zh')"));
+      await evaluate("chrome.runtime.sendMessage=window.originalSendMessage; document.querySelector('#retry-browser-pages').click()");
+      const retried=Date.now()+5000;
+      while(!await evaluate("document.querySelector('#retry-browser-pages').hidden")) {
+        if(Date.now()>retried)throw Error('Page retry did not recover');
+        await new Promise(r=>setTimeout(r,100));
+      }
       await command('Emulation.setDeviceMetricsOverride',{width:340,height:440,deviceScaleFactor:1,mobile:false},sessionId);
       await evaluate('document.fonts.ready');
       const emptyShot=await command('Page.captureScreenshot',{format:'png'},sessionId);
       fs.writeFileSync(output.replace(/\.png$/, '-empty.png'),Buffer.from(emptyShot.data,'base64'));
-      const linked=await evaluate(`(async()=>{
+      const linkedRecord=await evaluate(`(async()=>{
         const tab=await chrome.tabs.create({url:'https://example.test/linked-page',active:false});
         const groupId=await chrome.tabs.group({tabIds:[tab.id]});
         await chrome.tabGroups.update(groupId,{title:'BeatBrowser',color:'blue'});
-        return tab.id;
+        return {tabId:tab.id,groupId};
       })()`);
+      const linkedGroup=linkedRecord.groupId;
+      const linked=linkedRecord.tabId;
       const pageReady=Date.now()+10000;
       while(!await evaluate(`document.querySelector('.browser-page[data-tab-id="${linked}"]') !== null`)) {
         if(Date.now()>pageReady)throw Error('Ordinary BeatBrowser page absent from workspace');
@@ -85,6 +103,7 @@ export async function checkSpacesPopup({profileDirectory,url,output,cleanup=fals
         if(Date.now()>pageClosed)throw Error('Confirmed linked page did not close');
         await new Promise(r=>setTimeout(r,100));
       }
+      assert.equal(await evaluate(`chrome.tabGroups.get(${linkedGroup}).then(()=>true,()=>false)`),false,'Closed page must leave no live group');
       return {cleanupButton:true,confirmationCancel:true,endedRemoved:true,linkedPageVisible:true,linkedPageClosed:true,noOverflow:true};
     }
     const end=Date.now()+10000;

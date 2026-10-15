@@ -100,14 +100,13 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
       await Promise.all(pages(s).map(p => cdp.releaseBackground(p.tabId)));
     }
   }
-  async function markPages(s) {
-    const ids=pages(s).map(p=>p.tabId);
-    if(!ids.length)return;
-    s.groupTitle ||= `BeatBrowser · ${s.id.slice(0,8)}`;
-    const current=s.groupId!=null?await chrome.tabGroups.get(s.groupId).catch(()=>null):null;
-    const groupId=await chrome.tabs.group(current?.title===s.groupTitle && current.windowId===s.windowId
-      ?{tabIds:ids,groupId:s.groupId}:{tabIds:ids,createProperties:{windowId:s.windowId}});
-    await chrome.tabGroups.update(groupId,{title:s.groupTitle,color:'blue'});s.groupId=groupId;
+  async function unmarkPage(s, tab) {
+    if (!s.groupTitle || !tab || tab.windowId !== s.windowId || tab.groupId !== s.groupId) return;
+    const group = await chrome.tabGroups.get(s.groupId).catch(() => null);
+    if (group?.title === s.groupTitle && group.windowId === s.windowId) {
+      // Closing a group can save it in Chrome. Ungroup our own page first.
+      await chrome.tabs.ungroup(tab.id);
+    }
   }
   async function open(p, sid, spaces) {
     webUrl(p.url);
@@ -125,8 +124,6 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
       reportIntervalMs: Math.min(Math.max(Number(p.reportIntervalMs) || 300000, 60000), 3600000),
     };
     spaces[s.id] = s;
-    await write(spaces);
-    await markPages(s);
     await write(spaces);
     await retain(s);
     record(s, 'opened');
@@ -149,7 +146,6 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
         tab = await chrome.tabs.create({ windowId: s.windowId, url: webUrl(p.url), active: false });
       }
       pages(s).push({ label, tabId: tab.id, openedBy: p.action === 'adopt' ? 'user' : 'agent' });
-      await markPages(s);
       await write(spaces);
       try { await cdp.retainBackground(tab.id); }
       catch { await pause(s, 'interrupted', spaces); }
@@ -161,8 +157,10 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
         if (page.openedBy !== 'agent' && p.userConfirmed !== true) fail('Closing a user or popup page requires explicit user authorization.');
         const tab = await chrome.tabs.get(page.tabId);
         if (tab.windowId !== s.windowId) fail('Moved pages are protected; inspect them before closing.');
+        await unmarkPage(s, tab);
         await chrome.tabs.remove(page.tabId);
       }
+      if (p.action === 'release-page') await unmarkPage(s, await chrome.tabs.get(page.tabId));
       await cdp.releaseBackground(page.tabId);
       s.pages = pages(s).filter(item => item !== page);
       record(s, p.action === 'release-page' ? 'page-released' : 'page-closed', { pageLabel: label, tabId: page.tabId });
@@ -181,7 +179,7 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
       if (!tab) continue;
       // Unmanaged tabs are never touched; user/popup/moved pages are protected.
       if (keep === 'all' || keep.includes(page.label) || page.openedBy !== 'agent' || tab.windowId !== s.windowId) retained.push(page.label);
-      else { await chrome.tabs.remove(page.tabId); closed.push(page.label); }
+      else { await unmarkPage(s, tab); await chrome.tabs.remove(page.tabId); closed.push(page.label); }
     }
     s.pages = pages(s).filter(page => retained.includes(page.label));
     record(s, 'receipt', { retained, closed });
@@ -204,6 +202,7 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
           if (!/No tab with id|Invalid tab ID/i.test(error.message)) throw error;
         }
         if (!tab) continue;
+        await unmarkPage(s, tab);
         if (page.openedBy !== 'agent' || page.handedToUser || handedOff || tab.windowId !== s.windowId) kept.push(page.label);
         else { await chrome.tabs.remove(page.tabId); closed.push(page.label); }
       } catch { failed.push(page); }
@@ -334,10 +333,8 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
     if(!change.url)return;
     void serial(async()=>{const spaces=await read();if(Object.values(spaces).some(s=>pages(s).some(p=>p.tabId===tabId)))await write(spaces);});
   });
-  // Capture a previous in-memory generation before an upcoming extension update.
-  void serial(async()=>{const spaces=await read();for(const s of Object.values(spaces)) {
-    if(!s.groupTitle && pages(s).length)await markPages(s);
-  }await write(spaces);}).catch(()=>{});
+  // Initialize/migrate durable task metadata without adding browser UI.
+  void serial(async()=>{await read();}).catch(()=>{});
   const contains = async tabId => Object.values(await read()).some(s => pages(s).some(p => p.tabId === tabId));
   async function humanCommand(p) {
     if (p.action === 'list') return serial(async()=>({ spaces: Object.values(await read()).map(publicSpace) }));
@@ -376,7 +373,7 @@ export function createSpaces(chrome, cdp, { now = Date.now, uuid = () => crypto.
       webUrl(tab.url);s.windowId=tab.windowId;
       pages(s).push({...missing,tabId:tab.id,openedBy:'user',handedToUser:true});
       s.missingPages=s.missingPages.filter(page=>page!==missing);
-      await markPages(s);record(s,'page-linked',{pageLabel:p.pageLabel});await write(spaces);return publicSpace(s);
+      record(s,'page-linked',{pageLabel:p.pageLabel});await write(spaces);return publicSpace(s);
     });
     if (!['handoff', 'resume', 'stop', 'notifications', 'events'].includes(p.action)) fail('Unknown human control.');
     const s = (await read())[p.spaceId];
