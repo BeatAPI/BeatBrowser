@@ -2,17 +2,24 @@
 
 Unpublished preview. Both package and extension use 1.3.1; the extension is labelled `1.3.1 local preview`. This is not an npm release. AEO work remains separate.
 
-## Install the matching pair
+## Install the current GitHub source
 
-Finish active browser tasks and restart Agent clients during the update: old in-memory MCP processes can otherwise reconnect with their previous bridge version. Keep the existing extension and CLI until ready to test.
+For BeatGeo users, use [BeatGeo's setup](https://github.com/BeatAPI/BeatGeo#quick-start): it installs a pinned BeatBrowser and prepares the extension. Do not clone a second repository or install a global CLI for that route.
 
-1. Install the supplied local CLI tarball with `npm install -g /absolute/path/to/beatapi-beat-browser-1.3.1.tgz`.
-2. Run `beat-browser install` to point compatible Agent clients at the stable installation. This updates their local MCP configuration.
-3. Run `beat-browser extension` to get the installed extension path. In the intended Chrome profile, reload/update the existing unpacked extension to that path. Avoid two enabled BeatBrowser extensions competing for one bridge.
-4. Restart the Agent client and run `beat-browser doctor`. Check matching 1.3.1 versions and the intended connected profile. No Chrome profile or cookies need importing.
-5. Click BeatBrowser's toolbar icon, then **Workspace**. The sidebar does not open automatically during task execution.
+To try BeatBrowser independently, use the current source (Node.js 20+ and Git):
 
-Do not install only the extension ZIP while leaving an old CLI/bridge running.
+```sh
+git clone --branch main https://github.com/BeatAPI/beat-browser.git
+cd beat-browser
+npm ci
+node src/cli.js install --dry-run
+node src/cli.js install
+node src/cli.js extension
+```
+
+Keep this checkout in a permanent folder. In the intended Chrome profile, open `chrome://extensions`, enable Developer mode and load the extension folder printed above. Restart your Agent client, then run `node src/cli.js doctor --json`. No Chrome profile or cookies need importing. Click BeatBrowser's toolbar icon, then **Workspace**; the sidebar does not open automatically during task execution.
+
+Existing users should finish browser tasks before updating. Load only one BeatBrowser extension per profile, and keep the CLI and extension on the same source revision. The regular README download links still point to the stable 1.2.2 GitHub/npm release; they do not contain these source-preview features.
 
 ## Language and compact UI
 
