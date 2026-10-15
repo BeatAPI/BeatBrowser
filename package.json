@@ -38,7 +38,11 @@
     "docs/HUASHU_UPSTREAM_REVIEW.md",
     "docs/UPSTREAM_MAINTENANCE.md",
     "docs/upstream-sources.json",
-    "docs/PREVIEW_TESTING.md"
+    "docs/PREVIEW_TESTING.md",
+    "README.zh-CN.md",
+    "media/readme-cover.svg",
+    "media/readme-cover.png",
+    "docs/INSTALL.md"
   ],
   "engines": {
     "node": ">=20"
