@@ -22,6 +22,7 @@ export function createBrowser({ client = 'javascript-agent', sessionId, bridge }
       return new TaskSpace(call, state);
     },
     async listSpaces({ profileId } = {}) { return (await call('spaces', { action: 'list', profileId })).spaces; },
+    async claimSpace(spaceId, {profileId, userConfirmed=false}={}) {return new TaskSpace(call,await call('spaces',{action:'claim',spaceId,profileId,userConfirmed}));},
     async space(spaceId) { return new TaskSpace(call, await call('spaces', { action: 'status', spaceId })); },
     close() { transport.close(); },
   };

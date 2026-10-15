@@ -4,7 +4,7 @@ Unpublished preview. Both package and extension use 1.3.1; the extension is labe
 
 ## Install the current GitHub source
 
-For BeatGeo users, use [BeatGeo's setup](https://github.com/BeatAPI/BeatGeo#quick-start): it installs a pinned BeatBrowser and prepares the extension. Do not clone a second repository or install a global CLI for that route.
+For BeatGEO users, use [BeatGEO's setup](https://github.com/BeatAPI/BeatGEO#quick-start): it installs a pinned BeatBrowser and prepares the extension. Do not clone a second repository or install a global CLI for that route.
 
 To try BeatBrowser independently, use the current source (Node.js 20+ and Git):
 
@@ -29,13 +29,17 @@ The workspace removes the large slogan, duplicate introduction and routine conne
 
 ## Task cleanup follow-up
 
-For an existing matching 1.3.1 installation, this extension-only change needs an extension reload after active tasks finish. It does not require an MCP reinstall. Open the popup/sidebar and try **Clear** on an ended task, **Clear ended** for a batch, or **Clear all** with confirmation to stop and clear every task. Explicitly handed-over, adopted and moved pages remain open. Reloading the extension loses session task records, so finish existing tasks and keep track of retained pages before reloading.
+Update the source/dependency and reload the existing extension. This revision also changes bridge routing: after active Agent work finishes, restart the shared BeatBrowser bridge and reconnect Agent clients so both sides use the same revision. Do not install a second extension or import Chrome data.
+
+Task records now survive reload/update in local extension storage. Unfinished tasks show **Ready to restore** until you inspect their pages and choose **Continue**. Finished tasks remain finished. Missing pages offer **Check again** and **Reconnect pages**. No prior input or submission is automatically replayed. Recovery after a full browser restart also requires Chrome to restore the corresponding tabs/groups.
+
+Records already lost by an older version cannot be recovered retroactively. Use **Browser pages** for retained grouped pages. Open the popup/sidebar and try **Clear** on an ended task, **Clear ended** for a batch, or **Clear all** with confirmation. Explicitly handed-over, adopted and moved pages remain open.
 
 ## Linked browser pages
 
 The workspace separates background **Tasks** from **Browser pages**. Ordinary agent-controlled tabs and tabs in BeatBrowser groups appear in Browser pages even when there are zero TaskSpaces. Counts cover the current Chrome profile, not other profiles or browsers. A group indicates a page association, not a running task.
 
-View locates a page. Close and Close pages require confirmation; they act only on the listed snapshot. Unrelated tabs, task pages, and pages moved or navigated since confirmation remain open. Closing the last listed tab may close its window. Reloaded task records are still transient: this inventory can rediscover grouped/associated pages, but it cannot reconstruct a lost task or its completion state.
+View locates a page. Close and Close pages require confirmation; they act only on the listed snapshot. Unrelated tabs, task pages, and pages moved or navigated since confirmation remain open. Closing the last listed tab may close its window. This inventory also finds legacy grouped/associated pages whose original task records were never saved. Those pages do not imply a running task.
 
 ## What changed in this preview
 

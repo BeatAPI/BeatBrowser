@@ -47,3 +47,5 @@ try {
 - Do not equate returning task control with approval of every future consequential action. Keep action-specific authorization in the calling application.
 
 See [TaskSpace limits](TASKSPACES.md) and [Ego parity assessment](EGO_PARITY_REVIEW.md).
+
+After reconnecting, call `listSpaces({profileId})` before retrieving an existing `space(spaceId)`. If a new agent session is explicitly authorized to take over a recovered task, call `claimSpace(spaceId, {profileId, userConfirmed:true})`. This returns a paused handle; missing pages must be associated in the workspace and resuming still needs explicit user authorization.

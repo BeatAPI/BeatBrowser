@@ -36,7 +36,7 @@ try {
   assert.ok(Array.isArray(pack?.files) && typeof pack.filename === 'string', 'Invalid npm pack metadata');
   const names = new Set(pack.files.map(file => file.path));
   for (const required of ['LICENSE', 'README.md', 'AGENT_INSTALL.md', 'PRIVACY.md', 'TEST_RESULTS.md',
-    'src/cli.js', 'src/agents.json', 'src/browser.js', 'extension/spaces.js', 'extension/panel.html', 'extension/workspace.css',
+    'src/cli.js', 'src/agents.json', 'src/browser.js', 'extension/spaces.js', 'extension/task-store.js', 'extension/panel.html', 'extension/workspace.css',
     'extension/content-transport.js', 'extension/write-evidence.js',
     'docs/TASKSPACES.md', 'docs/JAVASCRIPT.md', 'extension/manifest.json', 'extension/background.js',
     'media/hero.webp', 'media/compare-agents.webp', 'media/architecture.png', 'media/architecture.svg', 'docs/COMPARISON.md', 'docs/DEMO.md',

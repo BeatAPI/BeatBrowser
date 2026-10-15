@@ -137,7 +137,7 @@ test('TaskSpace profile selection and page membership cannot fall back to anothe
   };
   send('profiles', {action:'profiles'});
   assert.deepEqual((await response('profiles')).data.profiles.map(p => p.profileId).sort(), ['first-profile','second-profile']);
-  for (const action of ['open', 'list']) {
+  for (const action of ['open', 'list', 'claim']) {
     send(`ambiguous-${action}`, {action, url:'https://example.test'});
     assert.equal((await response(`ambiguous-${action}`)).error.code, 'SPACE_STOPPED');
   }
@@ -167,4 +167,38 @@ test('TaskSpace profile selection and page membership cannot fall back to anothe
   send('replaced', {spaceId:'multi'}, 'snapshot', 42);
   assert.equal((await response('replaced')).error.code, 'SPACE_STOPPED');
   assert.equal(replacement.messages.some(m => m.id === 'replaced'), false);
+  send('restore-list',{action:'list',profileId:'second-profile'});
+  await until(()=>replacement.messages.some(m=>m.id==='restore-list'));
+  const listing=replacement.messages.find(m=>m.id==='restore-list');
+  replacement.socket.send(JSON.stringify({type:'res',id:listing.id,__k:listing.__k,ok:true,data:{spaces:[{spaceId:'multi',owned:true,state:'recovered',pages:[{tabId:42}]}]}}));
+  await response('restore-list');
+  send('restored-status',{action:'status',spaceId:'multi'});
+  await until(()=>replacement.messages.some(m=>m.id==='restored-status'));
+  assert.equal(first.messages.some(m=>m.id==='restored-status'),false);
+  const status=replacement.messages.find(m=>m.id==='restored-status');
+  replacement.socket.send(JSON.stringify({type:'res',id:status.id,__k:status.__k,ok:true,data:{spaceId:'multi',state:'recovered',pages:[{tabId:42}]}}));
+  await response('restored-status');
+  const newcomer=await peer(port);hello(newcomer,false);
+  await until(()=>newcomer.messages.some(m=>m.type==='welcome'));
+  const sendNew=(id,params)=>newcomer.socket.send(JSON.stringify({type:'cmd',id,cmd:'spaces',params}));
+  const newResponse=async id=>{await until(()=>newcomer.messages.some(m=>m.id===id));return newcomer.messages.find(m=>m.id===id);};
+  const replyNew=async(id,data,ok=true)=>{
+    await until(()=>replacement.messages.some(m=>m.id===id));
+    const command=replacement.messages.find(m=>m.id===id);
+    replacement.socket.send(JSON.stringify({type:'res',id,__k:command.__k,ok,data,error:ok?undefined:{code:'SPACE_STOPPED',message:'Explicit authorization required'}}));
+    return newResponse(id);
+  };
+  sendNew('new-list',{action:'list',profileId:'second-profile'});
+  await replyNew('new-list',{spaces:[{spaceId:'multi',owned:false,pages:[{tabId:42}]}]});
+  sendNew('not-owner',{action:'status',spaceId:'multi'});
+  assert.equal((await newResponse('not-owner')).error.code,'SPACE_STOPPED');
+  sendNew('denied-claim',{action:'claim',spaceId:'multi',profileId:'second-profile'});
+  assert.equal((await replyNew('denied-claim',null,false)).ok,false);
+  sendNew('claim',{action:'claim',spaceId:'multi',profileId:'second-profile',userConfirmed:true});
+  await replyNew('claim',{spaceId:'multi',state:'recovered',pages:[{tabId:42}]});
+  sendNew('claimed-status',{action:'status',spaceId:'multi'});
+  await replyNew('claimed-status',{spaceId:'multi',state:'recovered',pages:[{tabId:42}]});
+  send('old-owner',{action:'status',spaceId:'multi'});
+  assert.equal((await response('old-owner')).error.code,'SPACE_STOPPED');
+
 });

@@ -46,10 +46,10 @@ const EXPECT = {
 const TOOLS = [
   {
     name: 'spaces',
-    description: 'BeatBrowser-owned background task window. Open creates a minimized Chrome window using existing logins; pass its tabId on all browser calls. No Ego app is required. User focus pauses control. Handoff alone brings the window forward; resume requires explicit user instruction. Finish releases control and keeps evidence tabs.',
+    description: 'BeatBrowser-owned background task window. Open creates a minimized Chrome window using existing logins; pass its tabId on all browser calls. No Ego app is required. User focus pauses control. Handoff alone brings the window forward; resume requires explicit user instruction. Finish releases control and keeps evidence tabs. After reconnect, list spaces to restore routing. Recovered tasks remain paused; claim with userConfirmed:true can connect a new agent session after explicit user instruction, then inspect before resuming.',
     inputSchema: {type:'object', properties:{
-      action:{type:'string', enum:['profiles','open','list','status','pages','new-page','adopt','release-page','close-page','events','report','notifications','handoff','resume','stop','finish']},
-      profileId:{type:'string',description:'Connected extension profile ID returned by profiles. Required to open or list spaces when multiple profiles are connected.'},
+      action:{type:'string', enum:['profiles','open','list','claim','status','pages','new-page','adopt','release-page','close-page','events','report','notifications','handoff','resume','stop','finish']},
+      profileId:{type:'string',description:'Connected extension profile ID returned by profiles. Required to open, list or claim spaces when multiple profiles are connected.'},
       spaceId:{type:'string'}, url:{type:'string'}, label:{type:'string'},
       leaseMs:{type:'number'}, userConfirmed:{type:'boolean'},
       pageLabel:{type:'string',description:'Stable name within a space; main is created automatically.'},
