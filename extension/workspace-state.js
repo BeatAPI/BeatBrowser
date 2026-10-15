@@ -16,7 +16,7 @@ export function taskPresentation(space, locale = 'en') {
   };
   const t = key => globalThis.BeatBrowserUI.text(key, locale);
   return {label:t(labels[space.state] || 'Unknown state'),
-    detail:t(reasons[space.pauseReason] || (space.state==='user'?'Review before continuing.':'')),
+    detail:['finished','stopped'].includes(space.state) ? '' : t(reasons[space.pauseReason] || (space.state==='user'?'Review before continuing.':'')),
     terminal:['finished','stopped'].includes(space.state),
     canResume:['user','interrupted','expired'].includes(space.state),
   };

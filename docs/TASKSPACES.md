@@ -22,6 +22,12 @@ The bridge pins each space to its original extension connection and owner sessio
 
 The extension popup and persistent BeatBrowser workspace sidebar share the same task state. The sidebar adds named pages, per-page View and activity history. Open it explicitly from the toolbar popup; background work never opens it automatically. Both surfaces expose View / take over, Confirm / resume and Stop. Focusing a running task window pauses subsequent automation. This does not undo in-flight input. Returning control is not blanket approval for future consequential actions.
 
+### Cleanup in the popup and sidebar
+
+Ended tasks offer **Clear**. **Clear ended** removes all finished/stopped task cards; **Clear all** asks for confirmation, stops active tasks and cleans all cards. Cleanup closes only agent-created pages still in their task window. Adopted, moved and explicitly handed-over pages remain open. It never closes a whole window with unrelated tabs. Failed page closures remain retryable. These controls belong to the human UI, not the agent command API.
+
+Agent session titles are labelled **Linked page**: they identify that session's associated tab, not necessarily the active tab or an ongoing action. Ended tasks do not display stale pause instructions.
+
 The default lease is 15 minutes; requested leases range from 30 seconds to one hour. Explicit resume renews for 15 minutes. There are at most four nonterminal tasks per owner, 16 pages per task and 80 retained lifecycle events per task. Session state uses existing `chrome.storage.session`; it is not a durable job queue. An extension/browser restart loses task state, and bridge reconnection does not automatically recover ownership. Finish or stop when done.
 
 ## Agent access

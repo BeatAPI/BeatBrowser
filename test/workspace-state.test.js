@@ -13,3 +13,9 @@ test('finished tasks do not offer resume; unknown legacy pauses remain neutral',
  assert.equal(taskPresentation({state:'user'}).label,'Paused');
  assert.doesNotMatch(taskPresentation({state:'user'}).detail,/You have control/);
 });
+
+test('terminal task cards never carry a stale resume explanation',()=>{
+ for(const state of ['finished','stopped']) for(const pauseReason of ['window-focused','expired','handoff']) {
+  assert.equal(taskPresentation({state,pauseReason},'zh').detail,'');
+ }
+});

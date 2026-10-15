@@ -22,6 +22,11 @@
 <section class="spaces" aria-label="Tasks" data-i18n-aria="Tasks">
   <div class="section-heading"><h2 data-i18n="Tasks">Tasks</h2><span id="task-count" class="count">0</span></div>
   <p id="task-summary" class="task-summary"></p>
+  <div class="cleanup-actions"><button id="cleanup-ended" type="button" data-i18n="Clear ended" disabled>Clear ended</button><button id="cleanup-all" type="button" data-i18n="Clear all" disabled>Clear all</button></div>
+  <div id="cleanup-confirm" class="cleanup-confirm" hidden>
+    <p data-i18n="Stop all tasks and close task pages?">Stop all tasks and close task pages?</p>
+    <div class="cleanup-actions"><button id="cleanup-confirm-yes" type="button" data-i18n="Confirm">Confirm</button><button id="cleanup-cancel" type="button" data-i18n="Cancel">Cancel</button></div>
+  </div>
   <div id="spaces-list"></div>
   <p class="meta" id="spaces-message" role="status"></p>
 </section>

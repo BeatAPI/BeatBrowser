@@ -86,7 +86,8 @@ function renderSessions(rows) {
     who.textContent = r.label;
     const page = document.createElement('span');
     page.className = 'page';
-    page.textContent = r.title ? '· ' + r.title : '· '+t('Idle');
+    page.textContent = r.title ? t('Linked page') + ' · ' + r.title : t('No linked page');
+    page.title = page.textContent;
     line.append(sw, who, page);
     sess.appendChild(line);
   }
@@ -143,6 +144,23 @@ if (workspaceButton) {
     };
   }).catch(() => { messageArea.textContent = t('Open from the Chrome toolbar.'); });
 }
+let cleanupBusy = false;
+const clearEnded = document.getElementById('cleanup-ended');
+const clearAll = document.getElementById('cleanup-all');
+const confirmation = document.getElementById('cleanup-confirm');
+async function clean(params) {
+  if (cleanupBusy) return;
+  cleanupBusy = true;clearEnded.disabled = true;clearAll.disabled = true;
+  confirmation.hidden = true;
+  try {
+    const r = await control(params);
+    showMessage(t('Removed {removed} · Closed {closed} · Kept {kept}', r) + (r.failed ? ' · '+t('{failed} failed; retry',r) : ''), !!r.failed);
+  } catch {} finally { cleanupBusy = false;await refreshSpaces().catch(() => showMessage(t('Connection unavailable. Try reconnecting.'),true)); }
+}
+clearEnded.onclick = () => clean({action:'cleanup-ended'});
+clearAll.onclick = () => {confirmation.hidden = false;};
+document.getElementById('cleanup-cancel').onclick = () => {confirmation.hidden = true;};
+document.getElementById('cleanup-confirm-yes').onclick = () => clean({action:'cleanup-all',userConfirmed:true});
 let renderSequence = 0;
 async function refreshSpaces() {
   const sequence = ++renderSequence;
@@ -154,7 +172,9 @@ async function refreshSpaces() {
   root.replaceChildren();
   const spaces=result?.spaces || [];
   document.getElementById('task-count').textContent=String(spaces.length);
-  const active=spaces.filter(s=>!taskPresentation(s, language).terminal).length;
+  clearEnded.disabled = cleanupBusy || !spaces.some(s=>taskPresentation(s, language).terminal);
+  clearAll.disabled = cleanupBusy || !spaces.length;
+  const active=spaces.filter(s=>['opening','running'].includes(s.state)).length;
   const review=spaces.filter(s=>taskPresentation(s, language).canResume).length;
   document.getElementById('task-summary').textContent=spaces.length ? t('{active} active · {review} paused',{active,review}) : '';
   if (!spaces.length) {
@@ -184,13 +204,16 @@ async function refreshSpaces() {
     };
     notifyLabel.append(notify,document.createTextNode(' '+t('Progress notifications')));
     const actions=document.createElement('div');actions.className='space-actions';
-    const choices=[['handoff',presentation.terminal?'View':'Take over']];
+    const choices=[];
+    if (space.pages?.length) choices.push(['handoff',presentation.terminal?'View':'Take over']);
+    if (presentation.terminal) choices.push(['cleanup','Clear']);
     if (presentation.canResume) choices.push(['resume','Continue']);
     if (!presentation.terminal) choices.push(['stop','Stop']);
     for (const [action,label] of choices) {
       const button=document.createElement('button');button.type='button';button.textContent=t(label);button.dataset.action=action;
       button.onclick=async()=>{
         button.disabled=true;
+        if (action === 'cleanup') { await clean({action,spaceId:space.spaceId});return; }
         try {
           const reply=await control({action,spaceId:space.spaceId});
           showMessage(t(action==='resume' ? (reply.state==='running'?'Control returned':'Control unavailable') : action==='handoff' ? 'You have control' : 'Stopped'), action==='resume' && reply.state!=='running');
