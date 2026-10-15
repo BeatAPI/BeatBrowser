@@ -58,7 +58,34 @@ export async function checkSpacesPopup({profileDirectory,url,output,cleanup=fals
       await evaluate('document.fonts.ready');
       const emptyShot=await command('Page.captureScreenshot',{format:'png'},sessionId);
       fs.writeFileSync(output.replace(/\.png$/, '-empty.png'),Buffer.from(emptyShot.data,'base64'));
-      return {cleanupButton:true,confirmationCancel:true,endedRemoved:true,noOverflow:true};
+      const linked=await evaluate(`(async()=>{
+        const tab=await chrome.tabs.create({url:'https://example.test/linked-page',active:false});
+        const groupId=await chrome.tabs.group({tabIds:[tab.id]});
+        await chrome.tabGroups.update(groupId,{title:'BeatBrowser',color:'blue'});
+        return tab.id;
+      })()`);
+      const pageReady=Date.now()+10000;
+      while(!await evaluate(`document.querySelector('.browser-page[data-tab-id="${linked}"]') !== null`)) {
+        if(Date.now()>pageReady)throw Error('Ordinary BeatBrowser page absent from workspace');
+        await new Promise(r=>setTimeout(r,100));
+      }
+      assert.equal(await evaluate("document.querySelector('#task-count').textContent"),'0');
+      await evaluate(`document.querySelector('.browser-page[data-tab-id="${linked}"] [data-page-action=close]').click()`);
+      assert.equal(await evaluate("document.querySelector('#browser-pages-confirm').hidden"),false);
+      await evaluate("document.querySelector('#browser-pages-cancel').click()");
+      assert.equal(await evaluate(`chrome.tabs.get(${linked}).then(t=>t.id)`),linked);
+      await command('Emulation.setDeviceMetricsOverride',{width:340,height:760,deviceScaleFactor:1,mobile:false},sessionId);
+      assert.equal(await evaluate('document.documentElement.scrollWidth > innerWidth'),false);
+      const inventoryShot=await command('Page.captureScreenshot',{format:'png'},sessionId);
+      fs.writeFileSync(output.replace(/\.png$/, '-pages.png'),Buffer.from(inventoryShot.data,'base64'));
+      await evaluate(`document.querySelector('.browser-page[data-tab-id="${linked}"] [data-page-action=close]').click()`);
+      await evaluate("document.querySelector('#browser-pages-confirm-yes').click()");
+      const pageClosed=Date.now()+10000;
+      while(await evaluate(`chrome.tabs.get(${linked}).then(()=>true,()=>false)`)) {
+        if(Date.now()>pageClosed)throw Error('Confirmed linked page did not close');
+        await new Promise(r=>setTimeout(r,100));
+      }
+      return {cleanupButton:true,confirmationCancel:true,endedRemoved:true,linkedPageVisible:true,linkedPageClosed:true,noOverflow:true};
     }
     const end=Date.now()+10000;
     while(!await evaluate("document.querySelector('#spaces-list')?.textContent.includes('Both test pages completed.')")){

@@ -126,3 +126,8 @@ body:not(.panel) .space { padding:12px; }
 .cleanup-confirm[hidden] { display:none; }
 .cleanup-confirm p { margin:0; }
 #cleanup-confirm-yes { color:var(--danger); }
+
+.browser-pages { margin-top:20px; border-top:1px solid var(--line); padding-top:18px; }
+.browser-page { padding:10px 12px; margin-top:8px; border:1px solid var(--line); border-radius:10px; background:var(--panel); }
+.browser-page-title { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; font-weight:500; }
+.browser-page .cleanup-actions { margin:7px 0 0; }
