@@ -42,7 +42,11 @@
     "README.zh-CN.md",
     "media/readme-cover.svg",
     "media/readme-cover.png",
-    "docs/INSTALL.md"
+    "docs/INSTALL.md",
+    "media/readme-workflow.en.svg",
+    "media/readme-workspace.en.svg",
+    "media/readme-workflow.zh-CN.svg",
+    "media/readme-workspace.zh-CN.svg"
   ],
   "engines": {
     "node": ">=20"
@@ -83,7 +87,7 @@
     "type": "git",
     "url": "git+https://github.com/BeatAPI/BeatBrowser.git"
   },
-  "homepage": "https://github.com/BeatAPI/BeatBrowser",
+  "homepage": "https://beatapi.io/browser",
   "bugs": {
     "url": "https://github.com/BeatAPI/BeatBrowser/issues"
   },
