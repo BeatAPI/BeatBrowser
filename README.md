@@ -1,4 +1,4 @@
-![BeatBrowser — your everyday Chrome, now a workspace for AI agents](media/readme-cover.png)
+[![BeatBrowser — your everyday Chrome, now a workspace for AI agents](media/readme-cover.png)](https://beatapi.io/browser)
 
 # BeatBrowser
 
@@ -8,7 +8,7 @@
 
 An open-source browser toolkit by [BeatAPI](https://beatapi.io). Connect MCP-capable agents to the Chrome profile you already use, with its existing website sessions. Give background tasks their own windows, follow their progress and take over when needed.
 
-[Quick start](#quick-start) · [Background workspace](#background-workspace) · [Tools](#tools) · [JavaScript SDK](docs/JAVASCRIPT.md) · [Privacy](PRIVACY.md) · [MIT](LICENSE)
+[Website](https://beatapi.io/browser) · [Comparison](#compare-browser-integrations) · [Quick start](#quick-start) · [Background workspace](#background-workspace) · [Tools](#tools) · [JavaScript SDK](docs/JAVASCRIPT.md) · [Privacy](PRIVACY.md) · [MIT](LICENSE)
 
 > **Version 1.3.2** keeps tasks in the extension workspace without creating Chrome tab groups. [Install](docs/INSTALL.md) · [Release notes](docs/RELEASE_NOTES.md)
 
@@ -24,6 +24,18 @@ Use BeatBrowser from Claude Code, Codex CLI, Cursor or another client that can l
 - **Clean up when done.** Clear one ended task, clear ended tasks in a batch, or confirm clearing everything. User-associated, handed-over and moved pages are protected.
 
 Normal browser control needs no BeatBrowser account or API key. Your agent needs its own model access. BeatBrowser is also included in [BeatGEO](https://github.com/BeatAPI/BeatGEO), which adds brand monitoring, evidence and retests.
+
+## Compare browser integrations
+
+| Integration | Browser and login state | Task workspace | Native access |
+| --- | --- | --- | --- |
+| Codex built-in browser (desktop) | Separate profile; sign in inside the app | In-app browser panel | OpenAI desktop integration |
+| Codex browser extension | Existing browser profile and signed-in sites | Existing tabs; background and parallel-tab work | OpenAI desktop integration |
+| Claude Code built-in browser (desktop) | Clean profile; sign in and optionally keep cookies | In-app Browser panel | Claude Code desktop |
+| Claude Code + Claude in Chrome | Existing browser profile and signed-in sites | Session-linked tab group | Supported Claude integrations |
+| **BeatBrowser** | **Existing connected Chrome profile and signed-in sites** | **Separate task windows; progress, pause and takeover** | **Local MCP clients, CLI and JavaScript SDK** |
+
+Compare the browser integrations, not their models. Official extensions also support background and multi-tab work. BeatBrowser provides one MIT-licensed browser toolkit for compatible agents; separate task windows still share their profile's website sessions. [Detailed comparison and official sources](docs/COMPARISON.md).
 
 ## Quick start
 
@@ -49,33 +61,13 @@ The installer previews client configuration changes with `--dry-run` and backs u
 
 ## From installation to a finished task
 
-```mermaid
-flowchart LR
-    A[Install CLI and extension] --> B[Connect your Agent]
-    B --> C[Choose a signed-in Chrome profile]
-    C --> D[Start a background task]
-    D --> E[Review progress in the sidebar]
-    E --> F{Your decision}
-    F -->|Continue| D
-    F -->|Take over| G[Manual control]
-    G -->|Return control| D
-    F -->|Finish| H[Close task pages and clear the record]
-```
+![From installation to a finished task](media/readme-workflow.en.svg)
 
 BeatBrowser supplies browser tools; the Agent decides the steps. You can inspect the workspace, take over a task, and clean up completed tasks without clearing your everyday tabs. In BeatGEO, setup prepares the included extension, and the monitoring worker calls this same browser layer.
 
 ## Background workspace
 
-```mermaid
-flowchart LR
-    A[MCP agent / CLI / JS SDK] --> B[Local BeatBrowser bridge]
-    B --> C[Chrome extension]
-    C --> D[Selected signed-in profile]
-    D --> E[Separate task window]
-    E --> F[Progress and evidence]
-    F --> G[Human review]
-    G --> H[Continue or finish]
-```
+![Background workspace](media/readme-workspace.en.svg)
 
 TaskSpaces use a separate window in your existing profile; they are not separate cookie containers. A site popup or native browser behavior can still gain focus. Focusing a running task pauses subsequent automation; this cannot undo an action already in flight. Background work is the intended experience, not a guarantee of invisible operation.
 

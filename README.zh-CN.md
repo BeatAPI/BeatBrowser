@@ -1,4 +1,4 @@
-![BeatBrowser — 你的 Chrome，你的 Agent，由你掌控](media/readme-cover.png)
+[![BeatBrowser — 你的 Chrome，你的 Agent，由你掌控](media/readme-cover.png)](https://beatapi.io/browser)
 
 # BeatBrowser
 
@@ -8,7 +8,7 @@
 
 [BeatAPI](https://beatapi.io) 出品的开源浏览器工具，让支持 MCP 的 Agent 使用你已经登录的 Chrome。后台任务使用独立窗口，你可以查看进度、接管操作，或随时停止。
 
-[快速开始](#快速开始) · [后台工作区](#后台工作区) · [工具](#工具) · [JavaScript SDK](docs/JAVASCRIPT.md) · [隐私](PRIVACY.md) · [MIT](LICENSE)
+[项目官网](https://beatapi.io/browser) · [对比](#浏览器接入方式对比) · [快速开始](#快速开始) · [后台工作区](#后台工作区) · [工具](#工具) · [JavaScript SDK](docs/JAVASCRIPT.md) · [隐私](PRIVACY.md) · [MIT](LICENSE)
 
 > **1.3.2 版本**在插件工作区管理任务，不再自动创建 Chrome 标签组。[安装指南](docs/INSTALL.md) · [更新说明](docs/RELEASE_NOTES.md)
 
@@ -24,6 +24,18 @@
 - **做完方便清理。** 单个清理、批量清理已结束任务，或确认后全部清理。保护用户关联、已交给用户和移出任务窗口的页面。
 
 普通浏览器控制不需要 BeatBrowser 账号或 API Key；Agent 使用自己的模型服务。[BeatGEO](https://github.com/BeatAPI/BeatGEO) 已集成 BeatBrowser，并在其上提供品牌监测、证据和复测。
+
+## 浏览器接入方式对比
+
+| 接入方式 | 浏览器与登录态 | 任务工作区 | 原生接入范围 |
+| --- | --- | --- | --- |
+| Codex 内置浏览器（桌面版） | 独立配置，在 App 内登录 | App 内浏览器面板 | OpenAI 桌面整合 |
+| Codex 官方浏览器插件 | 沿用现有浏览器配置与登录态 | 现有标签页，支持后台与多标签并行 | OpenAI 桌面整合 |
+| Claude Code 内置浏览器（桌面版） | 独立配置，可登录并选择保留 Cookie | App 内 Browser 面板 | Claude Code 桌面版 |
+| Claude Code + Claude in Chrome | 沿用现有浏览器配置与登录态 | 与会话关联的标签组 | 受支持的 Claude 原生入口 |
+| **BeatBrowser** | **沿用已连接的 Chrome 配置与登录态** | **独立任务窗口，查看进度、暂停、接管** | **本地 MCP 客户端、CLI 与 JavaScript SDK** |
+
+比较的是浏览器整合，不是模型能力。官方插件也支持后台与多标签工作。BeatBrowser 为兼容 Agent 提供同一套 MIT 开源浏览器工具；独立任务窗口仍共享同一配置的网站登录态。[详细比较与官方来源](docs/COMPARISON.md)。
 
 ## 快速开始
 
@@ -49,33 +61,13 @@ beat-browser extension
 
 ## 从安装到完成任务
 
-```mermaid
-flowchart LR
-    A[安装 CLI 与扩展] --> B[连接 Agent]
-    B --> C[选择已登录的 Chrome 配置]
-    C --> D[启动后台任务]
-    D --> E[在侧栏查看进度]
-    E --> F{人工决定}
-    F -->|继续| D
-    F -->|接管| G[人工操作]
-    G -->|交还控制| D
-    F -->|完成| H[关闭任务页面并清理记录]
-```
+![从安装到完成任务](media/readme-workflow.zh-CN.svg)
 
 BeatBrowser 提供浏览器工具，由 Agent 决定具体步骤。你可以查看工作区、接管任务、清理已完成任务，而不清理日常浏览标签页。在 BeatGEO 中，安装流程准备内置扩展，监测工作进程调用同一套浏览器能力。
 
 ## 后台工作区
 
-```mermaid
-flowchart LR
-    A[MCP Agent / CLI / JS SDK] --> B[本地 BeatBrowser 桥接]
-    B --> C[Chrome 扩展]
-    C --> D[选定的已登录配置]
-    D --> E[独立任务窗口]
-    E --> F[进度与证据]
-    F --> G[人工检查]
-    G --> H[继续或结束]
-```
+![后台工作区](media/readme-workspace.zh-CN.svg)
 
 任务窗口复用同一配置的登录态，并不是独立 Cookie 容器。网站弹窗或浏览器原生行为仍可能获得焦点。任务窗口被聚焦时会暂停后续自动化，但无法撤回已经发出的操作。后台执行是目标体验，不等于绝对隐形或永不抢焦点。
 

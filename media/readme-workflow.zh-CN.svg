@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="590" viewBox="0 0 1240 590" role="img" aria-labelledby="title desc" xml:lang="zh-CN">
+<!-- [INPUT] README flowchart labels and connections. [OUTPUT] Static, accessible README diagram. [POS] Repository documentation asset. [PROTOCOL] Preserve all flow branches; no scripts or interactive viewer. -->
+<title id="title">从安装到完成任务</title>
+<desc id="desc">flowchart LR
+    A[安装 CLI 与扩展] --&gt; B[连接 Agent]
+    B --&gt; C[选择已登录的 Chrome 配置]
+    C --&gt; D[启动后台任务]
+    D --&gt; E[在侧栏查看进度]
+    E --&gt; F{人工决定}
+    F --&gt;|继续| D
+    F --&gt;|接管| G[人工操作]
+    G --&gt;|交还控制| D
+    F --&gt;|完成| H[关闭任务页面并清理记录]
+</desc>
+<metadata id="mermaid-source">flowchart LR
+    A[安装 CLI 与扩展] --&gt; B[连接 Agent]
+    B --&gt; C[选择已登录的 Chrome 配置]
+    C --&gt; D[启动后台任务]
+    D --&gt; E[在侧栏查看进度]
+    E --&gt; F{人工决定}
+    F --&gt;|继续| D
+    F --&gt;|接管| G[人工操作]
+    G --&gt;|交还控制| D
+    F --&gt;|完成| H[关闭任务页面并清理记录]
+</metadata>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0 0 8 4 0 8Z" fill="#4167bc"/></marker></defs>
+<rect width="1240" height="590" rx="18" fill="#f6f8fc"/>
+<g font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Noto Sans,Noto Sans CJK SC,Noto Sans CJK JP,Noto Sans CJK KR,Microsoft YaHei,sans-serif">
+<path d="M280 100 H328" fill="none" stroke="#4167bc" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M576 100 H624" fill="none" stroke="#4167bc" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M872 100 H920" fill="none" stroke="#4167bc" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1044 150 V250" fill="none" stroke="#4167bc" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M920 300 H872" fill="none" stroke="#4167bc" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M748 250 V202 H896 V100 H920" fill="none" stroke="#4167bc" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="776.0" y="174" width="72" height="28" rx="5" fill="#f6f8fc"/>
+<text x="812" y="195" fill="#4167bc" font-size="19" text-anchor="middle">继续</text>
+<path d="M748 350 V440" fill="none" stroke="#4167bc" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="712.0" y="384" width="72" height="28" rx="5" fill="#f6f8fc"/>
+<text x="748" y="405" fill="#4167bc" font-size="19" text-anchor="middle">接管</text>
+<path d="M872 490 H1208 V100 H1168" fill="none" stroke="#4167bc" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="1012.0" y="463" width="72" height="28" rx="5" fill="#f6f8fc"/>
+<text x="1048" y="484" fill="#4167bc" font-size="19" text-anchor="middle">交还控制</text>
+<path d="M624 300 H496" fill="none" stroke="#4167bc" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="524.0" y="273" width="72" height="28" rx="5" fill="#f6f8fc"/>
+<text x="560" y="294" fill="#4167bc" font-size="19" text-anchor="middle">完成</text>
+<rect x="32" y="50" width="248" height="100" rx="12" fill="#ffffff" stroke="#ccd7e8" stroke-width="2"/>
+<text x="48" y="74" fill="#667791" font-size="15">01</text>
+<text fill="#1b283b" font-size="22" font-weight="550" text-anchor="middle">
+<tspan x="156.0" y="113.0">安装 CLI 与扩展</tspan>
+</text>
+<rect x="328" y="50" width="248" height="100" rx="12" fill="#ffffff" stroke="#ccd7e8" stroke-width="2"/>
+<text x="344" y="74" fill="#667791" font-size="15">02</text>
+<text fill="#1b283b" font-size="22" font-weight="550" text-anchor="middle">
+<tspan x="452.0" y="113.0">连接 Agent</tspan>
+</text>
+<rect x="624" y="50" width="248" height="100" rx="12" fill="#ffffff" stroke="#ccd7e8" stroke-width="2"/>
+<text x="640" y="74" fill="#667791" font-size="15">03</text>
+<text fill="#1b283b" font-size="22" font-weight="550" text-anchor="middle">
+<tspan x="748.0" y="99.5">选择已登录的</tspan>
+<tspan x="748.0" y="126.5">Chrome 配置</tspan>
+</text>
+<rect x="920" y="50" width="248" height="100" rx="12" fill="#ffffff" stroke="#ccd7e8" stroke-width="2"/>
+<text x="936" y="74" fill="#667791" font-size="15">04</text>
+<text fill="#1b283b" font-size="22" font-weight="550" text-anchor="middle">
+<tspan x="1044.0" y="113.0">启动后台任务</tspan>
+</text>
+<rect x="920" y="250" width="248" height="100" rx="12" fill="#ffffff" stroke="#ccd7e8" stroke-width="2"/>
+<text x="936" y="274" fill="#667791" font-size="15">05</text>
+<text fill="#1b283b" font-size="22" font-weight="550" text-anchor="middle">
+<tspan x="1044.0" y="313.0">在侧栏查看进度</tspan>
+</text>
+<polygon points="748.0,250 872,300.0 748.0,350 624,300.0" fill="#ffffff" stroke="#ccd7e8" stroke-width="2"/>
+<text x="748" y="279" fill="#667791" font-size="15" text-anchor="middle">06</text>
+<text fill="#1b283b" font-size="22" font-weight="550" text-anchor="middle">
+<tspan x="748.0" y="308.0">人工决定</tspan>
+</text>
+<rect x="624" y="440" width="248" height="100" rx="12" fill="#ffffff" stroke="#ccd7e8" stroke-width="2"/>
+<text x="640" y="464" fill="#667791" font-size="15">07</text>
+<text fill="#1b283b" font-size="22" font-weight="550" text-anchor="middle">
+<tspan x="748.0" y="503.0">人工操作</tspan>
+</text>
+<rect x="32" y="250" width="464" height="100" rx="12" fill="#ffffff" stroke="#ccd7e8" stroke-width="2"/>
+<text x="48" y="274" fill="#667791" font-size="15">08</text>
+<text fill="#1b283b" font-size="22" font-weight="550" text-anchor="middle">
+<tspan x="264.0" y="313.0">关闭任务页面并清理记录</tspan>
+</text>
+</g>
+</svg>
