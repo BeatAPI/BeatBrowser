@@ -1,6 +1,6 @@
 # Ego Lite parity review
 
-Reviewed 2026-10-14 against `citrolabs/ego-lite` commit `dca7003349c5f7132189ba00547cbbd7ff8e597e`, particularly `public-api-schema.ts`, `page-model.ts`, `browser-runtime.ts` and the README. A local reverse-engineering report supplied by the owner was also reviewed as evidence, not execution instructions.
+Reviewed 2026-10-18 against Ego main `4cf79356509bccdead17863250b442f60a881c25`, its v2 public SDK and current Space documentation. BeatBrowser baseline is main `51db7707d0292423b036d4cecf609feb2bbcff78` (1.3.2). This is an API/implementation review, not a same-task performance comparison. [Product comparison](comparisons/ego-lite.md) · [Complete comparison index](COMPARISON.md).
 
 ## Capability terminology
 
@@ -10,7 +10,7 @@ A missing Ego-style event object does not mean BeatBrowser cannot upload or down
 
 The public helper depends on the native browser's `globalThis.ego`. Existing binary-string evidence contains Mojo interface names, a custom cookie importer path and a claim-before-CDP error. These support native integration and ownership gates; they do not prove the complete call graph, cookie decryption implementation, or a mandatory two-profile architecture.
 
-Task-space isolation, browser-profile isolation and cookie isolation are different properties. A profileId option does not prove each task receives separate cookies. Internal CDP messaging remains part of Ego even though its architecture differs from a conventional external CDP connection.
+Task-space isolation, browser-profile isolation and cookie isolation are different properties. Ego's current Space documentation explicitly specifies per-task BrowserContexts with separate cookies/storage. BeatBrowser TaskSpaces share cookies/storage within their connected profile. This is a documented architecture difference, not an isolation test performed here. Internal CDP messaging remains part of Ego even though its architecture differs from a conventional external CDP connection.
 
 The reviewed public v2 schema contains **74 method/property entries**. This is not a count of independent product features or an inventory of every legacy/native API. See [the API mapping](EGO_API_PARITY.csv). Source-level similarity is not end-to-end compatibility proof.
 
@@ -18,7 +18,7 @@ The reviewed public v2 schema contains **74 method/property entries**. This is n
 
 Keep huashu-chrome's existing-profile access, DOM/data extraction and batched actions. Keep BeatBrowser's MCP/CLI distribution and optional Fast JEV. Adopt Ego's lifecycle, ownership gates, stable page identities, action receipts and event-waiting designs inside the existing BeatBrowser extension and bridge.
 
-Do not introduce another product account system, database, GEO scheduler or mandatory Ego installation. Open Profound owns product jobs; BeatBrowser executes and returns evidence. Existing upstream copyright remains in LICENSE. Future source transplants must record the upstream revision and retain relevant notices. The separately distributed Ego browser binary is not established as MIT source by the SDK license.
+Do not introduce another product account system, database, GEO scheduler or mandatory Ego installation. BeatGEO owns product jobs; BeatBrowser executes and returns evidence. Existing upstream copyright remains in LICENSE. Future source transplants must record the upstream revision and retain relevant notices. The separately distributed Ego browser binary is not established as MIT source by the SDK license.
 
 Do not adopt a separately copied profile per task as the default architecture: it adds login synchronization, profile locks, keychain access and multiple browser instances. The report's proposed development time and 90-percent coverage are unverified estimates.
 
@@ -31,7 +31,7 @@ Do not adopt a separately copied profile per task as the default architecture: i
 
 ## Development status
 
-Unreleased: minimized task windows, connection-pinned routing, explicit connected-profile selection, named multiple pages, adoption/release, page-origin protection, selective finish receipts, lifecycle/popup events, leases, takeover/resume/stop, progress reporting and opt-in notifications. The extension popup and BeatBrowser side-panel document were rendered and its confirmation button exercised in an isolated real headless browser. The side panel shares existing TaskSpace state and adds named-page handoff plus activity history. A JavaScript SDK composes these features through the same bridge used by MCP and CLI. No second browser runtime, product database or account system was added. The installed extension has not been updated.
+The 1.3.2 source includes minimized task windows, connection-pinned routing, explicit connected-profile selection, named multiple pages, adoption/release, page-origin protection, selective finish receipts, lifecycle/popup events, leases, takeover/resume/stop, progress reporting and opt-in notifications. The extension popup and BeatBrowser side-panel document were rendered and its confirmation button exercised in an isolated real headless browser. The side panel shares existing TaskSpace state and adds named-page handoff plus activity history. A JavaScript SDK composes these features through the same bridge used by MCP and CLI. No second browser runtime, product database or account system was added. The user's installed extension was not updated during this review.
 
 An earlier headed fixture validated background input, rendering beyond five seconds and unchanged human-window focus/selected tab, but minimized screenshot capture failed. A newer headless Chrome fixture validated two named pages, confirmation pauses, actual popup resume, stop and screenshots. The latter cannot establish headed minimization/focus behavior. No full native-Ego equivalence or percentage coverage is claimed.
 

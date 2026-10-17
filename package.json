@@ -46,7 +46,13 @@
     "media/readme-workflow.en.svg",
     "media/readme-workspace.en.svg",
     "media/readme-workflow.zh-CN.svg",
-    "media/readme-workspace.zh-CN.svg"
+    "media/readme-workspace.zh-CN.svg",
+    "docs/comparison-data.json",
+    "docs/comparisons",
+    "media/readme-comparison.en.svg",
+    "media/readme-comparison.zh-CN.svg",
+    "media/readme-cover.en.svg",
+    "media/readme-cover.zh-CN.svg"
   ],
   "engines": {
     "node": ">=20"
@@ -61,7 +67,8 @@
     "build:extension": "node scripts/pack-extension.mjs",
     "benchmark:offline": "node scripts/benchmark-fast-agent.mjs",
     "check:package": "node scripts/check-package.mjs",
-    "check:upstream": "node scripts/check-upstream.mjs"
+    "check:upstream": "node scripts/check-upstream.mjs",
+    "check:comparison": "node scripts/render-comparison.mjs --check"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1",
