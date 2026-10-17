@@ -69,8 +69,8 @@ same brand belongs in the cloud section below.
 | OpenClaw | Local stdio when on your computer; remote HTTP when on a server. Current docs describe `mcp.servers`; do not assume the legacy catalog path is current. | [MCP](https://docs.openclaw.ai/tools/mcp) |
 | Hermes Agent | Manual local command configuration or remote URL and headers, depending on deployment | [MCP configuration](https://hermes-agent.nousresearch.com/docs/reference/mcp-config-reference) |
 
-Both appear in the README's local and cloud examples because their deployment
-determines the mode. See [OpenClaw deployment options](https://docs.openclaw.ai/gateway/remote)
+The README lists their cloud deployments as examples; a local deployment uses
+Local Agent mode instead. See [OpenClaw deployment options](https://docs.openclaw.ai/gateway/remote)
 and [Hermes local and remote backends](https://hermes-agent.nousresearch.com/docs/user-guide/desktop).
 Their MCP interfaces are documented; BeatBrowser client-level browser tasks
 remain to be verified.

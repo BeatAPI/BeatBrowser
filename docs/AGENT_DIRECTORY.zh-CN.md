@@ -64,7 +64,7 @@ OpenClaw、Hermes 按部署位置选择其中一种模式。两种模式都使�
 | OpenClaw | 在自己电脑运行时用本地 stdio；部署在服务器时用远程 HTTP。当前文档使用 `mcp.servers`，不能默认旧安装项路径仍然有效。 | [MCP](https://docs.openclaw.ai/tools/mcp) |
 | Hermes Agent | 按部署位置手动配置本地命令，或远程 URL 与认证请求头 | [MCP 配置](https://hermes-agent.nousresearch.com/docs/reference/mcp-config-reference) |
 
-两者在 README 的本地、云端示例中都会出现，模式由实际部署决定。
+README 以两者的云端部署举例；本地部署则使用本地 Agent 模式，按实际部署位置选择。
 部署依据见 [OpenClaw 部署方式](https://docs.openclaw.ai/gateway/remote)与
 [Hermes 本地及远程后端](https://hermes-agent.nousresearch.com/docs/user-guide/desktop)。
 官方 MCP 接口已有文档依据，BeatBrowser 的客户端浏览器任务仍需实测验收。
