@@ -1,5 +1,26 @@
 # Test results
 
+### Source preview: cloud Agent adapter and documentation, 2026-10-18
+
+- **284 tests passed**, zero failures or skips. Remote coverage includes credential
+  expiry/rotation/revocation, HTTP MCP with the official client, HTTP calls,
+  WebSocket, resource limits and background adapter lifecycle.
+- An isolated runtime check connects the HTTP MCP client through the real local
+  stdio server and ephemeral bridge to a synthetic extension. It does not use a
+  personal Chrome profile or a real website login.
+- Syntax: 74 JavaScript files. Narrow source-pattern scan: 124 files, no findings;
+  this is not a comprehensive security audit.
+- The 123-file tarball installs in an isolated directory, discovers 24 normal
+  tools, preserves existing WorkBuddy servers and selects its current config path.
+  Remote credential/configuration commands do not print the generated token.
+- Extension packaging and comparison-table/SVG consistency checks passed.
+  English and Chinese README rendering, local links and heading anchors were
+  checked; there is no published demo recording.
+- This source preview is not an npm or extension-download release. Published
+  `1.3.2` does not include the remote adapter or updated WorkBuddy config detection.
+  Public tunnels, Muse/Grok Bot client UI, real signed-in workflows and native
+  macOS focus behavior remain unverified by these checks.
+
 ### 1.3.2 group-free workspace, 2026-10-16
 
 - Ordinary agent pages and TaskSpaces create no native Chrome groups.

@@ -21,7 +21,7 @@ function walk(dir, out = []) {
 
 test('agent-facing files remain English; translated UI and README assets use explicit catalogs', () => {
   // Human-facing translated documentation is distinct from agent instructions.
-  const localized = new Set(['README.zh-CN.md', 'docs/comparison-data.json', 'extension/ui-language.js', 'extension/popup.html', 'extension/panel.html']);
+  const localized = new Set(['README.zh-CN.md', 'docs/REMOTE.zh-CN.md', 'docs/AGENT_DIRECTORY.zh-CN.md', 'docs/comparison-data.json', 'extension/ui-language.js', 'extension/popup.html', 'extension/panel.html']);
   const bad = walk(ROOT).filter(f => {
     const relative = path.relative(ROOT, f);
     if (localized.has(relative)) return false;

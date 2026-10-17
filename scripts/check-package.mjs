@@ -36,7 +36,10 @@ try {
   assert.ok(Array.isArray(pack?.files) && typeof pack.filename === 'string', 'Invalid npm pack metadata');
   const names = new Set(pack.files.map(file => file.path));
   for (const required of ['LICENSE', 'README.md', 'AGENT_INSTALL.md', 'PRIVACY.md', 'TEST_RESULTS.md',
-    'src/cli.js', 'src/agents.json', 'src/browser.js', 'extension/spaces.js', 'extension/task-store.js', 'extension/panel.html', 'extension/workspace.css',
+    'src/cli.js', 'src/agents.json', 'src/browser.js', 'src/remote/cli.js', 'src/remote/server.js',
+    'src/remote/store.js', 'src/remote/backend.js', 'docs/REMOTE.md', 'docs/REMOTE.zh-CN.md',
+    'docs/AGENT_DIRECTORY.md', 'docs/AGENT_DIRECTORY.zh-CN.md',
+    'extension/spaces.js', 'extension/task-store.js', 'extension/panel.html', 'extension/workspace.css',
     'extension/content-transport.js', 'extension/write-evidence.js',
     'docs/TASKSPACES.md', 'docs/JAVASCRIPT.md', 'extension/manifest.json', 'extension/background.js',
     'media/hero.webp', 'media/compare-agents.webp', 'media/architecture.png', 'media/architecture.svg', 'docs/COMPARISON.md', 'docs/DEMO.md',
@@ -66,13 +69,27 @@ try {
   fs.writeFileSync(path.join(fakeHome, '.claude.json'), '{"mcpServers":{}}\n');
   fs.mkdirSync(path.join(fakeHome, '.codex'));
   fs.writeFileSync(path.join(fakeHome, '.codex', 'config.toml'), '# Synthetic package check\n');
+  const workbuddyDirectory = path.join(fakeHome, '.workbuddy');
+  fs.mkdirSync(workbuddyDirectory);
+  const workbuddyFile = path.join(workbuddyDirectory, 'mcp.json');
+  const legacyWorkbuddyFile = path.join(workbuddyDirectory, '.mcp.json');
+  const existingWorkbuddy = { mcpServers: { existing: { command: 'synthetic-existing-tool' } } };
+  const workbuddySource = JSON.stringify(existingWorkbuddy) + '\n';
+  fs.writeFileSync(workbuddyFile, workbuddySource);
+  fs.writeFileSync(legacyWorkbuddyFile, '{}\n');
   run(process.execPath, [cli, 'install', '--dry-run']);
   assert.equal(fs.readFileSync(path.join(fakeHome, '.claude.json'), 'utf8'), '{"mcpServers":{}}\n');
+  assert.equal(fs.readFileSync(workbuddyFile, 'utf8'), workbuddySource, 'WorkBuddy dry-run must not write');
   run(process.execPath, [cli, 'install']);
   const launch = JSON.parse(fs.readFileSync(path.join(fakeHome, '.claude.json'))).mcpServers['beat-browser'];
   assert.equal(fs.realpathSync(launch.args[0]), fs.realpathSync(cli), 'MCP launcher must share the stable installed extension path');
   assert.ok(!launch.args.includes('npx'));
   assert.match(fs.readFileSync(path.join(fakeHome, '.codex', 'config.toml'), 'utf8'), /mcp_servers\.beat-browser/);
+  const workbuddy = JSON.parse(fs.readFileSync(workbuddyFile));
+  assert.deepEqual(workbuddy.mcpServers.existing, existingWorkbuddy.mcpServers.existing);
+  assert.equal(fs.realpathSync(workbuddy.mcpServers['beat-browser'].args[0]), fs.realpathSync(cli));
+  assert.equal(fs.readFileSync(legacyWorkbuddyFile, 'utf8'), '{}\n', 'Prefer the current WorkBuddy config when both paths exist');
+  assert.ok(fs.readdirSync(workbuddyDirectory).some(name => name.startsWith('mcp.json.bak-')), 'Back up the current WorkBuddy config');
   const transport = new StdioClientTransport({ command: process.execPath, args: [cli, 'mcp'], cwd: temporary, env, stderr: 'pipe' });
   const client = new Client({ name: 'package-check', version: '1.0.0' });
   try {
@@ -84,8 +101,20 @@ try {
   } finally {
     await client.close();
   }
+  const remoteCreated = JSON.parse(run(process.execPath, [cli, 'remote', 'add', 'package-check']));
+  const remoteToken = fs.readFileSync(remoteCreated.tokenFile, 'utf8').trim();
+  assert.ok(!JSON.stringify(remoteCreated).includes(remoteToken), 'Remote setup must not print credentials');
+  assert.equal(JSON.parse(run(process.execPath, [cli, 'remote', 'clients'])).clients.length, 1);
+  const remoteConfig = JSON.parse(run(process.execPath, [cli, 'remote', 'config', '--client', 'package-check', '--url', 'https://chrome.example.test']));
+  const connection = JSON.parse(fs.readFileSync(remoteConfig.file));
+  assert.equal(connection.url, 'https://chrome.example.test/mcp');
+  assert.equal(connection.headers.Authorization, `Bearer ${remoteToken}`);
+  assert.ok(!JSON.stringify(remoteConfig).includes(remoteToken), 'Connection metadata must not print credentials');
+  assert.ok(!fs.existsSync(path.join(fakeHome, '.beat-browser', 'bridge.json')), 'Remote configuration must not start a bridge');
+  assert.equal(JSON.parse(run(process.execPath, [cli, 'remote', 'revoke', 'package-check'])).revoked, true);
+  assert.ok(!fs.existsSync(remoteCreated.tokenFile));
   console.log(JSON.stringify({ version: metadata.version, files: names.size, tarballBytes: pack.size,
-    cleanInstall: true, stableLauncher: true, normalTools: 24, browserConnected: false }, null, 2));
+    cleanInstall: true, stableLauncher: true, workbuddyCurrentConfig: true, normalTools: 24, remoteConfiguration: true, browserConnected: false }, null, 2));
 } finally {
   fs.rmSync(temporary, { recursive: true, force: true });
 }

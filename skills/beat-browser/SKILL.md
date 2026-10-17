@@ -13,6 +13,12 @@ Drive the user's **real Chrome** through BeatBrowser. Stack: `beat-browser` CLI 
 
 ## Before any browser task
 
+First identify where commands execute. This local setup section applies to an
+Agent running on the user's computer. For a cloud runtime, use the user's
+configured remote tools and [Cloud Agent guide](../../docs/REMOTE.md). Do not
+run doctor in the cloud and treat its localhost as the user's Chrome. Never
+create a public tunnel or copy credentials without the user's setup instruction.
+
 1. Follow [AGENT_INSTALL.md](../../AGENT_INSTALL.md) if not installed.
 2. Run `node src/cli.js doctor --json` from the BeatBrowser repo root (or `beat-browser doctor --json` if on PATH).
 3. Proceed only when `"ok": true` and `extensionOnline: true`.

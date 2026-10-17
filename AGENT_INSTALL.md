@@ -1,5 +1,11 @@
 # BeatBrowser — Install Guide for AI Agents
 
+This is **Local Agent mode**, for example Codex, Claude Code, WorkBuddy or OpenCode:
+commands run on the user's computer. A cloud Agent
+must not install a second browser in its cloud runtime and call that the user's
+Chrome. Follow [Cloud Agent setup](docs/REMOTE.md) to configure the user's local
+adapter and their own authenticated tunnel. Local setup does not enable remote access.
+
 You are an AI agent setting up BeatBrowser for the user. Done = `node src/cli.js doctor --json` reports `"ok": true` and `extensionOnline: true`. Never use `sudo`. You cannot click Chrome's "Load unpacked" for the user — that step is theirs.
 
 ## Extension ZIP download

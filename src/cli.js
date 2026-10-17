@@ -16,6 +16,12 @@ const flag = (k, d) => { const i = argv.indexOf(k); return i >= 0 ? (argv[i + 1]
 const has = (k) => argv.includes(k);
 
 switch (cmd) {
+  case 'remote': {
+    const { runRemote } = await import('./remote/cli.js');
+    process.exitCode = await runRemote(argv.slice(1));
+    break;
+  }
+
   case 'run': {
     const { runCli } = await import('./fast-agent/cli.js');
     process.exitCode = await runCli(argv.slice(1));
@@ -130,8 +136,12 @@ switch (cmd) {
   default:
     console.log(`beat-browser: let any AI agent control your own Chrome
 
+Local Agent mode: local stdio MCP + bridge + Chrome extension. No tunnel needed.
+Cloud Agent mode: opt-in remote adapter + your own authenticated tunnel + local Chrome.
+
   beat-browser install        install: configure every detected agent, then guide the extension setup
   beat-browser mcp            start the MCP server (agent configs point here; install writes it for you)
+  beat-browser remote --help  connect cloud agents through your own authenticated tunnel
   beat-browser run --dry-run --url URL --goal TEXT  validate an optional fast task locally
   beat-browser run --enable-fast-agent --url URL --goal TEXT  opt into the bounded BeatAPI executor
   beat-browser doctor [--json] diagnose connection problems (machine-readable with --json)

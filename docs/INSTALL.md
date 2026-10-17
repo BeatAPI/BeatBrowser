@@ -4,6 +4,12 @@
 
 Install the matching 1.3.2 CLI and extension for background TaskSpaces, task recovery and the updated workspace.
 
+This guide covers **Local Agent mode**: Codex, Claude Code, WorkBuddy, OpenCode
+or another compatible Agent runs on your computer and uses local stdio MCP. No domain, public endpoint or tunnel is required. For an Agent
+running on a remote service/computer, use [Cloud Agent mode](REMOTE.md) instead.
+Remote access is opt-in and is not enabled by local installation.
+See the [Agent directory](AGENT_DIRECTORY.md) for client categories and configuration coverage.
+
 Requirements: Node.js 20+, Chrome 116+ and a client that can launch a local stdio MCP server. The extension is loaded unpacked; it is not listed on the Chrome Web Store.
 
 ### Download the Chrome extension
@@ -72,6 +78,11 @@ In a source checkout, substitute `node src/cli.js` wherever this README uses `be
 The MCP server starts the loopback bridge on demand. For an agent-led setup, use [AGENT_INSTALL.md](../AGENT_INSTALL.md). Auto-install targets are listed in [src/agents.json](../src/agents.json); detection requires an existing config file. An entry is a configuration adapter, not proof of an end-to-end test in every client.
 
 ### Manual MCP config
+
+The source installer now detects WorkBuddy's `~/.workbuddy/mcp.json`, while npm
+`1.3.2` only knows its older `.mcp.json` path. For current WorkBuddy with the
+released package, add the JSON entry below to `~/.workbuddy/mcp.json` manually,
+preserving existing servers. Alternatively, use the current repository source.
 
 For JSON-based clients, point at a stable source or installed package path:
 
