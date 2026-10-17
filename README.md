@@ -1,12 +1,14 @@
-[![BeatBrowser — your Chrome, your agent, your control](media/readme-cover.en.svg)](https://beatapi.io/browser)
+[![BeatBrowser — your everyday Chrome, now a workspace for AI agents](media/readme-cover.png)](https://beatapi.io/browser)
 
 # BeatBrowser
 
 **[English](README.md)** · [简体中文](README.zh-CN.md)
 
-**Keep Chrome. Bring your agent.**
+**Your Chrome. Now an agent browser.**
 
-An open-source Chrome extension and local bridge for MCP-capable agents. Reuse your existing browser and website logins, give tasks their own windows, and take over when needed. No separate browser app or browser-data migration required.
+**No browser switch. No login migration. Your choice of agent.**
+
+Connect Codex, Claude Code and other compatible agents directly to the Chrome you already use. Keep your website logins, run tasks in background windows, and take over when needed. BeatBrowser is a free, MIT-licensed Chrome extension and local bridge.
 
 [Get started](#quick-start) · [Cloud agents](#cloud-agents-your-chrome) · [Examples](#what-you-can-do) · [Compare](#compare-browser-integrations) · [JavaScript SDK](docs/JAVASCRIPT.md) · [Website](https://beatapi.io/browser)
 
@@ -14,12 +16,14 @@ Normal local browser tools are **free**, with **no BeatBrowser account or API ke
 
 ## Why BeatBrowser
 
-| Keep what works | Add what your agent needs |
+| Why choose BeatBrowser | What you get |
 | --- | --- |
-| **Your Chrome** | Use the connected profile and its existing website sessions. |
-| **Your agent** | Connect Codex, Claude Code, WorkBuddy, OpenCode or another compatible local stdio MCP client. |
-| **Your workspace** | Run tasks in separate Chrome windows and follow progress in the extension. |
-| **Your control** | View, pause, resume, stop and clean up tasks from the popup or sidebar. |
+| **Keep Chrome** | Use your existing browser and profile. |
+| **Keep your logins** | No cookie export or profile migration. |
+| **Choose your agent** | Codex, Claude Code, WorkBuddy and more. |
+| **Own the toolchain** | Extension, bridge, MCP, CLI and SDK source. |
+| **Work in the background** | Task windows with pause and takeover. |
+| **Cloud access preview** | Self-hosted access to your local Chrome. |
 
 The extension, local bridge, MCP server, CLI and Node SDK are public under [MIT](LICENSE). Task windows share their Chrome profile's cookies and storage.
 
@@ -49,6 +53,8 @@ More agents, configuration details and verification status are listed in the
 ## Quick start
 
 For **Local Agent mode**: **Node.js 20+**, **Chrome 116+**, and a client that can launch a local stdio MCP server. Setup has two parts: the local tools and the Chrome extension.
+
+![Local setup and everyday use: install tools, load the extension, verify, then start and review a task](media/readme-journey.en.png)
 
 ### 1. Install the local tools
 
@@ -128,7 +134,7 @@ These are example prompts; no demo video is available yet. Some sites save while
 
 The chart compares browser integrations and documented modes, not model quality or benchmark performance.
 
-![BeatBrowser compared with major browser integrations](media/readme-comparison.en.svg)
+![BeatBrowser compared with major browser integrations](media/readme-comparison.en.png)
 
 <!-- comparison-tables:start -->
 <details>
@@ -163,7 +169,7 @@ Open source means integration tooling, not the host app or browser engine. Ego c
 
 ## Background workspace
 
-![Diagram of task creation, progress, human takeover and cleanup](media/readme-workspace.en.svg)
+![Diagram of task creation, progress, human takeover and cleanup](media/readme-workspace.en.png)
 
 *Workflow illustration. Inspect actual tasks in the extension popup or sidebar.*
 

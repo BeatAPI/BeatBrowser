@@ -1,12 +1,14 @@
-[![BeatBrowser — 你的 Chrome，你的 Agent，由你掌控](media/readme-cover.zh-CN.svg)](https://beatapi.io/browser)
+[![BeatBrowser — 让日常 Chrome 成为 Agent 的工作区](media/readme-cover.png)](https://beatapi.io/browser)
 
 # BeatBrowser
 
 [English](README.md) · **[简体中文](README.zh-CN.md)**
 
-**保留现有 Chrome，接入你常用的 Agent。**
+**不用换浏览器，你的 Chrome 就是 Agent Browser。**
 
-开源 Chrome 扩展与本地桥接工具，让支持 MCP 的 Agent 复用你的浏览器和网站登录态。任务使用独立窗口，你随时查看和接管，无需另装专用浏览器或迁移浏览资料。
+**无需专用浏览器 · 无需迁移登录态 · Agent 自由选择**
+
+保留现有浏览器、登录态与使用习惯，让 Codex、Claude Code 等兼容 Agent 直接在 Chrome 里完成网页任务。任务使用独立后台窗口，你随时查看、暂停或接管。BeatBrowser 是免费、MIT 开源的 Chrome 扩展与本地桥接工具。
 
 [快速开始](#快速开始) · [云端 Agent](#云端-agent你的-chrome) · [使用示例](#可以用来做什么) · [能力对比](#浏览器接入方式对比) · [JavaScript SDK](docs/JAVASCRIPT.md) · [项目官网](https://beatapi.io/browser)
 
@@ -14,12 +16,14 @@
 
 ## 为什么用 BeatBrowser
 
-| 保留已有环境 | 为 Agent 加入工作能力 |
+| 为什么选 BeatBrowser | 你能得到什么 |
 | --- | --- |
-| **你的 Chrome** | 使用已连接的浏览器配置与网站登录态。 |
-| **你的 Agent** | 连接 Codex、Claude Code、WorkBuddy、OpenCode 等兼容的本地 stdio MCP 客户端。 |
-| **你的工作区** | 任务使用独立 Chrome 窗口，在扩展里查看进度。 |
-| **你的控制权** | 通过 popup 或侧栏查看、暂停、继续、停止和清理任务。 |
+| **保留现有 Chrome** | 使用原来的浏览器与配置。 |
+| **保留现有登录态** | 无需导出 Cookie 或迁移浏览资料。 |
+| **Agent 自由选择** | 接入 Codex、Claude Code、WorkBuddy 等。 |
+| **工具链源码公开** | 扩展、桥接、MCP、CLI、SDK 均可检查和修改。 |
+| **后台任务工作区** | 独立任务窗口，可暂停、继续或接管。 |
+| **云端接入预览** | 自建认证入口，连接你本地的 Chrome。 |
 
 扩展、桥接服务、MCP、CLI 和 Node SDK 源码按 [MIT](LICENSE) 公开。同一 Chrome 配置下的任务共享 Cookie 与存储。
 
@@ -46,6 +50,8 @@ OpenClaw、Hermes 在此以云端部署举例；在你的电脑上运行时，�
 ## 快速开始
 
 **本地 Agent 模式**需要 **Node.js 20+**、**Chrome 116+** 和能够启动本地 stdio MCP 服务的客户端。安装分为两部分：本地工具与 Chrome 扩展。
+
+![本地安装与日常使用：安装工具、加载扩展、确认连接，再发起和检查任务](media/readme-journey.zh-CN.png)
 
 ### 1. 安装本地工具
 
@@ -122,7 +128,7 @@ HTTP MCP、HTTP 调用或 WebSocket 的客户端。具体客户端设置与登�
 
 比较浏览器接入方式与文档提供的模式，不比较模型能力或未经实测的性能。
 
-![BeatBrowser 与主流浏览器接入方式对比](media/readme-comparison.zh-CN.svg)
+![BeatBrowser 与主流浏览器接入方式对比](media/readme-comparison.zh-CN.png)
 
 <!-- comparison-tables:start -->
 <details>
@@ -157,7 +163,7 @@ HTTP MCP、HTTP 调用或 WebSocket 的客户端。具体客户端设置与登�
 
 ## 后台工作区
 
-![任务创建、进度、人工接管与清理流程示意图](media/readme-workspace.zh-CN.svg)
+![任务创建、进度、人工接管与清理流程示意图](media/readme-workspace.zh-CN.png)
 
 *此处为流程示意图。实际任务可在扩展 popup 或侧栏中查看。*
 
