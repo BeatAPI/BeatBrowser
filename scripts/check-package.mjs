@@ -44,6 +44,9 @@ try {
     'docs/TASKSPACES.md', 'docs/JAVASCRIPT.md', 'extension/manifest.json', 'extension/background.js',
     'media/hero.webp', 'media/compare-agents.webp', 'media/architecture.png', 'media/architecture.svg', 'docs/COMPARISON.md', 'docs/DEMO.md',
     'media/readme-cover.en.svg', 'media/readme-cover.zh-CN.svg',
+    'media/readme-cover.png', 'media/readme-journey.en.png', 'media/readme-journey.zh-CN.png',
+    'media/readme-comparison.en.png', 'media/readme-comparison.zh-CN.png',
+    'media/readme-workspace.en.png', 'media/readme-workspace.zh-CN.png',
     'media/readme-comparison.en.svg', 'media/readme-comparison.zh-CN.svg',
     'docs/comparison-data.json', 'docs/comparisons/ego-lite.md',
     'docs/RELEASING.md', 'docs/RELEASE_NOTES.md', 'test/fixtures/demo.html', 'skills/beat-browser/SKILL.md']) {
