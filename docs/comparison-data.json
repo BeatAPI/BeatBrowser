@@ -1,0 +1,184 @@
+{
+  "reviewed": "2026-10-18",
+  "features": [
+    {
+      "id": 0,
+      "label": "Access signed-in websites",
+      "labelZh": "访问已登录网站"
+    },
+    {
+      "id": 1,
+      "label": "Works across external agents",
+      "labelZh": "接入不同厂商的外部 Agent"
+    },
+    {
+      "id": 2,
+      "label": "Open-source integration",
+      "labelZh": "浏览器接入工具开源"
+    },
+    {
+      "id": 3,
+      "label": "No tool vendor account",
+      "labelZh": "浏览器工具无需厂商账号"
+    },
+    {
+      "id": 4,
+      "label": "No extra browser app",
+      "labelZh": "无需另装专用浏览器"
+    },
+    {
+      "id": 5,
+      "label": "Visual task or session UI",
+      "labelZh": "可视化任务或会话界面"
+    },
+    {
+      "id": 6,
+      "label": "Read pages and fill forms",
+      "labelZh": "读取网页与填写表单"
+    }
+  ],
+  "products": [
+    {
+      "id": "beatbrowser",
+      "name": "BeatBrowser",
+      "values": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "claude-built-in",
+      "name": "Claude built-in",
+      "values": [
+        true,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "codex-built-in",
+      "name": "Codex built-in",
+      "values": [
+        true,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "claude-extension",
+      "name": "Claude extension",
+      "values": [
+        true,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "codex-extension",
+      "name": "Codex extension",
+      "values": [
+        true,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "ego-lite",
+      "name": "Ego Lite",
+      "values": [
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "playwright-mcp",
+      "name": "Playwright MCP",
+      "values": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true
+      ]
+    },
+    {
+      "id": "browser-use",
+      "name": "Browser Use",
+      "values": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true
+      ]
+    },
+    {
+      "id": "agent-browser",
+      "name": "agent-browser",
+      "values": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ]
+    }
+  ],
+  "groups": [
+    [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    [
+      0,
+      5,
+      6,
+      7,
+      8
+    ]
+  ],
+  "scope": "Vendor browser integrations; local OSS libraries/CLI; Playwright extension mode; agent-browser CDP and dashboard. Ego source means SDK/Skill, not native browser source. No performance claims.",
+  "titles": {
+    "en": "Your Chrome. Your agent. Your control.",
+    "zh-CN": "你的 Chrome，你的 Agent，由你掌控。"
+  },
+  "footers": {
+    "en": "Tooling and documented modes / docs/COMPARISON.md",
+    "zh-CN": "浏览器接入能力与文档模式 / docs/COMPARISON.md"
+  }
+}

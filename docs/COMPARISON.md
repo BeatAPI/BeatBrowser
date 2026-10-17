@@ -1,61 +1,87 @@
 # Browser integration comparison
 
-Reviewed on 2026-10-17. Scope: Codex and Claude Code built-in desktop browsers,
-their official browser extensions, and BeatBrowser. Compare the browser
-integrations, not their models or the hosts' support for third-party MCP.
+Reviewed 2026-10-18 against BeatBrowser main `51db7707d0292423b036d4cecf609feb2bbcff78` and the linked primary documentation. This compares browser integrations and connection modes, not model intelligence or market-wide performance.
 
-## Choose a browser integration
+## Quick comparison
 
-| Integration | Browser and login state | Task workspace | Native access |
-| --- | --- | --- | --- |
-| Codex built-in browser (desktop) | Separate profile; sign in directly. Available import features depend on the device. | In-app browser panel for local previews and page interaction. | OpenAI desktop integration; built-in Browser is not a Codex CLI or IDE feature. |
-| Codex browser extension | Existing browser profile and signed-in sites. | Existing tabs; background and parallel-tab work. | Supported OpenAI desktop experiences. |
-| Claude Code built-in browser (desktop Code tab) | Clean profile separate from your browser. Sign in inside the panel; Keep cookies can retain logins after quitting. | In-app Browser panel for local previews and external sites. | Claude Code desktop. |
-| Claude Code + Claude in Chrome | Existing browser profile and signed-in sites. | Session-linked tab group. Background and multi-tab behavior depends on entry point and version. | Claude Code and other supported Claude entry points. |
-| **BeatBrowser** | **Existing connected Chrome profile, without exporting cookies.** | **Separate task windows; progress, pause, takeover, stop and recovery.** | **Local MCP clients, CLI and JavaScript SDK.** |
+| Capability | BeatBrowser | Claude built-in | Codex built-in | Claude extension | Codex extension |
+| --- | :---: | :---: | :---: | :---: | :---: |
+| Access signed-in websites | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Works across external agents | ✅ | ❎ | ❎ | ❎ | ❎ |
+| Open-source integration | ✅ | ❎ | ❎ | ❎ | ❎ |
+| No tool vendor account | ✅ | ❎ | ❎ | ❎ | ❎ |
+| No extra browser app | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Visual task or session UI | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Read pages and fill forms | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-Native access describes each browser integration, not whether its host can install other MCP servers. Claude Cowork's built-in browser is a different entry point; its import features should not be assumed to apply to the Code tab.
+| Capability | BeatBrowser | Ego Lite | Playwright MCP | Browser Use | agent-browser |
+| --- | :---: | :---: | :---: | :---: | :---: |
+| Access signed-in websites | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Works across external agents | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Open-source integration | ✅ | ✅ | ✅ | ✅ | ✅ |
+| No tool vendor account | ✅ | ✅ | ✅ | ✅ | ✅ |
+| No extra browser app | ✅ | ❎ | ✅ | ✅ | ✅ |
+| Visual task or session UI | ✅ | ✅ | ❎ | ❎ | ✅ |
+| Read pages and fill forms | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-BeatBrowser provides one MIT-licensed browser toolkit across compatible agents. It includes 24 normal MCP tools, TaskSpaces with explicit connected-profile selection, editable local site notes and optional Fast JEV execution. Native integrations can also be useful when you prefer a vendor's setup, permissions and debugging workflow.
+## Read the rows consistently
 
-Official browser extensions support background and multi-tab work too. Login reuse, retained sessions and parallel browsing are not exclusive BeatBrowser capabilities. These are documentation and implementation comparisons, not a controlled performance benchmark.
-
-## What the official sources establish
-
-| Source | Verified scope |
+| Row | Exact scope |
 | --- | --- |
-| [Claude Code Chrome integration](https://code.claude.com/docs/en/chrome) | Shares browser login state; supports browser/coding workflows, site permissions, challenge handoff and GIF recording. Requires a direct Anthropic plan and supported sign-in; API-key and third-party-provider sessions have restrictions on the native Chrome integration. |
-| [Claude Code desktop Browser](https://code.claude.com/docs/en/desktop#browse-external-sites) | Local previews, external browsing, in-panel sign-in, Keep cookies and a profile separate from the personal browser. |
-| [OpenAI Browser](https://learn.chatgpt.com/docs/browser) | Desktop built-in browser has a separate profile; supports preview, annotations, rendered-page interaction and optional developer mode. Use the extension for regular browser context. |
-| [OpenAI browser extension](https://learn.chatgpt.com/docs/chrome-extension) | ChatGPT Work/Codex desktop can operate supported regular browsers through the extension; website access is controlled in the product. |
-| [Codex for Chrome changelog](https://learn.chatgpt.com/docs/changelog) | Background and parallel-tab work through the official extension. |
-| [Claude in Chrome](https://support.claude.com/en/articles/12012173-get-started-with-claude-in-chrome) | Supported Claude entry points, background workflows and multi-tab functionality. |
+| Signed-in website access | The agent can work with authenticated pages after the user signs in or imports site authentication. Built-in browsers can keep their own signed-in sessions, so they also count as yes. This does not imply direct reuse of the user's regular Chrome profile; connection and import paths are compared in the product pages. |
+| External AI agents | The browser integration is supplied for independently chosen external agents, rather than only its vendor's native agent entry points. A host's ability to install another MCP server does not make its built-in browser an external-agent tool. |
+| Open source | Publicly licensed browser-control integration/tooling. Codex CLI's open source does not establish that the desktop browser integration is self-hostable. Ego's SDK/Skill is open; its separately downloaded native browser is a different licensing scope. |
+| No tool vendor account | The local browser tooling does not require an account with its own vendor. Agent/model access may still require a separate account or key. This is not a zero-total-cost claim. |
+| No separate dedicated browser app | Can work through an existing supported browser or a browser bundled in the chosen agent app, without separately installing a dedicated browser product. BeatBrowser still requires its extension, Node.js and local bridge. Ego requires the Ego browser app. Playwright extension mode, Browser Use system-Chrome mode and agent-browser existing-browser modes count. This is not an install-time, step-count or zero-setup ranking. |
+| Visual interface | A bundled UI for inspecting browser tasks or sessions. Native app/extension interfaces and agent-browser's Dashboard count. Terminal logs, Playwright's connection permission screen, Browser Use Cloud and separate WebUI projects are outside this row. |
+| Page actions | Reading and form interaction. This does not certify any particular website, CAPTCHA bypass or successful submission. |
 
-Native integrations can be the better choice for someone staying in one host
-and wanting the vendor's setup, approvals and debugging experience. BeatBrowser
-is useful for a user who changes agents or wants to inspect/adapt a common
-browser toolkit. Availability and permissions remain host- and account-dependent.
+Ego supports Chrome login import and normal use without manually enabling remote debugging. The separate-browser row asks whether another dedicated browser app is required; it does not mean browser automation or login reuse is missing. [Ego source audit and implementation differences](comparisons/ego-lite.md).
 
-## Our limits
+## Compare one product at a time
 
-Separate task windows share their profile's website sessions; they are not cookie containers. Background work does not guarantee that popups or native browser behavior never take focus. Focusing a running task pauses subsequent automation, without undoing an action already in flight.
+- [BeatBrowser vs Ego Lite](comparisons/ego-lite.md)
+- [BeatBrowser vs Claude built-in browser](comparisons/claude-built-in.md)
+- [BeatBrowser vs Codex built-in browser](comparisons/codex-built-in.md)
+- [BeatBrowser vs Claude Chrome extension](comparisons/claude-extension.md)
+- [BeatBrowser vs Codex Chrome extension](comparisons/codex-extension.md)
+- [BeatBrowser vs Playwright MCP](comparisons/playwright-mcp.md)
+- [BeatBrowser vs Browser Use](comparisons/browser-use.md)
+- [BeatBrowser vs agent-browser](comparisons/agent-browser.md)
 
-BeatBrowser does not ship a cloud browser, a turnkey store extension, isolated
-concurrent writers, or a universal approval policy. TaskSpaces profile selection
-and each Agent client's end-to-end compatibility have separate acceptance scopes. Some tools can write directly. Normal allowlisting covers only
-URL-bearing commands. The loopback bridge is not cryptographically paired to its
-extension and assumes a trusted local machine.
+## BeatBrowser capability inventory
 
-Fast JEV is optional, with narrower DOM/action support and explicit cloud consent.
-The historical X timing smoke test in TEST_RESULTS.md is not a native-tool A/B
-test. It must not appear as a speed win over Claude or Codex.
+| Area | Current capability | Evidence / boundary |
+| --- | --- | --- |
+| Chrome access | Reuses the explicitly connected profile | No cookie/profile-file export; no scan of disconnected profiles |
+| Agent access | 24 normal stdio MCP tools, CLI, Node SDK | [SDK](JAVASCRIPT.md); individual clients need their own acceptance |
+| Profiles | List connected extensions and choose a profile | [TaskSpaces](TASKSPACES.md); multiple connections require explicit selection |
+| Tasks | Separate windows with labels and state | Same-profile cookies/storage are shared |
+| Multiple tasks | Up to four nonterminal tasks per owner | Up to 16 pages per task; not unlimited parallel throughput |
+| Ownership | Task pinned to extension and owner | Lost connection or ownership fails closed |
+| Page identity | Named task-local page handles | Does not make element refs durable across DOM changes |
+| Observation | Snapshot, text, structured queries, screenshots | Minimized headed screenshot remains a gap |
+| Actions | Click, type, select, keys, scroll | Single tools are not a universal approval system |
+| Composition | `act` with repeat/if/assert and Node workflows | Optional Fast JEV has a separate consent and support scope |
+| Human control | View, pause/handoff, explicit resume, stop | Focus pauses subsequent actions, not already dispatched input |
+| Progress | Caller-supplied notes and lifecycle history | A note is not an independently verified result |
+| Notifications | Opt-in local progress/review/completion | Changed progress at a bounded interval, not an always-on monitor |
+| Reload recovery | Records, labels and progress restore paused | [Recovery checks](PREVIEW_TESTING.md) |
+| Restart recovery | Records survive; explicitly reconnect missing pages | Matching URLs alone never grant control |
+| Agent recovery | Explicitly authorized claim by a new session | Claim leaves execution paused |
+| Cleanup | Clear ended tasks, selectively retain pages | Protects adopted, moved and handed-over pages |
+| Files | File-input and drag/drop upload, fetch/save, Chrome download | Full Download/FileChooser event objects remain incomplete |
+| Local context | Editable site notes and playbooks | No automatic model training claim |
+| Privacy | Local bridge and task state; no normal-mode Beat cloud | Tool output still reaches the chosen agent/provider |
+| Distribution | npm/source, matching extension archive | Unpacked extension; no store-install claim |
 
-## Suggested public wording
+## Primary sources
 
-> Your Chrome. Your choice of agent. BeatBrowser gives local MCP clients a common
-> toolkit for your signed-in Chrome, with batched actions, editable site notes and
-> a local audit trail.
+- [Claude Code Chrome](https://code.claude.com/docs/en/chrome) and [desktop Browser](https://code.claude.com/docs/en/desktop#browse-external-sites)
+- [OpenAI Browser](https://learn.chatgpt.com/docs/browser), [browser extension](https://learn.chatgpt.com/docs/chrome-extension), [changelog](https://learn.chatgpt.com/docs/changelog)
+- [Ego repository](https://github.com/citrolabs/ego-lite), [Space](https://lite.ego.app/document/en/docs/space), [SDK](https://github.com/citrolabs/ego-lite/tree/main/package/ego-browser)
+- [Playwright MCP](https://github.com/microsoft/playwright-mcp), including its extension-mode and isolated-mode documentation
+- [Browser Use](https://github.com/browser-use/browser-use), [real browser](https://docs.browser-use.com/open-source/customize/browser/real-browser)
+- [agent-browser](https://github.com/vercel-labs/agent-browser), [CDP mode](https://agent-browser.dev/cdp-mode), [Dashboard](https://agent-browser.dev/dashboard)
 
-Avoid: "Only BeatBrowser uses your logins", "Claude/Codex cannot do browser
-tasks", "all operations stay on your machine", "automatic learning", or
-"every sensitive operation is blocked".
+No timing, token, reliability or anti-bot ranking is claimed. A vendor's advertised benchmark and the owner's reported daily experience do not establish a controlled BeatBrowser-vs-competitor result. The task UI and existing-Chrome integration are useful product choices; native browser contexts, full protocol events and CI infrastructure are separate capabilities.

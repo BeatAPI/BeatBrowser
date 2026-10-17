@@ -1,45 +1,33 @@
-[![BeatBrowser — your everyday Chrome, now a workspace for AI agents](media/readme-cover.png)](https://beatapi.io/browser)
+[![BeatBrowser — your Chrome, your agent, your control](media/readme-cover.en.svg)](https://beatapi.io/browser)
 
 # BeatBrowser
 
-[English](README.md) · [简体中文](README.zh-CN.md)
+**[English](README.md)** · [简体中文](README.zh-CN.md)
 
-**Your everyday Chrome, now a workspace for AI agents.**
+**Keep Chrome. Bring your agent.**
 
-An open-source browser toolkit by [BeatAPI](https://beatapi.io). Connect MCP-capable agents to the Chrome profile you already use, with its existing website sessions. Give background tasks their own windows, follow their progress and take over when needed.
+An open-source Chrome extension and local bridge for MCP-capable agents. Reuse your existing browser and website logins, give tasks their own windows, and take over when needed. No separate browser app or browser-data migration required.
 
-[Website](https://beatapi.io/browser) · [Comparison](#compare-browser-integrations) · [Quick start](#quick-start) · [Background workspace](#background-workspace) · [Tools](#tools) · [JavaScript SDK](docs/JAVASCRIPT.md) · [Privacy](PRIVACY.md) · [MIT](LICENSE)
+[Get started](#quick-start) · [Examples](#what-you-can-do) · [Compare](#compare-browser-integrations) · [JavaScript SDK](docs/JAVASCRIPT.md) · [Website](https://beatapi.io/browser)
 
-> **Version 1.3.2** keeps tasks in the extension workspace without creating Chrome tab groups. [Install](docs/INSTALL.md) · [Release notes](docs/RELEASE_NOTES.md)
+Normal local browser tools are **free**, with **no BeatBrowser account or API key**. Your agent uses its own model access.
 
-## One browser toolkit across your agents
+## Why BeatBrowser
 
-Use BeatBrowser from Claude Code, Codex CLI, Cursor or another client that can launch a local stdio MCP server. Your agent provides the reasoning; BeatBrowser provides the browser tools.
+| Keep what works | Add what your agent needs |
+| --- | --- |
+| **Your Chrome** | Use the connected profile and its existing website sessions. |
+| **Your agent** | Connect Claude Code, Codex CLI, Cursor or another compatible local stdio MCP client. |
+| **Your workspace** | Run tasks in separate Chrome windows and follow progress in the extension. |
+| **Your control** | View, pause, resume, stop and clean up tasks from the popup or sidebar. |
 
-> “Open a background task on example.com, read the title and report the result. Pause for my review, then finish after I return control.”
-
-- **Keep your website sessions.** Work in a selected, already signed-in Chrome profile without exporting cookies or migrating browser data.
-- **Work in a separate task window.** Keep task pages and progress in a Chinese/English sidebar. View, pause, resume or stop from one place.
-- **Recover after updates.** Task records and progress survive extension reloads. Unfinished tasks restore paused; completed tasks stay completed. Missing pages can be explicitly reassociated.
-- **Clean up when done.** Clear one ended task, clear ended tasks in a batch, or confirm clearing everything. User-associated, handed-over and moved pages are protected.
-
-Normal browser control needs no BeatBrowser account or API key. Your agent needs its own model access. BeatBrowser is also included in [BeatGEO](https://github.com/BeatAPI/BeatGEO), which adds brand monitoring, evidence and retests.
-
-## Compare browser integrations
-
-| Integration | Browser and login state | Task workspace | Native access |
-| --- | --- | --- | --- |
-| Codex built-in browser (desktop) | Separate profile; sign in inside the app | In-app browser panel | OpenAI desktop integration |
-| Codex browser extension | Existing browser profile and signed-in sites | Existing tabs; background and parallel-tab work | OpenAI desktop integration |
-| Claude Code built-in browser (desktop) | Clean profile; sign in and optionally keep cookies | In-app Browser panel | Claude Code desktop |
-| Claude Code + Claude in Chrome | Existing browser profile and signed-in sites | Session-linked tab group | Supported Claude integrations |
-| **BeatBrowser** | **Existing connected Chrome profile and signed-in sites** | **Separate task windows; progress, pause and takeover** | **Local MCP clients, CLI and JavaScript SDK** |
-
-Compare the browser integrations, not their models. Official extensions also support background and multi-tab work. BeatBrowser provides one MIT-licensed browser toolkit for compatible agents; separate task windows still share their profile's website sessions. [Detailed comparison and official sources](docs/COMPARISON.md).
+The extension, local bridge, MCP server, CLI and Node SDK are public under [MIT](LICENSE). Task windows share their Chrome profile's cookies and storage.
 
 ## Quick start
 
-Prepare **Node.js 20+, Chrome 116+**, and a compatible local MCP client.
+Requirements: **Node.js 20+**, **Chrome 116+**, and a client that can launch a local stdio MCP server. Setup has two parts: the local tools and the Chrome extension.
+
+### 1. Install the local tools
 
 ```sh
 npm install --global @beatapi/beat-browser@1.3.2
@@ -48,32 +36,114 @@ beat-browser install
 beat-browser extension
 ```
 
-1. Keep the global installation in place. In the Chrome profile you want to use, open `chrome://extensions` and enable **Developer mode**.
-2. Choose **Load unpacked** and select the extension folder printed by the command. Load only one copy per profile.
-3. Restart your Agent client. Run `beat-browser doctor --json`; readiness requires `ok: true` and `extensionOnline: true`.
-4. Ask the agent to list connected profiles, choose the intended one and start a small read-only task. Open the extension → **Workspace** to follow it.
+`--dry-run` previews detected client configuration changes. The installer backs up changed configurations; keep the installation so the extension folder stays at a stable path.
 
-The installer previews client configuration changes with `--dry-run` and backs up changed configurations when applied. An installed configuration adapter is not an end-to-end certification of every Agent client. [Agent installation](AGENT_INSTALL.md)
+### 2. Load the Chrome extension
 
-**Using BeatGEO?** Follow its setup instead. It installs a fixed BeatBrowser revision and prepares the extension; you do not need another clone or global CLI.
+1. In the Chrome profile you want to use, open `chrome://extensions` and enable **Developer mode**.
+2. Choose **Load unpacked** and select the folder printed by `beat-browser extension`. Load one copy per profile.
+3. Restart your agent client and check the connection:
 
-[Download the matching CLI and extension, or install from source](docs/INSTALL.md). The extension ZIP alone is not the full installation. The Chrome extension is loaded unpacked and is not listed in the Chrome Web Store.
+```sh
+beat-browser doctor --json
+```
 
-## From installation to a finished task
+Ready means `ok: true` and `extensionOnline: true`. The extension is currently loaded unpacked, rather than installed from the Chrome Web Store.
 
-![From installation to a finished task](media/readme-workflow.en.svg)
+[Matching downloads and source setup](docs/INSTALL.md) · [Agent installation guide](AGENT_INSTALL.md) · [Release notes](docs/RELEASE_NOTES.md)
 
-BeatBrowser supplies browser tools; the Agent decides the steps. You can inspect the workspace, take over a task, and clean up completed tasks without clearing your everyday tabs. In BeatGEO, setup prepares the included extension, and the monitoring worker calls this same browser layer.
+<details>
+<summary>Let your agent guide setup</summary>
+
+Paste this into your agent:
+
+```text
+Set up BeatBrowser from https://github.com/BeatAPI/BeatBrowser.
+Read AGENT_INSTALL.md, preview configuration changes, then guide me through
+loading the Chrome extension. Verify doctor reports ok and extensionOnline.
+```
+
+Client configuration adapters are not a claim of end-to-end certification in every client. If you use [BeatGEO](https://github.com/BeatAPI/BeatGEO), follow its included BeatBrowser setup instead of installing a second copy.
+
+</details>
+
+### Try your first task
+
+```text
+Use BeatBrowser. List connected Chrome profiles and ask me to choose if there
+is more than one. Open a background task on https://example.com, read the
+page title, report the result, and pause for my review.
+```
+
+Open the extension → **Workspace** to inspect the task. The agent supplies the reasoning; BeatBrowser supplies the browser tools.
+
+## What you can do
+
+| Task | Example prompt |
+| --- | --- |
+| Read signed-in pages | “Extract the requested fields from these pages into a table with source URLs. Do not modify records.” |
+| Prepare a form | “Fill this form with the supplied information, check the values, then pause before the final submit.” |
+| Compare sources | “Read these two URLs in separate background tasks, summarize each source and wait for review.” |
+
+These are task examples, not claims that every website has been tested. Some sites save while you type; use a dedicated demo form when rehearsing. [Demo and recording guide](docs/DEMO.md)
+
+## Compare browser integrations
+
+The chart compares browser integrations and documented modes, not model quality or benchmark performance.
+
+![BeatBrowser compared with major browser integrations](media/readme-comparison.en.svg)
+
+<!-- comparison-tables:start -->
+<details>
+<summary>View the checkmark tables as text</summary>
+
+| Capability | BeatBrowser | Claude built-in | Codex built-in | Claude extension | Codex extension |
+| --- | :---: | :---: | :---: | :---: | :---: |
+| Access signed-in websites | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Works across external agents | ✅ | ❎ | ❎ | ❎ | ❎ |
+| Open-source integration | ✅ | ❎ | ❎ | ❎ | ❎ |
+| No tool vendor account | ✅ | ❎ | ❎ | ❎ | ❎ |
+| No extra browser app | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Visual task or session UI | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Read pages and fill forms | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+| Capability | BeatBrowser | Ego Lite | Playwright MCP | Browser Use | agent-browser |
+| --- | :---: | :---: | :---: | :---: | :---: |
+| Access signed-in websites | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Works across external agents | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Open-source integration | ✅ | ✅ | ✅ | ✅ | ✅ |
+| No tool vendor account | ✅ | ✅ | ✅ | ✅ | ✅ |
+| No extra browser app | ✅ | ❎ | ✅ | ✅ | ✅ |
+| Visual task or session UI | ✅ | ✅ | ❎ | ❎ | ✅ |
+| Read pages and fill forms | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+</details>
+<!-- comparison-tables:end -->
+
+Open source means integration tooling, not the host app or browser engine. Ego can import Chrome logins; BeatBrowser connects to the existing Chrome profile through its extension and local bridge. Playwright includes extension mode, Browser Use means the local library/CLI, and agent-browser includes its Dashboard. Reviewed 2026-10-18. [Definitions and primary sources](docs/COMPARISON.md).
+
+**Detailed comparisons:** [Ego Lite](docs/comparisons/ego-lite.md) · [Claude built-in](docs/comparisons/claude-built-in.md) · [Codex built-in](docs/comparisons/codex-built-in.md) · [Claude extension](docs/comparisons/claude-extension.md) · [Codex extension](docs/comparisons/codex-extension.md) · [Playwright MCP](docs/comparisons/playwright-mcp.md) · [Browser Use](docs/comparisons/browser-use.md) · [agent-browser](docs/comparisons/agent-browser.md).
 
 ## Background workspace
 
-![Background workspace](media/readme-workspace.en.svg)
+![Diagram of task creation, progress, human takeover and cleanup](media/readme-workspace.en.svg)
 
-TaskSpaces use a separate window in your existing profile; they are not separate cookie containers. A site popup or native browser behavior can still gain focus. Focusing a running task pauses subsequent automation; this cannot undo an action already in flight. Background work is the intended experience, not a guarantee of invisible operation.
+*Workflow illustration. Inspect actual tasks in the extension popup or sidebar.*
 
-After a reload, inspect recovered pages before continuing. Live pages are recovered by their native Chrome target identity. After a full browser restart, use **Reconnect pages** to confirm page associations; matching URLs alone never transfer control. Tasks lost before recovery was introduced cannot be reconstructed. Agent reconnection restores routing; an explicitly authorized new session can claim a recovered task without resuming it automatically.
+Tasks keep named pages, progress and a lifecycle history. You can take over a page, explicitly return control, or stop the task. Completed tasks can be cleared individually or in a batch while protecting user-associated, handed-over and moved pages.
 
-When updating, finish active work first, update the matching source, reload the extension and restart the local bridge and Agent connections. Do not delete local storage to update. [Task lifecycle and recovery](docs/TASKSPACES.md)
+<details>
+<summary>Recovery and current limits</summary>
+
+- Extension reloads restore task records, labels and progress; unfinished tasks restore **paused**. After a full browser restart, use **Reconnect pages** to confirm missing page associations before continuing. Matching URLs alone never grant control.
+- There are at most **four nonterminal tasks per owner** and **sixteen pages per task**. These are task windows, not isolated cookie containers.
+- Focusing a running task pauses subsequent automation, but does not undo an action already in flight. Site popups or native browser UI can still gain focus.
+- **Minimized headed screenshots remain a known gap.** Background execution does not guarantee invisible operation or support for every native permission dialog.
+- Finish active work before updating. Keep CLI and extension versions aligned, reload the extension and reconnect agents. Retain extension storage to preserve records.
+
+[Task lifecycle, recovery and verification](docs/TASKSPACES.md) · [Workspace acceptance](docs/PREVIEW_TESTING.md)
+
+</details>
 
 ## Tools
 
@@ -92,9 +162,31 @@ Snapshot before acting, pass explicit `tabId`/`spaceId`, and check the result. A
 
 Reviewed site notes and playbooks can be shared locally through `~/.beat-browser/learnings/`. This is reusable context, not automatic model training. [JavaScript SDK](docs/JAVASCRIPT.md) · [Demo guide](docs/DEMO.md) · [Dated integration comparison](docs/COMPARISON.md)
 
-## Optional BeatAPI execution
+## Privacy
 
-The optional **Fast JEV** executor lets a BeatAPI model choose from a bounded set of browser actions. It uses the same connection and is **off by default**. Live use requires a BeatAPI key and explicit task consent. Normal mode does not require it.
+Normal mode uses a local bridge on `127.0.0.1` with token-authenticated agent connections. It adds no BeatBrowser cloud service or telemetry. Tool output still reaches your chosen agent and model provider; local task records remain until cleared.
+
+The extension has broad browser permissions. Use trusted agents and explicit approval for consequential actions: task controls are not a universal authorization system. [Full privacy and permission details](PRIVACY.md)
+
+## Development and reference
+
+```sh
+npm ci
+npm test
+npm run check:syntax
+npm run check:security
+npm run check:comparison
+npm run check:package
+```
+
+[JavaScript SDK](docs/JAVASCRIPT.md) · [Agent setup](AGENT_INSTALL.md) · [Architecture](media/architecture.svg) · [Test results](TEST_RESULTS.md) · [Release procedure](docs/RELEASING.md) · [Report an issue](https://github.com/BeatAPI/BeatBrowser/issues)
+
+Bug reports and pull requests are welcome. Include the CLI/extension versions, reproduction steps and sanitized output. Do not include tokens, cookies or private page data. Unit and isolated Chromium checks do not certify every agent client or macOS foreground-focus behavior.
+
+<details>
+<summary>Optional BeatAPI execution — Fast JEV</summary>
+
+The optional Fast JEV executor lets a BeatAPI model choose from a bounded set of browser actions. It uses the same connection, is **off by default**, and requires a BeatAPI key and explicit task consent. Normal browser tools do not require it.
 
 ```sh
 beat-browser run --dry-run \
@@ -102,27 +194,12 @@ beat-browser run --dry-run \
   --goal 'Check that the Example Domain page is ready'
 ```
 
-Dry-run makes no model call and opens no browser connection. Fast JEV currently targets top-frame light DOM, not iframes or shadow DOM; it stops on uncertainty instead of replaying an uncertain submission. [Configuration and consent](docs/JEV_FAST_AGENT.md)
+Dry-run makes no model call and opens no browser connection. Fast JEV targets top-frame light DOM, not iframes or shadow DOM; it stops on uncertainty instead of replaying an uncertain submission. [Configuration and consent](docs/JEV_FAST_AGENT.md)
 
-## Privacy and boundaries
-
-The local bridge listens on `127.0.0.1`; Agent connections require a local token. Normal mode adds no BeatBrowser cloud service or telemetry, but tool output still reaches your chosen Agent and its provider. Task labels, progress and lifecycle metadata persist locally until cleared; URL fingerprints support page recovery.
-
-The extension has broad browser permissions and trusts the local machine. It does not protect against malicious local software or extensions. Task focus gates and `act` checks are not universal authorization controls: individual tools or JavaScript can write to websites. Use trusted agents and retain action-specific approval for consequential operations. [Full privacy details](PRIVACY.md)
-
-## Development and verification
-
-```sh
-npm ci
-npm test
-npm run check:syntax
-npm run check:security
-npm run check:package
-npm run build:extension
-```
-
-Task recovery passed isolated real Chromium extension-reload and browser-restart checks. These do not establish macOS foreground-focus behavior or every Agent client's compatibility. See [workspace acceptance](docs/PREVIEW_TESTING.md), [TaskSpace checks](docs/TASKSPACES.md), [historical results](TEST_RESULTS.md) and [release procedure](docs/RELEASING.md).
+</details>
 
 ## Credits and license
 
-[MIT](LICENSE). Based on [huashu-chrome](https://github.com/alchaincyf/huashu-chrome) by [alchaincyf](https://github.com/alchaincyf), with the original copyright preserved. BeatAPI maintains the distribution and adds TaskSpaces, recovery, the workspace UI and optional Fast JEV execution.
+[MIT](LICENSE). Based on [huashu-chrome](https://github.com/alchaincyf/huashu-chrome) by [alchaincyf](https://github.com/alchaincyf), with the original copyright preserved. [BeatAPI](https://beatapi.io) maintains the distribution and adds TaskSpaces, recovery, the workspace UI and optional Fast JEV execution.
+
+Also included in [BeatGEO](https://github.com/BeatAPI/BeatGEO), which adds brand monitoring, evidence and retests.

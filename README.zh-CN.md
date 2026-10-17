@@ -1,45 +1,33 @@
-[![BeatBrowser — 你的 Chrome，你的 Agent，由你掌控](media/readme-cover.png)](https://beatapi.io/browser)
+[![BeatBrowser — 你的 Chrome，你的 Agent，由你掌控](media/readme-cover.zh-CN.svg)](https://beatapi.io/browser)
 
 # BeatBrowser
 
-[English](README.md) · [简体中文](README.zh-CN.md)
+[English](README.md) · **[简体中文](README.zh-CN.md)**
 
-**你的 Chrome，你的 Agent，由你掌控。**
+**保留现有 Chrome，接入你常用的 Agent。**
 
-[BeatAPI](https://beatapi.io) 出品的开源浏览器工具，让支持 MCP 的 Agent 使用你已经登录的 Chrome。后台任务使用独立窗口，你可以查看进度、接管操作，或随时停止。
+开源 Chrome 扩展与本地桥接工具，让支持 MCP 的 Agent 复用你的浏览器和网站登录态。任务使用独立窗口，你随时查看和接管，无需另装专用浏览器或迁移浏览资料。
 
-[项目官网](https://beatapi.io/browser) · [对比](#浏览器接入方式对比) · [快速开始](#快速开始) · [后台工作区](#后台工作区) · [工具](#工具) · [JavaScript SDK](docs/JAVASCRIPT.md) · [隐私](PRIVACY.md) · [MIT](LICENSE)
+[快速开始](#快速开始) · [使用示例](#可以用来做什么) · [能力对比](#浏览器接入方式对比) · [JavaScript SDK](docs/JAVASCRIPT.md) · [项目官网](https://beatapi.io/browser)
 
-> **1.3.2 版本**在插件工作区管理任务，不再自动创建 Chrome 标签组。[安装指南](docs/INSTALL.md) · [更新说明](docs/RELEASE_NOTES.md)
+普通本地浏览器工具**免费**，**不需要 BeatBrowser 账号或 API Key**；Agent 使用自己的模型服务。
 
-## 一套浏览器能力，供多个 Agent 使用
+## 为什么用 BeatBrowser
 
-可用于 Claude Code、Codex CLI、Cursor，以及能够启动本地 stdio MCP 服务的其他客户端。Agent 负责推理，BeatBrowser 提供浏览器工具。
+| 保留已有环境 | 为 Agent 加入工作能力 |
+| --- | --- |
+| **你的 Chrome** | 使用已连接的浏览器配置与网站登录态。 |
+| **你的 Agent** | 连接 Claude Code、Codex CLI、Cursor 或其他兼容的本地 stdio MCP 客户端。 |
+| **你的工作区** | 任务使用独立 Chrome 窗口，在扩展里查看进度。 |
+| **你的控制权** | 通过 popup 或侧栏查看、暂停、继续、停止和清理任务。 |
 
-> “在 example.com 创建后台任务，读取标题并报告结果。暂停等我检查，我交回控制后再结束。”
-
-- **复用已有登录态。** 使用指定 Chrome 配置，无须导出 Cookie 或迁移浏览器数据。
-- **任务有自己的窗口。** 中英文侧栏集中显示任务、页面和进度，支持查看、暂停、继续与停止。
-- **更新后找回任务。** 重载扩展保留任务和进度；未完成任务以暂停状态恢复，已完成任务保持完成。缺失页面可明确重新关联。
-- **做完方便清理。** 单个清理、批量清理已结束任务，或确认后全部清理。保护用户关联、已交给用户和移出任务窗口的页面。
-
-普通浏览器控制不需要 BeatBrowser 账号或 API Key；Agent 使用自己的模型服务。[BeatGEO](https://github.com/BeatAPI/BeatGEO) 已集成 BeatBrowser，并在其上提供品牌监测、证据和复测。
-
-## 浏览器接入方式对比
-
-| 接入方式 | 浏览器与登录态 | 任务工作区 | 原生接入范围 |
-| --- | --- | --- | --- |
-| Codex 内置浏览器（桌面版） | 独立配置，在 App 内登录 | App 内浏览器面板 | OpenAI 桌面整合 |
-| Codex 官方浏览器插件 | 沿用现有浏览器配置与登录态 | 现有标签页，支持后台与多标签并行 | OpenAI 桌面整合 |
-| Claude Code 内置浏览器（桌面版） | 独立配置，可登录并选择保留 Cookie | App 内 Browser 面板 | Claude Code 桌面版 |
-| Claude Code + Claude in Chrome | 沿用现有浏览器配置与登录态 | 与会话关联的标签组 | 受支持的 Claude 原生入口 |
-| **BeatBrowser** | **沿用已连接的 Chrome 配置与登录态** | **独立任务窗口，查看进度、暂停、接管** | **本地 MCP 客户端、CLI 与 JavaScript SDK** |
-
-比较的是浏览器整合，不是模型能力。官方插件也支持后台与多标签工作。BeatBrowser 为兼容 Agent 提供同一套 MIT 开源浏览器工具；独立任务窗口仍共享同一配置的网站登录态。[详细比较与官方来源](docs/COMPARISON.md)。
+扩展、桥接服务、MCP、CLI 和 Node SDK 源码按 [MIT](LICENSE) 公开。同一 Chrome 配置下的任务共享 Cookie 与存储。
 
 ## 快速开始
 
-需要 **Node.js 20+、Chrome 116+** 和兼容的本地 MCP 客户端。
+需要 **Node.js 20+**、**Chrome 116+** 和能够启动本地 stdio MCP 服务的客户端。安装分为两部分：本地工具与 Chrome 扩展。
+
+### 1. 安装本地工具
 
 ```sh
 npm install --global @beatapi/beat-browser@1.3.2
@@ -48,32 +36,113 @@ beat-browser install
 beat-browser extension
 ```
 
-1. 保留全局安装目录。在要使用的 Chrome 配置中打开 `chrome://extensions`，启用**开发者模式**。
-2. 点击**加载已解压的扩展程序**，选择命令输出的扩展目录。每个配置只加载一份。
-3. 重启 Agent 客户端。运行 `beat-browser doctor --json`，就绪状态应为 `ok: true`、`extensionOnline: true`。
-4. 让 Agent 列出已连接配置，选中目标配置，先做一个小型只读任务。点击扩展 → **工作区**查看进度。
+`--dry-run` 预览已检测到的客户端配置改动；实际安装会备份被修改的配置。请保留安装目录，确保扩展路径稳定。
 
-`--dry-run` 预览客户端配置改动，实际安装会备份被修改的配置。支持某个客户端的安装配置，不代表已经对每个客户端完成端到端验收。[Agent 安装指南](AGENT_INSTALL.md)
+### 2. 加载 Chrome 扩展
 
-**使用 BeatGEO 的用户：** 直接按 BeatGEO 的安装流程操作。它会安装固定版本并准备扩展，不需要第二次克隆或安装全局 CLI。
+1. 在你要使用的 Chrome 配置中打开 `chrome://extensions`，启用**开发者模式**。
+2. 点击**加载已解压的扩展程序**，选择 `beat-browser extension` 输出的目录。每个配置只加载一份。
+3. 重启 Agent 客户端，检查连接：
 
-见[配套 CLI、扩展下载与源码安装](docs/INSTALL.md)。扩展 ZIP 只是其中一部分。当前通过加载已解压扩展安装，尚未上架 Chrome 应用商店。
+```sh
+beat-browser doctor --json
+```
 
-## 从安装到完成任务
+就绪条件是 `ok: true` 和 `extensionOnline: true`。当前通过加载已解压扩展安装，尚未上架 Chrome 应用商店。
 
-![从安装到完成任务](media/readme-workflow.zh-CN.svg)
+[配套下载与源码安装](docs/INSTALL.md) · [Agent 安装指南](AGENT_INSTALL.md) · [更新说明](docs/RELEASE_NOTES.md)
 
-BeatBrowser 提供浏览器工具，由 Agent 决定具体步骤。你可以查看工作区、接管任务、清理已完成任务，而不清理日常浏览标签页。在 BeatGEO 中，安装流程准备内置扩展，监测工作进程调用同一套浏览器能力。
+<details>
+<summary>让 Agent 引导安装</summary>
+
+把下面这段话发给你的 Agent：
+
+```text
+请从 https://github.com/BeatAPI/BeatBrowser 安装 BeatBrowser。
+先阅读 AGENT_INSTALL.md，预览客户端配置改动，再引导我加载 Chrome 扩展。
+最后检查 doctor，确认 ok 和 extensionOnline 均为 true。
+```
+
+提供某个客户端的配置适配器，不代表已对每个客户端完成端到端验收。使用 [BeatGEO](https://github.com/BeatAPI/BeatGEO) 时，按它内置的 BeatBrowser 安装流程操作，无需再装第二份。
+
+</details>
+
+### 试试第一个任务
+
+```text
+使用 BeatBrowser，列出已连接的 Chrome 配置；如果有多个，让我选择。
+在 https://example.com 创建后台任务，读取标题，汇报结果，然后暂停等我检查。
+```
+
+点击扩展 → **工作区** 查看任务。Agent 负责推理，BeatBrowser 提供浏览器工具。
+
+## 可以用来做什么
+
+| 任务 | 提示词示例 |
+| --- | --- |
+| 整理已登录页面 | “从这些页面提取指定字段，整理成带来源链接的表格，不修改记录。” |
+| 预填表单 | “按我提供的信息填写表单，检查内容，在最终提交之前暂停。” |
+| 比较多个来源 | “用两个独立后台任务读取这两个网址，分别总结，等待我检查。” |
+
+这些是任务示例，不代表已验收所有网站。有些网站会在输入时自动保存，演练请使用专门的演示表单。[演示与录屏指南](docs/DEMO.md)
+
+## 浏览器接入方式对比
+
+比较浏览器接入方式与文档提供的模式，不比较模型能力或未经实测的性能。
+
+![BeatBrowser 与主流浏览器接入方式对比](media/readme-comparison.zh-CN.svg)
+
+<!-- comparison-tables:start -->
+<details>
+<summary>展开查看文字对比表</summary>
+
+| 能力 | BeatBrowser | Claude 内置 | Codex 内置 | Claude 插件 | Codex 插件 |
+| --- | :---: | :---: | :---: | :---: | :---: |
+| 访问已登录网站 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 接入不同厂商的外部 Agent | ✅ | ❎ | ❎ | ❎ | ❎ |
+| 浏览器接入工具开源 | ✅ | ❎ | ❎ | ❎ | ❎ |
+| 浏览器工具无需厂商账号 | ✅ | ❎ | ❎ | ❎ | ❎ |
+| 无需另装专用浏览器 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 可视化任务或会话界面 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 读取网页与填写表单 | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+| 能力 | BeatBrowser | Ego Lite | Playwright MCP | Browser Use | agent-browser |
+| --- | :---: | :---: | :---: | :---: | :---: |
+| 访问已登录网站 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 接入不同厂商的外部 Agent | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 浏览器接入工具开源 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 浏览器工具无需厂商账号 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 无需另装专用浏览器 | ✅ | ❎ | ✅ | ✅ | ✅ |
+| 可视化任务或会话界面 | ✅ | ✅ | ❎ | ❎ | ✅ |
+| 读取网页与填写表单 | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+</details>
+<!-- comparison-tables:end -->
+
+开源指接入工具，不代表宿主 App 或浏览器内核开源。Ego 可导入 Chrome 登录态；BeatBrowser 通过扩展与本地桥接使用现有 Chrome 配置。Playwright 包含插件模式，Browser Use 指本地库与 CLI，agent-browser 包含自带 Dashboard。核对日期为 2026-10-18。[维度定义与一手来源](docs/COMPARISON.md)。
+
+**逐项对比：** [Ego Lite](docs/comparisons/ego-lite.md) · [Claude 内置](docs/comparisons/claude-built-in.md) · [Codex 内置](docs/comparisons/codex-built-in.md) · [Claude 插件](docs/comparisons/claude-extension.md) · [Codex 插件](docs/comparisons/codex-extension.md) · [Playwright MCP](docs/comparisons/playwright-mcp.md) · [Browser Use](docs/comparisons/browser-use.md) · [agent-browser](docs/comparisons/agent-browser.md)。
 
 ## 后台工作区
 
-![后台工作区](media/readme-workspace.zh-CN.svg)
+![任务创建、进度、人工接管与清理流程示意图](media/readme-workspace.zh-CN.svg)
 
-任务窗口复用同一配置的登录态，并不是独立 Cookie 容器。网站弹窗或浏览器原生行为仍可能获得焦点。任务窗口被聚焦时会暂停后续自动化，但无法撤回已经发出的操作。后台执行是目标体验，不等于绝对隐形或永不抢焦点。
+*此处为流程示意图。实际任务可在扩展 popup 或侧栏中查看。*
 
-重载后先确认恢复的页面，再继续任务。扩展重载后按 Chrome 原生页面标识恢复关联；浏览器彻底重启后，通过**关联页面**确认归属，再继续任务。不会仅凭相同网址接管页面。此前已丢失的旧记录无法补回。原 Agent 重连后可恢复路由；新 Agent 经明确授权可以接手恢复的任务，但不会因此自动继续执行。
+任务保留命名页面、进度和生命周期记录。你可以接管页面、明确交回控制权，或停止任务。结束后支持单个或批量清理，同时保护用户关联、已交给用户和移出任务窗口的页面。
 
-更新前先结束正在执行的操作，更新配套源码，重载扩展，再重启本地桥接服务和 Agent 连接。更新不需要删除本地存储。[任务生命周期与恢复](docs/TASKSPACES.md)
+<details>
+<summary>恢复机制与当前限制</summary>
+
+- 扩展重载后保留任务记录、页面名和进度；未完成任务以**暂停**状态恢复。浏览器完全重启后，通过**关联页面**确认缺失页面，再明确继续；不会仅凭相同网址接管页面。
+- 每个 owner 最多 **4 个未结束任务**，每任务最多 **16 个页面**。任务窗口不等于独立 Cookie 容器。
+- 聚焦任务窗口会暂停后续自动化，无法撤回已经发出的操作。网站弹窗或浏览器原生界面仍可能获得焦点。
+- **有头最小化截图仍有已知限制。** 后台执行不等于绝对隐形，也不保证所有原生权限弹窗都能处理。
+- 更新前先结束当前操作。保持 CLI 与扩展版本一致，重载扩展、重新连接 Agent；保留扩展存储才能保留任务记录。
+
+[任务生命周期、恢复与验证](docs/TASKSPACES.md) · [工作区验收](docs/PREVIEW_TESTING.md)
+
+</details>
 
 ## 工具
 
@@ -92,9 +161,31 @@ BeatBrowser 提供浏览器工具，由 Agent 决定具体步骤。你可以查�
 
 审核过的站点笔记与操作手册保存在 `~/.beat-browser/learnings/`，供不同 Agent 复用。这是共享上下文，不是自动训练模型。[JavaScript SDK](docs/JAVASCRIPT.md) · [演示指南](docs/DEMO.md) · [注明时间的集成对比](docs/COMPARISON.md)
 
-## 可选的 BeatAPI 执行能力
+## 隐私
 
-**Fast JEV** 让 BeatAPI 模型从有限的浏览器动作中选择下一步，复用相同连接，**默认关闭**。真实调用需要 BeatAPI Key 和明确的任务授权，普通模式不需要。
+普通模式使用监听 `127.0.0.1` 的本地桥接，Agent 连接需要本地令牌，不新增 BeatBrowser 云服务或遥测。工具结果仍会传给你选择的 Agent 与模型提供方；本地任务记录保留至清理。
+
+扩展拥有较广的浏览器权限。请使用可信 Agent，并对有后果的操作保留明确授权；任务控制不构成全局授权机制。[完整隐私与权限说明](PRIVACY.md)
+
+## 开发与参考
+
+```sh
+npm ci
+npm test
+npm run check:syntax
+npm run check:security
+npm run check:comparison
+npm run check:package
+```
+
+[JavaScript SDK](docs/JAVASCRIPT.md) · [Agent 安装](AGENT_INSTALL.md) · [架构](media/architecture.svg) · [测试记录](TEST_RESULTS.md) · [发布流程](docs/RELEASING.md) · [反馈问题](https://github.com/BeatAPI/BeatBrowser/issues)
+
+欢迎提交问题与 PR，请附上 CLI/扩展版本、复现步骤和脱敏输出，不要包含令牌、Cookie 或私有页面数据。单元测试和隔离 Chromium 检查不代表已验收每个 Agent 客户端或 macOS 原生焦点行为。
+
+<details>
+<summary>可选 BeatAPI 执行能力 — Fast JEV</summary>
+
+Fast JEV 让 BeatAPI 模型从有限的浏览器动作中选择下一步，复用相同连接，**默认关闭**。真实调用需要 BeatAPI Key 和明确任务授权，普通浏览器工具不需要。
 
 ```sh
 beat-browser run --dry-run \
@@ -102,27 +193,12 @@ beat-browser run --dry-run \
   --goal 'Check that the Example Domain page is ready'
 ```
 
-Dry-run 不调用模型、不连接浏览器。Fast JEV 目前面向顶层 light DOM，不支持 iframe 或 shadow DOM；遇到不确定状态会停止，不自动重发结果不明的提交。[配置与授权](docs/JEV_FAST_AGENT.md)
+Dry-run 不调用模型、不连接浏览器。Fast JEV 面向顶层 light DOM，不支持 iframe 或 shadow DOM；遇到不确定状态会停止，不自动重发结果不明的提交。[配置与授权](docs/JEV_FAST_AGENT.md)
 
-## 隐私与边界
-
-桥接服务监听 `127.0.0.1`，Agent 连接需要本地令牌。普通模式没有 BeatBrowser 云服务或遥测，但工具结果仍会传给你选择的 Agent 和模型提供方。任务名称、进度和事件记录在本地保留至清理，URL 指纹用于恢复关联。
-
-扩展有较广的浏览器权限，信任本地运行环境，不能防范恶意本地程序或扩展。焦点暂停与 `act` 检查不是全局授权机制，单个工具或 JavaScript 仍可修改网站。应连接可信 Agent，并对有后果的操作保留具体授权。[完整隐私说明](PRIVACY.md)
-
-## 开发与验证
-
-```sh
-npm ci
-npm test
-npm run check:syntax
-npm run check:security
-npm run check:package
-npm run build:extension
-```
-
-任务恢复已通过隔离的真实 Chromium 扩展重载与浏览器重启测试；这不代表 macOS 原生焦点或每个 Agent 客户端都已验收。详见[工作区验收](docs/PREVIEW_TESTING.md)、[任务测试](docs/TASKSPACES.md)、[历史结果](TEST_RESULTS.md)和[发布流程](docs/RELEASING.md)。
+</details>
 
 ## 致谢与许可
 
-[MIT](LICENSE)。基于 [alchaincyf](https://github.com/alchaincyf) 的 [huashu-chrome](https://github.com/alchaincyf/huashu-chrome)，保留原作者版权。BeatAPI 维护发行版本，并加入任务空间、任务恢复、工作区界面和可选的 Fast JEV 执行能力。
+[MIT](LICENSE)。基于 [alchaincyf](https://github.com/alchaincyf) 的 [huashu-chrome](https://github.com/alchaincyf/huashu-chrome)，保留原作者版权。[BeatAPI](https://beatapi.io) 维护发行版本，并加入任务空间、任务恢复、工作区界面与可选 Fast JEV 执行能力。
+
+[BeatGEO](https://github.com/BeatAPI/BeatGEO) 已集成 BeatBrowser，在其上提供品牌监测、证据和复测。
