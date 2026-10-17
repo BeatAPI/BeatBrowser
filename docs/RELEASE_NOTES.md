@@ -1,27 +1,27 @@
-# BeatBrowser 1.3.2
+# BeatBrowser 1.4.0
 
-Tasks stay in the extension workspace without adding Chrome tab groups.
+The npm package and matching extension downloads now include the current Agent setup and optional remote access tooling.
 
 ## What changed
 
-- Neither ordinary agent pages nor background TaskSpaces create native tab groups. View, take over, continue, stop and clear tasks from the popup or sidebar.
-- Reload recovery uses Chrome page identities plus URL fingerprints. A full browser restart preserves task records and progress; explicitly reconnect pages before continuing. Matching URLs alone never transfer control.
-- Existing v1 task groups migrate conservatively and are ungrouped after their page identity is saved. Renamed groups, moved pages and user-associated pages remain protected.
-- Cleanup ungroups recognized legacy pages before closing them. Page-list failures offer Retry or an extension reload hint; empty inventories hide the unused close button.
+- Include an opt-in remote adapter for compatible cloud agents: dedicated credentials, expiry/revocation, authenticated HTTP/MCP/WebSocket and a user-managed tunnel. Local mode remains the default; installation opens no remote listener.
+- Detect WorkBuddy's current `~/.workbuddy/mcp.json` path while preserving existing servers.
+- Package the English/Chinese local/cloud guides, Agent directory and updated comparison visuals.
+- Retain background TaskSpaces, identity-based recovery and cleanup from 1.3.2. The Chrome extension version matches the CLI; this release adds no new extension permissions.
 
 ## Install or update
 
 ```sh
-npm install --global @beatapi/beat-browser@1.3.2
+npm install --global @beatapi/beat-browser@1.4.0
 beat-browser install --dry-run
 beat-browser install
 beat-browser extension
 ```
 
-Load the printed extension folder, or extract the matching GitHub extension ZIP into a permanent directory. Finish active operations, reload the existing extension, restart the bridge and reconnect agents. Keep extension storage to retain task records. Inspect recovered pages before continuing.
-
-The release includes matching extension ZIP and CLI tarball downloads, with SHA-256 checksums. npm publication and GitHub assets are verified separately.
+Finish active operations, reload the existing extension from the printed folder, restart the bridge and reconnect agents. Keep extension storage to retain task records. Inspect recovered pages before continuing. BeatGEO users should update the bundled dependency through BeatGEO instead of installing a second copy.
 
 ## Validation and limits
 
-Unit tests, clean package installation, isolated real Chromium task/UI checks and extension-reload/browser-restart recovery checks cover this release. Full browser restart intentionally requires explicit page reassociation. These checks do not establish macOS native focus behavior or every agent client's compatibility. Previously saved, already closed Chrome groups may need removal in Chrome itself.
+Release checks cover unit tests, remote authentication and isolated mock-extension runtime, package contents, clean installation and MCP discovery. Remote tooling remains an opt-in preview: these checks do not certify each cloud client, public tunnel or signed-in website workflow. The extension behavior is unchanged apart from version metadata; no new real-browser acceptance is claimed by this release.
+
+GitHub ZIP and CLI tarball downloads carry SHA-256 checksums. npm publication and GitHub assets are verified independently. This is an unpacked extension release, not a Chrome Web Store listing.

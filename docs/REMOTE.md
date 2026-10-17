@@ -4,9 +4,7 @@ Run the agent in the cloud and keep the browser on your computer. Reuse your
 website logins and inspect tasks in the Chrome extension Workspace. No cloud
 browser rental or BeatBrowser-operated relay is required.
 
-**Source preview:** remote commands are implemented in this checkout. The
-published `1.3.2` npm package and release downloads do not include them yet.
-Use the current repository source instead of installing the old npm package.
+**Opt-in preview:** version `1.4.0` includes remote commands in the npm package and matching release downloads. Remote access remains disabled until explicitly configured. Client-specific end-to-end acceptance is still required.
 
 [Chinese guide](REMOTE.zh-CN.md) · [Local Agent setup](INSTALL.md) · [Privacy](../PRIVACY.md)
 
@@ -54,7 +52,7 @@ node src/cli.js extension
 ```
 
 If you already have this source checkout, use it rather than installing a second
-copy. The released `v1.3.2` tag does not include the remote adapter.
+copy. Use version `1.4.0` or later; `v1.3.2` does not include the remote adapter.
 
 Load the printed folder through Chrome's **Developer mode → Load unpacked**.
 Keep the folder at a stable location. Then check:
@@ -191,7 +189,7 @@ node src/cli.js remote stop
 
 | What you see | What to check |
 | --- | --- |
-| `remote` command not recognized | The published `1.3.2` package lacks this feature. Use the preview checkout and `node src/cli.js remote ...`. |
+| `remote` command not recognized | Update to `1.4.0` or later and restart the CLI/MCP client. Confirm the command uses the updated package. |
 | Local adapter is not running | Run `remote start` from the same checkout and OS user. Check its printed log path if startup fails. |
 | Tunnel cannot reach the local service | Run `remote status`; match the tunnel target to its port and keep `cloudflared` running on the Chrome computer. |
 | HTTP 401 from the adapter | Check the dedicated Agent credential and its expiry/revocation. Regenerate client config after rotation. |

@@ -35,8 +35,7 @@ The extension, local bridge, MCP server, CLI and Node SDK are public under [MIT]
 | **Cloud Agent** | Remote / cloud | Tools + extension + credential + your own tunnel. |
 
 Local mode is the default; installation does not enable remote access. Both modes
-use your computer's Chrome. Cloud mode is currently a source preview, outside the
-published `1.3.2` package. [Cloud Agent setup](docs/REMOTE.md)
+use your computer's Chrome. Version `1.4.0` includes the optional cloud adapter as a preview. [Cloud Agent setup](docs/REMOTE.md)
 
 ### Bring the agent you use
 
@@ -59,7 +58,7 @@ For **Local Agent mode**: **Node.js 20+**, **Chrome 116+**, and a client that ca
 ### 1. Install the local tools
 
 ```sh
-npm install --global @beatapi/beat-browser@1.3.2
+npm install --global @beatapi/beat-browser@1.4.0
 beat-browser install --dry-run
 beat-browser install
 beat-browser extension
@@ -115,8 +114,7 @@ Chrome through your own authenticated Cloudflare Tunnel. Use your own hostname,
 give each agent a separate credential, and inspect tasks in the extension Workspace.
 No cloud browser rental or BeatBrowser account is required; your computer must stay online.
 
-**Source preview:** remote commands are available in this checkout, not the published
-`1.3.2` package. [Configure cloud access](docs/REMOTE.md) for Muse, Grok Bot or another
+**Opt-in preview:** version `1.4.0` includes remote commands in both the source and npm package. [Configure cloud access](docs/REMOTE.md) for Muse, Grok Bot or another
 client supporting Bearer-authenticated HTTP MCP, HTTP calls or WebSocket.
 Client-specific settings and signed-in tasks require end-to-end verification.
 

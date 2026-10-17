@@ -17,7 +17,7 @@ The GitHub [latest release](https://github.com/BeatAPI/BeatBrowser/releases/late
 Install the matching CLI from the release asset, preview client config changes and print the extension folder:
 
 ```bash
-npm install --global https://github.com/BeatAPI/BeatBrowser/releases/download/v1.3.2/beat-browser-cli.tgz
+npm install --global https://github.com/BeatAPI/BeatBrowser/releases/download/v1.4.0/beat-browser-cli.tgz
 beat-browser install --dry-run
 beat-browser extension
 ```
@@ -29,7 +29,7 @@ The GitHub tarball installs public npm dependencies. Load either the extracted e
 Install the matching release from the official npm registry:
 
 ```bash
-npm install --global @beatapi/beat-browser@1.3.2
+npm install --global @beatapi/beat-browser@1.4.0
 beat-browser install --dry-run
 beat-browser extension
 ```
