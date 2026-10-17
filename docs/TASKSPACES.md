@@ -1,6 +1,6 @@
 # Background TaskSpaces — development status
 
-BeatBrowser 1.3.2. Update the CLI and reload the matching extension to apply changes. No Ego installation or native browser engine is required.
+Update the CLI and reload the matching extension to apply changes. No Ego installation or native browser engine is required.
 
 ## Execution model
 

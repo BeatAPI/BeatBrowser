@@ -1,6 +1,6 @@
-# BeatBrowser 1.3.2 workspace and acceptance
+# BeatBrowser workspace and acceptance
 
-Both package and extension use 1.3.2. Use the [release installation guide](INSTALL.md) for matching downloads, or the source route below for development. AEO work remains separate.
+Install matching CLI and extension versions. Use the [release installation guide](INSTALL.md) for matching downloads, or the source route below for development. AEO work remains separate.
 
 ## Install the current GitHub source
 

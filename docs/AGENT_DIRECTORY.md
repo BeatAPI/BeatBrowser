@@ -21,8 +21,7 @@ CLI, IDE and desktop are product categories within Local Agent mode, not extra
 connection modes. OpenClaw and Hermes belong to either mode according to where
 you deploy them. Both modes use Chrome on your computer.
 
-**Release status:** local mode is available in `1.3.2`. Cloud mode is a source
-preview in this checkout and is not part of the published `1.3.2` package.
+**Release status:** the current npm package and release downloads include local mode and the optional cloud adapter. Cloud mode remains an opt-in preview, disabled by default.
 
 ## Local CLI agents
 
@@ -30,8 +29,8 @@ An **installer entry** means `beat-browser install` knows a configuration path a
 writer. It detects existing files; it does not install the agent or guarantee the
 current configuration on every OS. Preview with `beat-browser install --dry-run`.
 **Manual** means configure the client's local MCP server using its own schema.
-The catalog describes current source; for WorkBuddy on npm `1.3.2`, follow the
-[manual configuration note](INSTALL.md#manual-mcp-config).
+The current installer detects WorkBuddy’s `~/.workbuddy/mcp.json`. See the
+[manual configuration note](INSTALL.md#manual-mcp-config) if automatic detection is unavailable.
 
 | Agent | BeatBrowser configuration | First-party reference |
 | --- | --- | --- |
@@ -125,7 +124,7 @@ verified. A model provider name, by itself, is not an agent client.
 5. Record the client version, OS, transport and result. Test a signed-in site
    separately before advertising a specific website workflow.
 
-The current source preview has protocol/runtime and synthetic-extension tests.
+The optional remote adapter has protocol/runtime and synthetic-extension tests.
 Those do not certify every client in this directory or a public tunnel. Local
 mode exposes 24 normal tools; remote mode exposes 21, with the differences
 documented in [Cloud setup](REMOTE.md#scope-and-validation).
