@@ -38,11 +38,11 @@ published `1.3.2` package. [Cloud Agent setup](docs/REMOTE.md)
 
 | Mode | Agent examples |
 | --- | --- |
-| Local | Codex, Claude Code, WorkBuddy, OpenCode, Kimi Code, OpenClaw, Hermes |
+| Local | Codex, Claude Code, WorkBuddy, OpenCode, Kimi Code |
 | Cloud | Muse, Grok Bot, OpenClaw, Hermes |
 
-OpenClaw and Hermes fit either mode: local when their tools run on your computer,
-cloud when they run on a remote server.
+OpenClaw and Hermes are shown here as cloud deployment examples; they also work
+in Local Agent mode when their tools run on your computer.
 More agents, configuration details and verification status are listed in the
 [Agent directory](docs/AGENT_DIRECTORY.md).
 

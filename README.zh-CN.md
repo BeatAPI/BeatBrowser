@@ -35,12 +35,12 @@
 
 ### 接入你常用的 Agent
 
-| 使用方式 | Agent 示例 |
+| 模式 | Agent 示例 |
 | --- | --- |
-| 本地 | Codex、Claude Code、WorkBuddy、OpenCode、Kimi Code、OpenClaw、Hermes |
+| 本地 | Codex、Claude Code、WorkBuddy、OpenCode、Kimi Code |
 | 云端 | Muse、Grok Bot、OpenClaw、Hermes |
 
-OpenClaw、Hermes 按工具运行位置归类：在你的电脑上运行用本地模式，在远程服务器上运行用云端模式。
+OpenClaw、Hermes 在此以云端部署举例；在你的电脑上运行时，也可以使用本地模式。
 更多 Agent、具体配置与验证状态，见完整[Agent 接入目录](docs/AGENT_DIRECTORY.zh-CN.md)。
 
 ## 快速开始
