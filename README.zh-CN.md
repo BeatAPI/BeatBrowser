@@ -197,8 +197,6 @@ Dry-run 不调用模型、不连接浏览器。Fast JEV 面向顶层 light DOM�
 
 </details>
 
-## 致谢与许可
+## 许可证
 
-[MIT](LICENSE)。基于 [alchaincyf](https://github.com/alchaincyf) 的 [huashu-chrome](https://github.com/alchaincyf/huashu-chrome)，保留原作者版权。[BeatAPI](https://beatapi.io) 维护发行版本，并加入任务空间、任务恢复、工作区界面与可选 Fast JEV 执行能力。
-
-[BeatGEO](https://github.com/BeatAPI/BeatGEO) 已集成 BeatBrowser，在其上提供品牌监测、证据和复测。
+本项目采用 [MIT 许可证](LICENSE)。
