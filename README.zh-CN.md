@@ -35,7 +35,7 @@
 | **云端 Agent** | 远程服务或电脑 | 本地工具、扩展、独立凭证，以及自己的隧道。 |
 
 默认本地模式，安装不会开启远程访问。两种模式都使用你电脑上的 Chrome。
-`1.4.0` 已包含可选的云端适配层，仍作为预览功能提供。[云端 Agent 配置教程](docs/REMOTE.zh-CN.md)
+`1.4.1` 已包含可选的云端适配层，仍作为预览功能提供。[云端 Agent 配置教程](docs/REMOTE.zh-CN.md)
 
 ### 接入你常用的 Agent
 
@@ -56,7 +56,7 @@ OpenClaw、Hermes 在此以云端部署举例；在你的电脑上运行时，�
 ### 1. 安装本地工具
 
 ```sh
-npm install --global @beatapi/beat-browser@1.4.0
+npm install --global @beatapi/beat-browser@1.4.1
 beat-browser install --dry-run
 beat-browser install
 beat-browser extension
@@ -110,7 +110,7 @@ beat-browser doctor --json
 使用自己的域名，为每个 Agent 分配独立凭证，在扩展工作区查看和接管任务。
 无需租用云浏览器或注册 BeatBrowser 账号；你的电脑仍需保持在线。
 
-**可选预览**：`1.4.0` 的源码与 npm 包均包含远程命令，默认不开启远程访问。
+**可选预览**：`1.4.1` 的源码与 npm 包均包含远程命令，默认不开启远程访问。
 参照[云端接入教程](docs/REMOTE.zh-CN.md)，配置 Muse、Grok Bot 或其他支持 Bearer 认证的
 HTTP MCP、HTTP 调用或 WebSocket 的客户端。具体客户端设置与登录任务仍需端到端验收。
 

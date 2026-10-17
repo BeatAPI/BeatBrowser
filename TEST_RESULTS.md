@@ -1,5 +1,12 @@
 # Test results
 
+### 1.4 release validation, 2026-10-18
+
+- 1.4.0 includes the optional remote adapter and current WorkBuddy configuration detection. The 284-test suite, syntax, source-pattern security scan, comparison assets, clean package installation, MCP discovery and extension packaging passed.
+- GitHub extension and CLI download checksums matched. Public npm availability is verified separately from a successful publish job.
+- 1.4.1 corrects remaining version guidance in the Agent directory and workspace documentation; runtime behavior is unchanged.
+- Remote client compatibility, public tunnels, real signed-in workflows and native macOS focus behavior still need separate acceptance. The dated source-preview entry below records the earlier pre-release review.
+
 ### Source preview: cloud Agent adapter and documentation, 2026-10-18
 
 - **284 tests passed**, zero failures or skips. Remote coverage includes credential

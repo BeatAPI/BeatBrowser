@@ -2,7 +2,7 @@
 
 [Back to BeatBrowser](../README.md) · [Workspace and acceptance guide](PREVIEW_TESTING.md)
 
-Install the matching 1.4.0 CLI and extension for background TaskSpaces, task recovery and the updated workspace.
+Install the matching 1.4.1 CLI and extension for background TaskSpaces, task recovery and the updated workspace.
 
 This guide covers **Local Agent mode**: Codex, Claude Code, WorkBuddy, OpenCode
 or another compatible Agent runs on your computer and uses local stdio MCP. No domain, public endpoint or tunnel is required. For an Agent
@@ -28,7 +28,7 @@ The ZIP contains the Chrome extension only. It needs the local BeatBrowser MCP s
 Install the exact matching CLI directly from this GitHub release:
 
 ```bash
-npm install --global https://github.com/BeatAPI/BeatBrowser/releases/download/v1.4.0/beat-browser-cli.tgz
+npm install --global https://github.com/BeatAPI/BeatBrowser/releases/download/v1.4.1/beat-browser-cli.tgz
 beat-browser install --dry-run
 beat-browser install
 ```
@@ -38,12 +38,12 @@ This installs the local Node CLI and its public npm dependencies. It does not lo
 ### npm registry alternative
 
 
-The 1.4.0 release ships matching CLI and extension downloads and an npm package. Use the source path below when developing BeatBrowser.
+The 1.4.1 release ships matching CLI and extension downloads and an npm package. Use the source path below when developing BeatBrowser.
 
 Install globally so Chrome's extension folder stays at a stable path:
 
 ```bash
-npm install --global @beatapi/beat-browser@1.4.0
+npm install --global @beatapi/beat-browser@1.4.1
 beat-browser install --dry-run   # preview client config changes
 beat-browser install             # apply; backs up each changed config
 beat-browser extension           # print the extension folder
@@ -58,7 +58,7 @@ You can also install from the matching source tag below. GitHub extension downlo
 ### From source
 
 ```bash
-git clone --branch v1.4.0 https://github.com/BeatAPI/BeatBrowser.git
+git clone --branch v1.4.1 https://github.com/BeatAPI/BeatBrowser.git
 cd BeatBrowser
 npm ci
 node src/cli.js install --dry-run
@@ -79,7 +79,7 @@ The MCP server starts the loopback bridge on demand. For an agent-led setup, use
 
 ### Manual MCP config
 
-The 1.4.0 installer detects WorkBuddy's `~/.workbuddy/mcp.json` and preserves existing servers. If automatic detection is unavailable, add the JSON entry below to that file manually.
+The 1.4.1 installer detects WorkBuddy's `~/.workbuddy/mcp.json` and preserves existing servers. If automatic detection is unavailable, add the JSON entry below to that file manually.
 
 For JSON-based clients, point at a stable source or installed package path:
 

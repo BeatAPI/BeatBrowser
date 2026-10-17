@@ -1,8 +1,10 @@
-# BeatBrowser 1.4.0
+# BeatBrowser 1.4.1
 
 The npm package and matching extension downloads now include the current Agent setup and optional remote access tooling.
 
 ## What changed
+
+- Correct the Agent directory and workspace guides to match the npm release, including WorkBuddy setup. This patch changes documentation and version metadata only; runtime behavior matches 1.4.0.
 
 - Include an opt-in remote adapter for compatible cloud agents: dedicated credentials, expiry/revocation, authenticated HTTP/MCP/WebSocket and a user-managed tunnel. Local mode remains the default; installation opens no remote listener.
 - Detect WorkBuddy's current `~/.workbuddy/mcp.json` path while preserving existing servers.
@@ -12,7 +14,7 @@ The npm package and matching extension downloads now include the current Agent s
 ## Install or update
 
 ```sh
-npm install --global @beatapi/beat-browser@1.4.0
+npm install --global @beatapi/beat-browser@1.4.1
 beat-browser install --dry-run
 beat-browser install
 beat-browser extension
