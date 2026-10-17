@@ -40,7 +40,7 @@ for (const [lang, filename] of [['en','README.md'], ['zh-CN','README.zh-CN.md']]
   const tables = [...segment.matchAll(/(?:^\|.*\|\n?)+/gm)].map(match => match[0].trim().split('\n').map(row => row.split('|').slice(1,-1).map(s=>s.trim())));
   assert.equal(tables.length, data.groups.length);
   const localizedTitle = data.titles[lang];
-  let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1536 1454" role="img" aria-labelledby="title desc"><title id="title">${xml(localizedTitle)}</title><desc id="desc">${xml(tables.map(t=>t.map(r=>r.join(' | ')).join('; ')).join('; '))}</desc><rect width="1536" height="1454" rx="26" fill="#f7f9fc"/><g font-family="Arial, PingFang SC, Microsoft YaHei, sans-serif">`;
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1536" height="1454" viewBox="0 0 1536 1454" role="img" aria-labelledby="title desc"><title id="title">${xml(localizedTitle)}</title><desc id="desc">${xml(tables.map(t=>t.map(r=>r.join(' | ')).join('; ')).join('; '))}</desc><rect width="1536" height="1454" rx="26" fill="#f7f9fc"/><g font-family="Arial, PingFang SC, Microsoft YaHei, sans-serif">`;
   svg += text('BEATBROWSER', 54, 60, 1000, {size:20, color:'#2563eb', weight:700});
   svg += text(localizedTitle, 54, 118, 1420, {size:38, weight:700});
   svg += text(`2026-10-18  /  ${lang === 'en' ? 'Browser integration comparison' : 'BeatBrowser'}`, 55, 159, 1400, {size:18,color:'#66758c'});
