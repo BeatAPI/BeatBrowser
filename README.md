@@ -198,8 +198,6 @@ Dry-run makes no model call and opens no browser connection. Fast JEV targets to
 
 </details>
 
-## Credits and license
+## License
 
-[MIT](LICENSE). Based on [huashu-chrome](https://github.com/alchaincyf/huashu-chrome) by [alchaincyf](https://github.com/alchaincyf), with the original copyright preserved. [BeatAPI](https://beatapi.io) maintains the distribution and adds TaskSpaces, recovery, the workspace UI and optional Fast JEV execution.
-
-Also included in [BeatGEO](https://github.com/BeatAPI/BeatGEO), which adds brand monitoring, evidence and retests.
+Released under the [MIT License](LICENSE).
