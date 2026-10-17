@@ -14,6 +14,32 @@ where those results go. The browser continues to contact the sites it visits.
 "Local bridge" does not mean that visited websites or an outer cloud agent
 receive no data.
 
+## Optional self-hosted remote access
+
+Remote access is off unless the local operator creates an Agent credential and
+starts `beat-browser remote`. The adapter listens on loopback and requires a
+separate user-configured route such as Cloudflare Tunnel for cloud access.
+BeatBrowser does not provision a hosted browser, shared public relay or account.
+
+Each Agent has a random Bearer credential. Hashes, expiry and revocation records
+are stored under `~/.beat-browser/remote/`; local token files and exported client
+connection files contain the credential itself. Protect those files and the cloud
+client settings. Tokens/configs are not printed by the CLI. On POSIX, private files
+use mode `0600` and directories use `0700`; other OS access controls need review.
+Remote audit metadata records time, client, tool and status, not request contents.
+
+Requests and tool results, including requested page content and screenshots, pass
+through the configured tunnel/provider and reach the chosen cloud Agent/model.
+Local Chrome state does not mean all browser data stays local. The local adapter
+does not automatically upload a profile or migrate cookies. Authenticated browser
+tools can still access sensitive site data; credentials grant browser control,
+not per-Agent cookie or account isolation. Website authorization remains the
+operator's responsibility. Revocation cannot undo site actions already started.
+
+Remote mode excludes OS file tools, saved site learnings, binary fetches and the
+optional Fast JEV executor. Local MCP behavior is unchanged. See the [remote guide](docs/REMOTE.md)
+for protocol limits, setup and validation scope.
+
 ## Local task recovery
 
 Background task labels, caller-supplied progress notes, bounded lifecycle history,

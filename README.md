@@ -8,7 +8,7 @@
 
 An open-source Chrome extension and local bridge for MCP-capable agents. Reuse your existing browser and website logins, give tasks their own windows, and take over when needed. No separate browser app or browser-data migration required.
 
-[Get started](#quick-start) · [Examples](#what-you-can-do) · [Compare](#compare-browser-integrations) · [JavaScript SDK](docs/JAVASCRIPT.md) · [Website](https://beatapi.io/browser)
+[Get started](#quick-start) · [Cloud agents](#cloud-agents-your-chrome) · [Examples](#what-you-can-do) · [Compare](#compare-browser-integrations) · [JavaScript SDK](docs/JAVASCRIPT.md) · [Website](https://beatapi.io/browser)
 
 Normal local browser tools are **free**, with **no BeatBrowser account or API key**. Your agent uses its own model access.
 
@@ -17,15 +17,38 @@ Normal local browser tools are **free**, with **no BeatBrowser account or API ke
 | Keep what works | Add what your agent needs |
 | --- | --- |
 | **Your Chrome** | Use the connected profile and its existing website sessions. |
-| **Your agent** | Connect Claude Code, Codex CLI, Cursor or another compatible local stdio MCP client. |
+| **Your agent** | Connect Codex, Claude Code, WorkBuddy, OpenCode or another compatible local stdio MCP client. |
 | **Your workspace** | Run tasks in separate Chrome windows and follow progress in the extension. |
 | **Your control** | View, pause, resume, stop and clean up tasks from the popup or sidebar. |
 
 The extension, local bridge, MCP server, CLI and Node SDK are public under [MIT](LICENSE). Task windows share their Chrome profile's cookies and storage.
 
+## Choose your mode
+
+| Mode | Agent location | Setup |
+| --- | --- | --- |
+| **Local Agent** | Your computer | Tools + extension; no domain or tunnel. |
+| **Cloud Agent** | Remote / cloud | Tools + extension + credential + your own tunnel. |
+
+Local mode is the default; installation does not enable remote access. Both modes
+use your computer's Chrome. Cloud mode is currently a source preview, outside the
+published `1.3.2` package. [Cloud Agent setup](docs/REMOTE.md)
+
+### Bring the agent you use
+
+| Mode | Agent examples |
+| --- | --- |
+| Local | Codex, Claude Code, WorkBuddy, OpenCode, Kimi Code, OpenClaw, Hermes |
+| Cloud | Muse, Grok Bot, OpenClaw, Hermes |
+
+OpenClaw and Hermes fit either mode: local when their tools run on your computer,
+cloud when they run on a remote server.
+More agents, configuration details and verification status are listed in the
+[Agent directory](docs/AGENT_DIRECTORY.md).
+
 ## Quick start
 
-Requirements: **Node.js 20+**, **Chrome 116+**, and a client that can launch a local stdio MCP server. Setup has two parts: the local tools and the Chrome extension.
+For **Local Agent mode**: **Node.js 20+**, **Chrome 116+**, and a client that can launch a local stdio MCP server. Setup has two parts: the local tools and the Chrome extension.
 
 ### 1. Install the local tools
 
@@ -77,6 +100,20 @@ page title, report the result, and pause for my review.
 
 Open the extension → **Workspace** to inspect the task. The agent supplies the reasoning; BeatBrowser supplies the browser tools.
 
+## Cloud agents, your Chrome
+
+**Run the agent in the cloud. Keep the browser on your computer.**
+
+The optional remote adapter lets compatible cloud agents operate your signed-in
+Chrome through your own authenticated Cloudflare Tunnel. Use your own hostname,
+give each agent a separate credential, and inspect tasks in the extension Workspace.
+No cloud browser rental or BeatBrowser account is required; your computer must stay online.
+
+**Source preview:** remote commands are available in this checkout, not the published
+`1.3.2` package. [Configure cloud access](docs/REMOTE.md) for Muse, Grok Bot or another
+client supporting Bearer-authenticated HTTP MCP, HTTP calls or WebSocket.
+Client-specific settings and signed-in tasks require end-to-end verification.
+
 ## What you can do
 
 | Task | Example prompt |
@@ -85,7 +122,7 @@ Open the extension → **Workspace** to inspect the task. The agent supplies the
 | Prepare a form | “Fill this form with the supplied information, check the values, then pause before the final submit.” |
 | Compare sources | “Read these two URLs in separate background tasks, summarize each source and wait for review.” |
 
-These are task examples, not claims that every website has been tested. Some sites save while you type; use a dedicated demo form when rehearsing. [Demo and recording guide](docs/DEMO.md)
+These are example prompts; no demo video is available yet. Some sites save while you type; use a dedicated demo form when rehearsing. [Example task walkthrough](docs/DEMO.md)
 
 ## Compare browser integrations
 
@@ -147,7 +184,8 @@ Tasks keep named pages, progress and a lifecycle history. You can take over a pa
 
 ## Tools
 
-BeatBrowser exposes **24 normal MCP tools**, including `spaces` for background tasks.
+Local Agent mode exposes **24 normal MCP tools**, including `spaces` for background tasks.
+Cloud Agent mode exposes 21, excluding local file tools and saved learnings; see [remote scope](docs/REMOTE.md#scope-and-validation).
 
 | Purpose | Tools |
 | --- | --- |
@@ -160,7 +198,7 @@ BeatBrowser exposes **24 normal MCP tools**, including `spaces` for background t
 
 Snapshot before acting, pass explicit `tabId`/`spaceId`, and check the result. A successful click receipt is not proof of the business outcome. Use `ask` for login, CAPTCHA, OTP or a decision requiring the user. Multiple clients can connect; ordinary writes to the same tab are not isolated.
 
-Reviewed site notes and playbooks can be shared locally through `~/.beat-browser/learnings/`. This is reusable context, not automatic model training. [JavaScript SDK](docs/JAVASCRIPT.md) · [Demo guide](docs/DEMO.md) · [Dated integration comparison](docs/COMPARISON.md)
+Reviewed site notes and playbooks can be shared locally through `~/.beat-browser/learnings/`. This is reusable context, not automatic model training. [JavaScript SDK](docs/JAVASCRIPT.md) · [Example task walkthrough](docs/DEMO.md) · [Dated integration comparison](docs/COMPARISON.md)
 
 ## Privacy
 

@@ -1,4 +1,7 @@
-# Record a BeatBrowser demo
+# Example tasks and recording plan
+
+No public demo video is available yet. This guide provides a local task rehearsal
+and a plan for a future recording. README images are workflow illustrations.
 
 ## Main story: switch agents, keep the browser
 
@@ -60,7 +63,7 @@ text and that the title is still Browser triage. Do not publish or clear it.
 
 To isolate Claude's test from its native Chrome integration and other MCP
 servers, create a temporary local MCP JSON with one `beat-browser` entry using
-the manual config in README, then run:
+the [manual config in the installation guide](INSTALL.md#manual-mcp-config), then run:
 
 ```bash
 claude --no-chrome --strict-mcp-config --mcp-config /absolute/path/to/demo-mcp.json

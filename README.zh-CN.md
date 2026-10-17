@@ -8,7 +8,7 @@
 
 开源 Chrome 扩展与本地桥接工具，让支持 MCP 的 Agent 复用你的浏览器和网站登录态。任务使用独立窗口，你随时查看和接管，无需另装专用浏览器或迁移浏览资料。
 
-[快速开始](#快速开始) · [使用示例](#可以用来做什么) · [能力对比](#浏览器接入方式对比) · [JavaScript SDK](docs/JAVASCRIPT.md) · [项目官网](https://beatapi.io/browser)
+[快速开始](#快速开始) · [云端 Agent](#云端-agent你的-chrome) · [使用示例](#可以用来做什么) · [能力对比](#浏览器接入方式对比) · [JavaScript SDK](docs/JAVASCRIPT.md) · [项目官网](https://beatapi.io/browser)
 
 普通本地浏览器工具**免费**，**不需要 BeatBrowser 账号或 API Key**；Agent 使用自己的模型服务。
 
@@ -17,15 +17,35 @@
 | 保留已有环境 | 为 Agent 加入工作能力 |
 | --- | --- |
 | **你的 Chrome** | 使用已连接的浏览器配置与网站登录态。 |
-| **你的 Agent** | 连接 Claude Code、Codex CLI、Cursor 或其他兼容的本地 stdio MCP 客户端。 |
+| **你的 Agent** | 连接 Codex、Claude Code、WorkBuddy、OpenCode 等兼容的本地 stdio MCP 客户端。 |
 | **你的工作区** | 任务使用独立 Chrome 窗口，在扩展里查看进度。 |
 | **你的控制权** | 通过 popup 或侧栏查看、暂停、继续、停止和清理任务。 |
 
 扩展、桥接服务、MCP、CLI 和 Node SDK 源码按 [MIT](LICENSE) 公开。同一 Chrome 配置下的任务共享 Cookie 与存储。
 
+## 选择使用模式
+
+| 模式 | Agent 在哪里 | 需要配置什么 |
+| --- | --- | --- |
+| **本地 Agent** | 你的电脑 | 本地工具与 Chrome 扩展，无需域名或隧道。 |
+| **云端 Agent** | 远程服务或电脑 | 本地工具、扩展、独立凭证，以及自己的隧道。 |
+
+默认本地模式，安装不会开启远程访问。两种模式都使用你电脑上的 Chrome。
+云端模式目前是源码预览，已发布的 `1.3.2` 尚未包含。[云端 Agent 配置教程](docs/REMOTE.zh-CN.md)
+
+### 接入你常用的 Agent
+
+| 使用方式 | Agent 示例 |
+| --- | --- |
+| 本地 | Codex、Claude Code、WorkBuddy、OpenCode、Kimi Code、OpenClaw、Hermes |
+| 云端 | Muse、Grok Bot、OpenClaw、Hermes |
+
+OpenClaw、Hermes 按工具运行位置归类：在你的电脑上运行用本地模式，在远程服务器上运行用云端模式。
+更多 Agent、具体配置与验证状态，见完整[Agent 接入目录](docs/AGENT_DIRECTORY.zh-CN.md)。
+
 ## 快速开始
 
-需要 **Node.js 20+**、**Chrome 116+** 和能够启动本地 stdio MCP 服务的客户端。安装分为两部分：本地工具与 Chrome 扩展。
+**本地 Agent 模式**需要 **Node.js 20+**、**Chrome 116+** 和能够启动本地 stdio MCP 服务的客户端。安装分为两部分：本地工具与 Chrome 扩展。
 
 ### 1. 安装本地工具
 
@@ -76,6 +96,18 @@ beat-browser doctor --json
 
 点击扩展 → **工作区** 查看任务。Agent 负责推理，BeatBrowser 提供浏览器工具。
 
+## 云端 Agent，你的 Chrome
+
+**Agent 在云端，浏览器留在你的电脑。**
+
+通过可选远程适配层与自己的 Cloudflare 隧道，让兼容的云端 Agent 操作已登录的 Chrome。
+使用自己的域名，为每个 Agent 分配独立凭证，在扩展工作区查看和接管任务。
+无需租用云浏览器或注册 BeatBrowser 账号；你的电脑仍需保持在线。
+
+**源码预览**：远程命令已在当前源码实现，已发布的 `1.3.2` 尚未包含。
+参照[云端接入教程](docs/REMOTE.zh-CN.md)，配置 Muse、Grok Bot 或其他支持 Bearer 认证的
+HTTP MCP、HTTP 调用或 WebSocket 的客户端。具体客户端设置与登录任务仍需端到端验收。
+
 ## 可以用来做什么
 
 | 任务 | 提示词示例 |
@@ -84,7 +116,7 @@ beat-browser doctor --json
 | 预填表单 | “按我提供的信息填写表单，检查内容，在最终提交之前暂停。” |
 | 比较多个来源 | “用两个独立后台任务读取这两个网址，分别总结，等待我检查。” |
 
-这些是任务示例，不代表已验收所有网站。有些网站会在输入时自动保存，演练请使用专门的演示表单。[演示与录屏指南](docs/DEMO.md)
+以上为示例提示词，目前暂无演示录屏。有些网站会在输入时自动保存，演练请使用专门的演示表单。[任务示例与操作步骤](docs/DEMO.md)
 
 ## 浏览器接入方式对比
 
@@ -146,7 +178,8 @@ beat-browser doctor --json
 
 ## 工具
 
-包含 **24 个普通 MCP 工具**，其中 `spaces` 用于后台任务。
+本地 Agent 模式提供 **24 个普通 MCP 工具**，其中 `spaces` 用于后台任务。
+云端 Agent 模式提供 21 个，不含本地文件工具与保存的网站经验，详见[远程模式范围](docs/REMOTE.zh-CN.md#接口范围与验收边界)。
 
 | 用途 | 工具 |
 | --- | --- |
@@ -159,7 +192,7 @@ beat-browser doctor --json
 
 先观察页面，再操作，并明确传入 `tabId` / `spaceId`，最后核实结果。点击成功不等于业务操作成功。登录、验证码、OTP 和需要用户决定的步骤使用 `ask`。可以连接多个客户端，但普通模式下同时修改同一标签页并不隔离。
 
-审核过的站点笔记与操作手册保存在 `~/.beat-browser/learnings/`，供不同 Agent 复用。这是共享上下文，不是自动训练模型。[JavaScript SDK](docs/JAVASCRIPT.md) · [演示指南](docs/DEMO.md) · [注明时间的集成对比](docs/COMPARISON.md)
+审核过的站点笔记与操作手册保存在 `~/.beat-browser/learnings/`，供不同 Agent 复用。这是共享上下文，不是自动训练模型。[JavaScript SDK](docs/JAVASCRIPT.md) · [任务示例与操作步骤](docs/DEMO.md) · [注明时间的集成对比](docs/COMPARISON.md)
 
 ## 隐私
 

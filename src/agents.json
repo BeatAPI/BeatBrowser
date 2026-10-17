@@ -84,6 +84,7 @@
       "client": "workbuddy",
       "kind": "json",
       "paths": [
+        "~/.workbuddy/mcp.json",
         "~/.workbuddy/.mcp.json"
       ]
     },
