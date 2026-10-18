@@ -40,15 +40,14 @@ for (const [lang, filename] of [['en','README.md'], ['zh-CN','README.zh-CN.md']]
   const tables = [...segment.matchAll(/(?:^\|.*\|\n?)+/gm)].map(match => match[0].trim().split('\n').map(row => row.split('|').slice(1,-1).map(s=>s.trim())));
   assert.equal(tables.length, data.groups.length);
   const localizedTitle = data.titles[lang];
-  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1536" height="1454" viewBox="0 0 1536 1454" role="img" aria-labelledby="title desc"><title id="title">${xml(localizedTitle)}</title><desc id="desc">${xml(tables.map(t=>t.map(r=>r.join(' | ')).join('; ')).join('; '))}</desc><rect width="1536" height="1454" rx="26" fill="#f7f9fc"/><g font-family="Arial, PingFang SC, Microsoft YaHei, sans-serif">`;
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1536" height="1380" viewBox="0 0 1536 1380" role="img" aria-labelledby="title desc"><title id="title">${xml(localizedTitle)}</title><desc id="desc">${xml(tables.map(t=>t.map(r=>r.join(' | ')).join('; ')).join('; '))}</desc><rect width="1536" height="1380" rx="26" fill="#f7f9fc"/><g font-family="Arial, PingFang SC, Microsoft YaHei, sans-serif">`;
   svg += text('BEATBROWSER', 54, 60, 1000, {size:20, color:'#2563eb', weight:700});
   svg += text(localizedTitle, 54, 118, 1420, {size:38, weight:700});
-  svg += text(`2026-10-18  /  ${lang === 'en' ? 'Browser integration comparison' : 'BeatBrowser'}`, 55, 159, 1400, {size:18,color:'#66758c'});
   tables.forEach((rows, group) => {
     const expected = data.groups[group];
     assert.equal(rows.length, data.features.length + 2);
     assert.equal(rows[0].length, expected.length + 1);
-    const top = 196 + group * 610, left = 48, featureWidth = 430, cellWidth = 202;
+    const top = 160 + group * 610, left = 48, featureWidth = 430, cellWidth = 202;
     svg += `<rect x="48" y="${top}" width="1440" height="578" rx="14" fill="white" stroke="#dce3ed"/><rect x="478" y="${top+1}" width="202" height="576" fill="#eaf1ff"/>`;
     rows[0].forEach((label, column) => {
       const x = column ? left + featureWidth + (column-.5)*cellWidth : left+24;
@@ -67,7 +66,7 @@ for (const [lang, filename] of [['en','README.md'], ['zh-CN','README.zh-CN.md']]
       });
     });
   });
-  svg += text(data.footers[lang],54,1430,1430,{size:17,color:'#66758c'}) + '</g></svg>\n';
+  svg += '</g></svg>\n';
   const target = path.join(root, `media/readme-comparison.${lang}.svg`);
   if (check) assert.equal(fs.readFileSync(target,'utf8'),svg,`Regenerate ${path.relative(root,target)}`);
   else fs.writeFileSync(target,svg);
