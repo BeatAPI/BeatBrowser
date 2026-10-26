@@ -14,7 +14,7 @@
 
 Connect Codex, Claude Code and other compatible agents directly to the Chrome you already use. Keep your website logins, run tasks in background windows, and take over when needed. BeatBrowser is a free, MIT-licensed Chrome extension and local bridge.
 
-[Get started](#quick-start) · [Cloud agents](#cloud-agents-your-chrome) · [Examples](#what-you-can-do) · [Compare](#compare-browser-integrations) · [JavaScript SDK](docs/JAVASCRIPT.md) · [Website](https://beatapi.io/browser)
+[Get started](#quick-start) · [FAST mode](#fast-mode) · [Cloud agents](#cloud-agents-your-chrome) · [Examples](#what-you-can-do) · [Compare](#compare-browser-integrations) · [JavaScript SDK](docs/JAVASCRIPT.md) · [Website](https://beatapi.io/browser)
 
 Normal local browser tools are **free**, with **no BeatBrowser account or API key**. Your agent uses its own model access.
 
@@ -27,6 +27,7 @@ Normal local browser tools are **free**, with **no BeatBrowser account or API ke
 | **Choose your agent** | Codex, Claude Code, WorkBuddy and more. |
 | **Own the toolchain** | Extension, bridge, MCP, CLI and SDK source. |
 | **Work in the background** | Task windows with pause and takeover. |
+| **Optional FAST execution** | Your agent supplies the goal and inputs; JEV chooses bounded browser actions. Requires a BeatAPI key. |
 | **Cloud access preview** | Self-hosted access to your local Chrome. |
 
 The extension, local bridge, MCP server, CLI and Node SDK are public under [MIT](LICENSE). Task windows share their Chrome profile's cookies and storage.
@@ -108,6 +109,37 @@ page title, report the result, and pause for my review.
 ```
 
 Open the extension → **Workspace** to inspect the task. The agent supplies the reasoning; BeatBrowser supplies the browser tools.
+
+<a id="fast-mode"></a>
+
+## FAST mode: let JEV execute a bounded browser task
+
+In normal mode, your agent calls browser tools step by step. **FAST mode** lets a local agent hand a goal, exact inputs and success assertions to `browser_task`. JEV chooses among bounded actions such as clicking, typing, selecting and scrolling, and the executor checks the result. Use it for interaction tasks with clear boundaries; the outer agent still handles planning and exceptions.
+
+FAST is **off by default** and requires a **BeatAPI key**. Connection tests and live model calls may consume credits. Normal browser tools remain free and need no key.
+
+**To enable:**
+
+1. In the extension popup or workspace, open **Settings → FAST → Configure**.
+2. Enter a BeatAPI key and JEV model (default `jev-1.13`), confirm model calls, and choose **Test & enable**.
+3. Ask your local agent to use `browser_task` with a concrete goal, inputs and success assertions. Each task still requires cloud-processing consent. **Turn off FAST** stops FAST execution.
+
+Only the local Node bridge saves the key in an owner-only file; Chrome storage does not retain it. **The new settings entry is currently on the source branch and has not shipped in a new npm package or extension download.** Both the CLI/MCP package and extension must contain it. Existing `1.4.1` installations use [environment configuration](docs/JEV_FAST_AGENT.md#prerequisites-and-configuration).
+
+FAST currently supports top-frame light DOM, excluding iframes and shadow DOM, and stops on uncertainty. [Full configuration and execution boundaries](docs/JEV_FAST_AGENT.md) · [Dated test results](TEST_RESULTS.md)
+
+<details>
+<summary>Check task arguments locally without a key</summary>
+
+```sh
+beat-browser run --dry-run \
+  --url https://example.com \
+  --goal 'Check that the Example Domain page is ready'
+```
+
+Dry-run only validates arguments; it makes no model call and opens no browser connection.
+
+</details>
 
 ## Cloud agents, your Chrome
 
@@ -228,23 +260,6 @@ npm run check:package
 [JavaScript SDK](docs/JAVASCRIPT.md) · [Agent setup](AGENT_INSTALL.md) · [Architecture](media/architecture.svg) · [Test results](TEST_RESULTS.md) · [Release procedure](docs/RELEASING.md) · [Report an issue](https://github.com/BeatAPI/BeatBrowser/issues)
 
 Bug reports and pull requests are welcome. Include the CLI/extension versions, reproduction steps and sanitized output. Do not include tokens, cookies or private page data. Unit and isolated Chromium checks do not certify every agent client or macOS foreground-focus behavior.
-
-<details>
-<summary>Optional BeatAPI execution — Fast JEV</summary>
-
-The optional Fast JEV executor lets a BeatAPI model choose from a bounded set of browser actions. It uses the same connection, is **off by default**, and requires a BeatAPI key and explicit task consent. Normal browser tools do not require it.
-
-In the extension popup and workspace, open **Settings → FAST → Configure** to enter a BeatAPI key and JEV model, confirm model calls, then choose **Test & enable**. Settings and configuration start collapsed so tasks stay first. A valid JEV test response is required before enabling. Only the local Node bridge saves the key, in an owner-only file. Local agents discover `browser_task` after enabling; **Turn off FAST** stops FAST execution. Both the extension and local CLI/MCP package must contain this entry.
-
-```sh
-beat-browser run --dry-run \
-  --url https://example.com \
-  --goal 'Check that the Example Domain page is ready'
-```
-
-Dry-run makes no model call and opens no browser connection. Fast JEV targets top-frame light DOM, not iframes or shadow DOM; it stops on uncertainty instead of replaying an uncertain submission. [Configuration and consent](docs/JEV_FAST_AGENT.md)
-
-</details>
 
 ## License
 

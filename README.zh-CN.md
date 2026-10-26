@@ -14,7 +14,7 @@
 
 保留现有浏览器、登录态与使用习惯，让 Codex、Claude Code 等兼容 Agent 直接在 Chrome 里完成网页任务。任务使用独立后台窗口，你随时查看、暂停或接管。BeatBrowser 是免费、MIT 开源的 Chrome 扩展与本地桥接工具。
 
-[快速开始](#快速开始) · [云端 Agent](#云端-agent你的-chrome) · [使用示例](#可以用来做什么) · [能力对比](#浏览器接入方式对比) · [JavaScript SDK](docs/JAVASCRIPT.md) · [项目官网](https://beatapi.io/browser)
+[快速开始](#快速开始) · [FAST 模式](#fast模式) · [云端 Agent](#云端-agent你的-chrome) · [使用示例](#可以用来做什么) · [能力对比](#浏览器接入方式对比) · [JavaScript SDK](docs/JAVASCRIPT.md) · [项目官网](https://beatapi.io/browser)
 
 普通本地浏览器工具**免费**，**不需要 BeatBrowser 账号或 API Key**；Agent 使用自己的模型服务。
 
@@ -27,6 +27,7 @@
 | **Agent 自由选择** | 接入 Codex、Claude Code、WorkBuddy 等。 |
 | **工具链源码公开** | 扩展、桥接、MCP、CLI、SDK 均可检查和修改。 |
 | **后台任务工作区** | 独立任务窗口，可暂停、继续或接管。 |
+| **可选 FAST 执行** | Agent 给定目标与输入，JEV 选择有限的浏览器动作；需要 BeatAPI Key。 |
 | **云端接入预览** | 自建认证入口，连接你本地的 Chrome。 |
 
 扩展、桥接服务、MCP、CLI 和 Node SDK 源码按 [MIT](LICENSE) 公开。同一 Chrome 配置下的任务共享 Cookie 与存储。
@@ -105,6 +106,37 @@ beat-browser doctor --json
 ```
 
 点击扩展 → **工作区** 查看任务。Agent 负责推理，BeatBrowser 提供浏览器工具。
+
+<a id="fast模式"></a>
+
+## FAST 模式：让 JEV 执行明确的浏览器任务
+
+普通模式由你的 Agent 逐步调用浏览器工具。**FAST 模式**允许本地 Agent 把目标、准确输入和成功条件交给 `browser_task`，由 JEV 在点击、输入、选择和滚动等有限动作中决定下一步，执行后检查结果。它适合步骤边界明确的交互任务；规划和异常处理仍由外层 Agent 负责。
+
+FAST **默认关闭**，需要 **BeatAPI Key**；测试连接和实际模型调用可能消耗额度。普通浏览器工具仍免费，无需 Key。
+
+**开启方式：**
+
+1. 在扩展弹窗或工作区打开 **设置 → FAST → 配置**。
+2. 填入 BeatAPI Key 和 JEV 模型（默认 `jev-1.13`），勾选允许模型调用，点击 **测试并开启**。
+3. 让本地 Agent 使用 `browser_task`，提供具体目标、输入和成功条件；每次任务仍需云端处理授权。**关闭 FAST** 可停止 FAST 执行。
+
+Key 由本机 Node 桥接以受限权限文件保存，不写入 Chrome 存储。**新版设置入口目前在源码分支中，尚未随新的 npm 包或扩展下载发布**；需要同时使用包含该入口的 CLI/MCP 与扩展，现有 `1.4.1` 安装仍按[环境变量方式](docs/JEV_FAST_AGENT.md#prerequisites-and-configuration)配置。
+
+FAST 当前支持页面顶层的普通 DOM，不支持 iframe 或 shadow DOM；遇到不确定状态会停止。[完整配置与执行边界](docs/JEV_FAST_AGENT.md) · [注明日期的测试记录](TEST_RESULTS.md)
+
+<details>
+<summary>无需 Key 的本地参数检查</summary>
+
+```sh
+beat-browser run --dry-run \
+  --url https://example.com \
+  --goal 'Check that the Example Domain page is ready'
+```
+
+Dry-run 只检查参数，不调用模型、不连接浏览器。
+
+</details>
 
 ## 云端 Agent，你的 Chrome
 
@@ -224,23 +256,6 @@ npm run check:package
 [JavaScript SDK](docs/JAVASCRIPT.md) · [Agent 安装](AGENT_INSTALL.md) · [架构](media/architecture.svg) · [测试记录](TEST_RESULTS.md) · [发布流程](docs/RELEASING.md) · [反馈问题](https://github.com/BeatAPI/BeatBrowser/issues)
 
 欢迎提交问题与 PR，请附上 CLI/扩展版本、复现步骤和脱敏输出，不要包含令牌、Cookie 或私有页面数据。单元测试和隔离 Chromium 检查不代表已验收每个 Agent 客户端或 macOS 原生焦点行为。
-
-<details>
-<summary>可选 BeatAPI 执行能力 — Fast JEV</summary>
-
-Fast JEV 让 BeatAPI 模型从有限的浏览器动作中选择下一步，复用相同连接，**默认关闭**。真实调用需要 BeatAPI Key 和明确任务授权，普通浏览器工具不需要。
-
-插件弹窗和工作区通过 **设置 → FAST → 配置** 进入：设置和配置默认收起，先展示任务；点击「配置」后才显示 BeatAPI Key、JEV 模型和授权选项，再点击「测试并开启」。测试成功才会启用；Key 仅由本机 Node 桥接以受限权限文件保存。开启后，本地 Agent 可发现 `browser_task`；「关闭 FAST」会停止 FAST 执行。需要同时使用包含该入口的扩展和本地 CLI/MCP 包。
-
-```sh
-beat-browser run --dry-run \
-  --url https://example.com \
-  --goal 'Check that the Example Domain page is ready'
-```
-
-Dry-run 不调用模型、不连接浏览器。Fast JEV 面向顶层 light DOM，不支持 iframe 或 shadow DOM；遇到不确定状态会停止，不自动重发结果不明的提交。[配置与授权](docs/JEV_FAST_AGENT.md)
-
-</details>
 
 ## 许可证
 
