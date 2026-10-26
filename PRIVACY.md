@@ -64,7 +64,7 @@ The optional JEV executor is disabled by default. A CLI task must include
 `--enable-fast-agent`. The optional `browser_task` MCP tool must first be
 enabled for the server, and each call must include `cloudConsent: true`.
 `--dry-run` validates local task configuration without opening a browser
-connection, reading an API key or making network requests.
+connection or making network requests; no API key is required.
 
 An enabled task sends a bounded, allowlisted model payload to BeatAPI:
 
@@ -79,8 +79,19 @@ An enabled task sends a bounded, allowlisted model payload to BeatAPI:
 The default endpoint is `https://api.beatapi.io`; a trusted local operator may
 set `BEATAPI_BASE_URL`. The destination matters: the configured endpoint
 receives the BeatAPI authorization key in the request header. Only the Node
-process reads `BEATAPI_API_KEY`; the key is not sent across the extension bridge
-or included in the model state or trace. Per-task MCP arguments cannot override
+process reads `BEATAPI_API_KEY`. Alternatively, the extension FAST setup sends a
+human-entered key over its local loopback bridge connection. The Node bridge
+stores it in `~/.beat-browser/fast-settings.json` with owner-only (`0600`)
+permissions. This file contains plaintext credentials, not keychain-encrypted
+credentials. The key is not saved in Chrome storage, returned to the extension
+or an agent, logged, or included in model state or traces. The extension password
+field retains an unsaved draft only until it is saved or the extension page is
+closed. UI setup always targets `https://api.beatapi.io`. **Test connection** and
+**Test & enable** make a real synthetic decision request and may consume credits;
+they do not read any browser page. Disabling preserves the local key; **Remove
+saved key** removes it and disables FAST, without changing environment secrets.
+Settings are shared by local processes using the same BeatBrowser home.
+Per-task MCP arguments cannot override
 credentials, endpoint or model.
 
 The fast path does not collect cookie or storage dumps, browser authorization

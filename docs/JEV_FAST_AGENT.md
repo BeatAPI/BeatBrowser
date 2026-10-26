@@ -6,7 +6,7 @@ and success assertions. The executor observes the current page, asks BeatAPI
 JEV to choose from a finite action set, validates that choice, rechecks the
 live target, performs one supported action and verifies the result.
 
-It is off by default. The 23 ordinary manual MCP tools, local bridge,
+It is off by default. The ordinary manual MCP tools, local bridge,
 installation flow and existing `ask` mechanism remain available without a
 BeatAPI API key. Fast mode is intended for constrained interaction loops; the
 outer agent retains planning, task authorization and handling of exceptions.
@@ -19,6 +19,55 @@ click names and assertions. When a live page contradicts a learning, trust the
 page and update the note after the run.
 
 ## Prerequisites and configuration
+
+### Extension FAST entry
+
+The popup and workspace keep tasks first. Open **Settings**, then choose
+**Configure** on its FAST row to reveal the API key, JEV model and consent
+options. Settings and the configuration form are collapsed on initial load;
+FAST remains disabled by default. Closing Settings also closes the form and
+clears its unsaved key. Enter a BeatAPI API key and JEV model, and confirm model calls. **Test connection**
+makes one synthetic JEV decision request without reading a browser page or saving
+the draft. **Test & enable** repeats that check and enables FAST only after a
+valid JEV response. Tests can consume model credits. The default model remains
+`jev-1.13`; the model field accepts another published JEV model ID.
+
+The Node bridge must be running from a package containing this entry; an older
+bridge needs a package update and agent restart. The key is sent once over the
+local extension-to-bridge WebSocket and stored in `~/.beat-browser/fast-settings.json`
+with owner-only permissions (`0600`). This is a local plaintext credential file,
+not an OS keychain. It is never saved in Chrome storage, returned in settings
+responses, exposed to an agent, or included in audit/model/trace data. UI setup
+always uses `https://api.beatapi.io` even if the process has another base URL.
+The password field keeps an unsaved draft only while that extension page is open.
+
+Enabling FAST adds `browser_task` to a local MCP server's current tool list and
+sends a tool-list-changed notification. Clients that cache the list may need a
+reconnect. Each task still requires `cloudConsent: true`; the switch itself
+does not start a task or authorize a website action. Turning FAST off prevents
+new calls, stops running MCP tasks, and prevents a further runner operation
+after revocation. Removing a saved key also switches FAST off. Disabling keeps
+the saved key for later use; removing it does not erase a separately configured
+process-environment key. Settings apply to local processes sharing this user's
+BeatBrowser home, across Chrome profiles. Remote servers explicitly keep FAST
+disabled.
+
+Existing process-environment configuration still works when no saved settings
+file exists. A saved disabled configuration overrides startup opt-in until the
+user enables FAST again. `BEAT_BROWSER_FAST_AGENT=0` is an explicit opt-out that
+also overrides saved configuration. CLI live runs still require their explicit
+`--enable-fast-agent` flag and can reuse the saved key. Dry runs remain offline.
+
+For isolated test processes only, `BEAT_BROWSER_FAST_CONFIG_FILE` selects a
+different trusted local settings path; it is never a per-task argument.
+
+`BEAT_TEST_CHROME=/path/to/chrome node scripts/check-fast-browser.mjs` exercises
+the popup, sidebar and real browser actions with synthetic provider responses in
+a disposable profile. Explicit `--live` additionally requires `BEATAPI_API_KEY`
+in process memory and uses real BeatAPI calls. It skips redundant/negative live
+model tests to limit billed calls. Reports and screenshots contain no key, and
+temporary credential settings are removed when the run exits. See `TEST_RESULTS.md`
+for the dated live run and its narrow acceptance scope.
 
 Use the repository's supported Node.js version, install its existing
 dependencies, and load the BeatBrowser Chrome extension. No new runtime

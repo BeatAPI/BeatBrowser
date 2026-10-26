@@ -21,6 +21,20 @@ import { validateScript, condText, repeatMax, EXEC_BUDGET } from './script.js';
 const fastRuns = new Map();
 const fastTabWatches = new Map();
 const fastCanceledRuns = new Set();
+const fastSettingsRequests = new Map();
+
+async function fastSettingsRequest(params) {
+  if (!(await connected())) throw new Error('FAST_BRIDGE_REQUIRED');
+  const id = crypto.randomUUID();
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => { fastSettingsRequests.delete(id); reject(new Error('FAST_BRIDGE_TIMEOUT')); }, 20000);
+    fastSettingsRequests.set(id, { resolve, reject, timer });
+    // No persistent outbox: a credential setup request must never be replayed.
+    void toBridge({ type: 'fast_settings', id, params }).catch(() => {
+      clearTimeout(timer); fastSettingsRequests.delete(id); reject(new Error('FAST_BRIDGE_REQUIRED'));
+    });
+  });
+}
 
 //
 
@@ -251,6 +265,14 @@ const emit = (event, extra = {}) => toBridge({ type: 'event', event, ...extra })
 const NO_SLOT_CMDS = new Set(['tabs', 'spaces', 'download', 'reload', 'status']);
 
 async function onMessage(msg) {
+  if (msg.type === 'fast_settings_result') {
+    const pending = fastSettingsRequests.get(msg.id);
+    if (!pending) return;
+    clearTimeout(pending.timer); fastSettingsRequests.delete(msg.id);
+    if (msg.error) pending.reject(new Error(msg.error));
+    else pending.resolve(msg.data);
+    return;
+  }
   if (msg.type === 'event') return onBridgeEvent(msg);
   if (msg.type !== 'cmd') return;
   try {
@@ -2414,6 +2436,13 @@ chrome.tabs.onUpdated.addListener((tabId, info) => {
 });
 
 chrome.runtime.onMessage.addListener((m, _s, sendResponse) => {
+  if (m?.__hcPopup === 'fastSettings') {
+    if (_s.id !== chrome.runtime.id || !['popup.html', 'panel.html'].some(file => _s.url === chrome.runtime.getURL(file))) {
+      sendResponse({ error: 'FAST_UI_REQUIRED' }); return false;
+    }
+    fastSettingsRequest(m.params).then(sendResponse).catch(error => sendResponse({ error: error.message }));
+    return true;
+  }
   if (m?.__hcPopup === 'spaces' || m?.__hcPopup === 'workspacePages') {
     if (_s.id !== chrome.runtime.id || !['popup.html', 'panel.html'].some(path => _s.url === chrome.runtime.getURL(path))) {
       sendResponse({error:'TaskSpace controls are available only in the extension workspace.'});

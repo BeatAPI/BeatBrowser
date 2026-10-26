@@ -81,6 +81,7 @@ export async function handleBrowserTask(args, {
   env = process.env,
   stderr = process.stderr,
   runTaskImpl = runTask,
+  isEnabled,
 } = {}) {
   if (enabled !== true) return failure('disabled', 'FAST_AGENT_DISABLED', 'The server has not enabled browser_task. Manual browser tools remain available.');
   if (!args || typeof args !== 'object' || Array.isArray(args)
@@ -92,7 +93,7 @@ export async function handleBrowserTask(args, {
     const { cloudConsent: _consent, ...task } = args;
     const options = validateTaskOptions({ ...task, enabled: true });
     if (!options.dryRun) stderr.write(cloudConsentNotice(options.allowTextHelper, env) + '\n');
-    const result = await runTaskImpl({ ...options, signal }, { bridge, env });
+    const result = await runTaskImpl({ ...options, signal }, { bridge, env, ...(isEnabled ? { isEnabled } : {}) });
     // Keep the MCP result small. In particular, never forward a snapshot or page body.
     const output = {};
     for (const key of ['status', 'verified', 'summary', 'tracePath', 'blockedReason', 'verification', 'metrics', 'tabId']) {

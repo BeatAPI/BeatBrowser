@@ -1,5 +1,61 @@
 # Test results
 
+### GitHub source submission validation, 2026-10-26
+
+- Re-ran all 292 tests: zero failures, cancellations or skips. Syntax checks
+  passed for 78 JavaScript files; the narrow source-pattern security scan found
+  no findings in 128 files. Clean package installation (134 files), 24 normal
+  MCP tools, and local extension packaging passed.
+- Re-ran isolated Chrome for Testing acceptance with synthetic provider responses.
+  Popup/sidebar setup, consent, test without saving, enable/disable/remove,
+  credential boundaries, Chinese layout and collapsed Settings passed. The real
+  browser runner performed one click and passed its outcome assertion with
+  `status: completed`, `verified: true`.
+- This recheck made no real BeatAPI model calls and does not revalidate the
+  dated live-provider observations below. Source submission does not publish
+  a new npm version, GitHub Release or extension download.
+
+### Source preview: extension FAST entry, 2026-10-25
+
+- The revised popup/sidebar keep tasks first and nest FAST inside the collapsed
+  Settings section. Expanding Settings shows a compact FAST row; only Configure
+  reveals API key/model/consent fields. Isolated Chromium acceptance confirmed
+  this initial state, configuration expansion, and unsaved-key clearing when
+  Settings is closed. Default, Settings-row and expanded-form screenshots were
+  regenerated without making additional live model calls for the layout change.
+- 292 tests passed with zero failures/skips. Eight new integration tests cover
+  ephemeral connection testing, private key persistence, consent, fixed BeatAPI
+  routing, failure preservation, permission/symlink rejection, opt-out precedence,
+  live MCP tool discovery, revocation, and credential-free bridge replies/audits.
+- `node scripts/check-fast-browser.mjs` with `BEAT_TEST_CHROME` uses an isolated
+  Chrome for Testing profile, temporary bridge and synthetic model responses.
+  Actual popup and sidebar controls passed: consent gating, invalid-key response,
+  test-without-saving, enable/disable/remove, saved-state recovery, Chinese UI and
+  340px layout. Keys were absent from Chrome local/session storage, and an injected
+  content script could not change FAST settings.
+- The real extension/bridge runner completed a local fixture task with one JEV
+  decision and one actual browser click, followed by a passing page assertion.
+  The provider response was synthetic: this does not establish current real JEV
+  availability, billing, latency, or decision quality.
+- Syntax: 78 JavaScript files. Narrow source-pattern scan: no findings. Clean
+  134-file package installation, stable launcher and 24 normal MCP tools passed.
+- A subsequent explicit live run used the operator-authorized credential through
+  process memory. The non-billable `GET /v1/usage` check returned HTTP 200.
+  Exactly two `POST /v1/systemone` calls to BeatAPI with `jev-1.13` returned 200:
+  the popup's **Test & enable** request (1,773 ms response-header latency) and
+  the actual browser runner decision (614 ms response-header latency). The
+  runner performed one real click and passed its page assertion with
+  `status: completed`, `verified: true`. These are two observed requests,
+  not a general latency or reliability benchmark. The popup/sidebar and
+  enable/disable/remove controls passed with this real provider configuration.
+- The live run used a disposable browser profile and owner-only temporary settings;
+  the key was removed from those settings and the test profile was deleted.
+  It was not written to the repository, result report or Chrome storage. The
+  authorized existing secret-store entry was unchanged. No exact billing charge
+  was audited. Signed-in websites, complex workflows and native macOS focus
+  behavior remain unverified. This is an unreleased development branch; the
+  active extension was not replaced.
+
 ### 1.4 release validation, 2026-10-18
 
 - 1.4.0 includes the optional remote adapter and current WorkBuddy configuration detection. The 284-test suite, syntax, source-pattern security scan, comparison assets, clean package installation, MCP discovery and extension packaging passed.

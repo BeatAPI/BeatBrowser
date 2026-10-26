@@ -15,6 +15,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { VERSION } from './lib/version.js';
 import { BROWSER_TASK_TOOL, handleBrowserTask } from './fast-agent/task.js';
+import { createFastSettings } from './fast-agent/settings.js';
 
 const REF = { type: 'string', description: 'Element ref from the latest snapshot, e.g. "e3"' };
 const SNAP = { type: 'string', description: 'snapshotId the ref came from' };
@@ -515,8 +516,13 @@ reply — it must survive context compaction. With 2+ work-lines (a subagent, tw
 pass tabId on EVERY call — the implicit slot is SHARED with subagents and any of them can
 move it. Lost track? tabs(action:"list").
 
-OPTIONAL FAST LOOP: a cheap subagent can own the goal, site learnings and its own tab
-(tabId on every call); it escalates payments, ask outcomes and plan changes back to you.
+FAST JEV. When listed, browser_task is the user's enabled FAST executor. Prefer it
+for bounded top-frame light-DOM interaction tasks with a concrete goal, exact inputs
+and success assertions, after reviewing site learnings. Set cloudConsent:true only
+with task-specific cloud-processing consent. It opens its own tab; preserve the
+returned tabId. Check status and verified before claiming success. Existing-tab,
+iframe, shadow-DOM and TaskSpace tasks should keep their supported manual tools.
+The FAST switch alone does not authorize a website action or start a task.
 
 Information lives in three places; use them in this order:
 1. NETWORK for DATA — \`network\` first: the API names its own fields; screen-read numbers
@@ -548,14 +554,31 @@ export function getToolList({ fastAgentEnabled = false } = {}) {
   return fastAgentEnabled === true ? [...tools, BROWSER_TASK_TOOL] : tools;
 }
 
-export async function startMcpServer({ client = 'unknown', fastAgentEnabled = process.env.BEAT_BROWSER_FAST_AGENT === '1' } = {}) {
+export async function startMcpServer({ client = 'unknown', fastAgentEnabled,
+  fastSettings = createFastSettings() } = {}) {
+  const runtime = () => fastSettings.runtime(process.env.BEAT_BROWSER_FAST_AGENT === '0' ? false : fastAgentEnabled);
   const bridge = new BridgeClient({ client });
   const server = new Server(
     { name: 'beat-browser', version: VERSION },
-    { capabilities: { tools: {} }, instructions: STRATEGY }
+    { capabilities: { tools: { listChanged: true } }, instructions: STRATEGY }
   );
 
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: getToolList({ fastAgentEnabled }) }));
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: getToolList({ fastAgentEnabled: runtime().enabled }) }));
+  const runningFastTasks = new Set();
+  let advertisedFast = runtime().enabled;
+  fs.watchFile(fastSettings.filename, { persistent: false, interval: 500 }, () => {
+    const enabled = runtime().enabled;
+    if (!enabled) for (const controller of runningFastTasks) controller.abort();
+    if (enabled !== advertisedFast) {
+      advertisedFast = enabled;
+      void server.sendToolListChanged().catch(() => {});
+    }
+  });
+  server.onclose = () => {
+    fs.unwatchFile(fastSettings.filename);
+    for (const controller of runningFastTasks) controller.abort();
+    bridge.close();
+  };
 
   
   
@@ -574,7 +597,19 @@ export async function startMcpServer({ client = 'unknown', fastAgentEnabled = pr
     // Dispatch before manual identification/connect. Disabled, invalid and dry-run
     // tasks must not touch Chrome or perform inference.
     if (name === 'browser_task') {
-      return handleBrowserTask(args, { enabled: fastAgentEnabled, bridge, signal: extra?.signal });
+      const current = runtime();
+      const controller = new AbortController();
+      const cancel = () => controller.abort();
+      extra?.signal?.addEventListener('abort', cancel, { once: true });
+      if (extra?.signal?.aborted) controller.abort();
+      runningFastTasks.add(controller);
+      try {
+        return await handleBrowserTask(args, { enabled: current.enabled, bridge, signal: controller.signal,
+          env: current.env, isEnabled: () => runtime().enabled });
+      } finally {
+        runningFastTasks.delete(controller);
+        extra?.signal?.removeEventListener('abort', cancel);
+      }
     }
     identify();
     try {
