@@ -1,4 +1,5 @@
 import {taskPresentation, activityLabel} from './workspace-state.js';
+import { mountFastSettings } from './fast-settings.js';
 const ui = globalThis.BeatBrowserUI;
 let language = await ui.read();
 const t = (key, params) => ui.text(key, language, params);
@@ -10,6 +11,8 @@ function applyLanguage() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
 }
+applyLanguage();
+const fastSettingsUI = mountFastSettings({ t });
 applyLanguage();
 languageSelect.querySelectorAll('button').forEach(button => {
   button.onclick = async () => {
@@ -303,7 +306,7 @@ async function refreshSpaces() {
 refreshSpaces().catch(()=>{document.getElementById('spaces-message').textContent=t('Task spaces unavailable');});
 chrome.storage.onChanged.addListener((changes,area)=>{
   if(area==='local' && changes.uiLanguage) {
-    language=ui.resolve(changes.uiLanguage.newValue);applyLanguage();showMessage('');refreshConnection();refreshMark();refreshSpaces().catch(()=>{});
+    language=ui.resolve(changes.uiLanguage.newValue);applyLanguage();fastSettingsUI.render();showMessage('');refreshConnection();refreshMark();refreshSpaces().catch(()=>{});
   }
   if(area==='session' && changes.beatTaskSpaces) refreshSpaces().catch(()=>{});
 });

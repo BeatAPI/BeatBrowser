@@ -12,6 +12,7 @@ import { DEFAULT_PORT, writeBridgeInfo, newToken, tokenEquals, audit, ensureHome
 import { VERSION } from './lib/version.js';
 
 import { scrubProse } from '../extension/redact.js';
+import { createFastSettings } from './fast-agent/settings.js';
 
 export { VERSION };
 const PROTOCOL = 1;
@@ -23,7 +24,8 @@ const EXT_PROBE_MS = 15000;
 const ORPHAN_GRACE_MS = 15000;       
 
 export function startBridge({ port = DEFAULT_PORT, token = newToken(), writeInfo = true, orphanGraceMs = ORPHAN_GRACE_MS,
-  silenceMs = EXT_SILENCE_MS, probeMs = EXT_PROBE_MS, tickMs = 20000, auditFn = audit } = {}) {
+  silenceMs = EXT_SILENCE_MS, probeMs = EXT_PROBE_MS, tickMs = 20000, auditFn = audit,
+  fastSettings = createFastSettings() } = {}) {
   if (writeInfo) ensureHome();
   const audit = auditFn;
 
@@ -286,6 +288,18 @@ export function startBridge({ port = DEFAULT_PORT, token = newToken(), writeInfo
   }
 
   function route(ws, msg) {
+    // Settings never enter command dispatch, audit logs, queues or agent responses.
+    if (msg.type === 'fast_settings') {
+      if (!extensions.has(ws) || typeof msg.id !== 'string' || msg.id.length > 80) return;
+      void fastSettings.handle(msg.params).then(data => {
+        send(ws, { type: 'fast_settings_result', id: msg.id, data });
+      }).catch(error => {
+        const code = ['INVALID_SETTINGS', 'FAST_PROCESS_DISABLED', 'MISSING_API_KEY', 'INVALID_API_KEY', 'PROVIDER_HTTP_ERROR', 'INVALID_DECISION', 'INVALID_RESPONSE', 'NETWORK_ERROR', 'TIMEOUT'].includes(error.code)
+          ? error.code : 'SETTINGS_FAILED';
+        send(ws, { type: 'fast_settings_result', id: msg.id, error: code });
+      });
+      return;
+    }
     // agent → extension
     if (msg.type === 'cmd') {
       if (!agents.has(ws)) return;

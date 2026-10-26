@@ -234,6 +234,8 @@ Bug reports and pull requests are welcome. Include the CLI/extension versions, r
 
 The optional Fast JEV executor lets a BeatAPI model choose from a bounded set of browser actions. It uses the same connection, is **off by default**, and requires a BeatAPI key and explicit task consent. Normal browser tools do not require it.
 
+In the extension popup and workspace, open **Settings → FAST → Configure** to enter a BeatAPI key and JEV model, confirm model calls, then choose **Test & enable**. Settings and configuration start collapsed so tasks stay first. A valid JEV test response is required before enabling. Only the local Node bridge saves the key, in an owner-only file. Local agents discover `browser_task` after enabling; **Turn off FAST** stops FAST execution. Both the extension and local CLI/MCP package must contain this entry.
+
 ```sh
 beat-browser run --dry-run \
   --url https://example.com \

@@ -230,6 +230,8 @@ npm run check:package
 
 Fast JEV 让 BeatAPI 模型从有限的浏览器动作中选择下一步，复用相同连接，**默认关闭**。真实调用需要 BeatAPI Key 和明确任务授权，普通浏览器工具不需要。
 
+插件弹窗和工作区通过 **设置 → FAST → 配置** 进入：设置和配置默认收起，先展示任务；点击「配置」后才显示 BeatAPI Key、JEV 模型和授权选项，再点击「测试并开启」。测试成功才会启用；Key 仅由本机 Node 桥接以受限权限文件保存。开启后，本地 Agent 可发现 `browser_task`；「关闭 FAST」会停止 FAST 执行。需要同时使用包含该入口的扩展和本地 CLI/MCP 包。
+
 ```sh
 beat-browser run --dry-run \
   --url https://example.com \

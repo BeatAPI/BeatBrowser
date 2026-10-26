@@ -24,7 +24,13 @@ switch (cmd) {
 
   case 'run': {
     const { runCli } = await import('./fast-agent/cli.js');
-    process.exitCode = await runCli(argv.slice(1));
+    let dependencies = {};
+    if (has('--enable-fast-agent') && !has('--dry-run')) {
+      const { createFastSettings } = await import('./fast-agent/settings.js');
+      const settings = createFastSettings();
+      dependencies = { env: settings.runtime(true).env, isEnabled: () => settings.runtime(true).enabled };
+    }
+    process.exitCode = await runCli(argv.slice(1), { dependencies });
     break;
   }
 
@@ -33,7 +39,8 @@ switch (cmd) {
     
     await startMcpServer({
       client: flag('--client', 'unknown'),
-      fastAgentEnabled: has('--enable-fast-agent') || process.env.BEAT_BROWSER_FAST_AGENT === '1',
+      fastAgentEnabled: process.env.BEAT_BROWSER_FAST_AGENT === '0' ? false
+        : has('--enable-fast-agent') || process.env.BEAT_BROWSER_FAST_AGENT === '1' ? true : undefined,
     });
     break;
   }

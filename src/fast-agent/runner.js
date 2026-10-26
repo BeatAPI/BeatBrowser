@@ -223,6 +223,7 @@ export async function runTask(options = {}, dependencies = {}) {
     catch { throw fail('TRACE_WRITE_FAILED'); }
   };
   const check = () => {
+    if (dependencies.isEnabled && !dependencies.isEnabled()) throw fail('FAST_AGENT_DISABLED');
     if (options.signal?.aborted) throw fail('ABORTED');
     if (context && Date.now() >= context.deadline) throw fail('TIMEOUT');
     if (controller.signal.aborted) throw fail('ABORTED');
